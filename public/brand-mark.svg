@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img"
+  aria-labelledby="title desc">
+  <title id="title">Strudel Studio Logo</title>
+  <desc id="desc">A neon audio-wave monogram with circular ring.</desc>
+
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="72%">
+      <stop offset="0%" stop-color="#1a2238" />
+      <stop offset="60%" stop-color="#090d17" />
+      <stop offset="100%" stop-color="#020305" />
+    </radialGradient>
+
+    <linearGradient id="ring" x1="20%" y1="15%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#00ff95" />
+      <stop offset="50%" stop-color="#00e8ff" />
+      <stop offset="100%" stop-color="#7affd4" />
+    </linearGradient>
+
+    <linearGradient id="wave" x1="20%" y1="12%" x2="80%" y2="88%">
+      <stop offset="0%" stop-color="#f4fff8" />
+      <stop offset="42%" stop-color="#8bffe2" />
+      <stop offset="100%" stop-color="#00ffd0" />
+    </linearGradient>
+
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="128" cy="128" r="116" fill="url(#bg)" />
+  <circle cx="128" cy="128" r="104" fill="none" stroke="url(#ring)" stroke-width="12"
+    filter="url(#glow)" />
+
+  <path
+    d="M64 161 C74 142, 93 143, 107 128 C122 111, 133 90, 149 90 C169 90, 178 111, 192 112"
+    fill="none"
+    stroke="url(#wave)"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#glow)"
+  />
+
+  <path
+    d="M64 95 C80 95, 90 110, 106 111 C122 112, 133 98, 149 98 C167 98, 180 114, 192 133"
+    fill="none"
+    stroke="url(#wave)"
+    stroke-width="11"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.88"
+  />
+
+  <circle cx="128" cy="128" r="4" fill="#dffff4" opacity="0.9" />
+</svg>

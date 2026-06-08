@@ -127,23 +127,16 @@ export const Header: React.FC<HeaderProps> = ({
 
   const logo = (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div
+      <img
+        src="/brand-mark.svg"
+        alt="Strudel Studio"
         style={{
           width: isMobile ? 22 : 28,
           height: isMobile ? 22 : 28,
-          borderRadius: "50%",
-          background: "linear-gradient(135deg,#00ff88,#00ffff)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: isMobile ? 12 : 14,
-          fontWeight: 900,
-          color: "#000",
+          objectFit: "contain",
           flexShrink: 0,
         }}
-      >
-        S
-      </div>
+      />
       <span
         style={{
           fontFamily: '"JetBrains Mono",monospace',
