@@ -23,20 +23,6 @@ interface HeaderProps {
   onRecordStop: () => void;
 }
 
-const STATUS_COLOR: Record<StrudelStatus, string> = {
-  idle: "#333",
-  loading: "#ffcc00",
-  playing: "#00ff88",
-  error: "#ff3366",
-};
-
-const STATUS_LABEL: Record<StrudelStatus, string> = {
-  idle: "IDLE",
-  loading: "LOADING",
-  playing: "LIVE",
-  error: "ERROR",
-};
-
 export const Header: React.FC<HeaderProps> = ({
   status,
   isMobile,
@@ -55,14 +41,12 @@ export const Header: React.FC<HeaderProps> = ({
   onRecordStart,
   onRecordStop,
 }) => {
-  const dotColor = STATUS_COLOR[status];
   const controlSize = isMobile ? 10 : 11;
   const [mobileAdvancedOpen, setMobileAdvancedOpen] = useState(false);
   const chromeBg = "rgba(0,0,0,0.94)";
   const surfaceSoft = "rgba(10,10,10,0.9)";
   const surfaceStrong = "rgba(16,16,16,0.95)";
   const borderSoft = "1px solid rgba(255,255,255,0.2)";
-  const livePulseAnimation = "none";
 
   useEffect(() => {
     onMobileAdvancedOpenChange?.(isMobile && mobileAdvancedOpen);
@@ -85,48 +69,8 @@ export const Header: React.FC<HeaderProps> = ({
     transition: "all 0.18s ease",
   };
 
-  const statusPill = (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "3px 10px",
-        borderRadius: 20,
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.16)",
-        boxShadow: "none",
-        flexShrink: 0,
-        animation: livePulseAnimation,
-      }}
-    >
-      <div
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: "50%",
-          background: dotColor,
-          boxShadow: status === "playing" ? `0 0 8px ${dotColor}` : "none",
-          animation:
-            status === "loading" ? "pulse 0.8s ease-in-out infinite" : "none",
-        }}
-      />
-      <span
-        style={{
-          fontSize: 10,
-          fontFamily: '"JetBrains Mono",monospace',
-          fontWeight: 700,
-          letterSpacing: 1.5,
-          color: dotColor,
-        }}
-      >
-        {STATUS_LABEL[status]}
-      </span>
-    </div>
-  );
-
   const logo = (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
       <img
         src="/brand-mark.svg"
         alt="Strudel Studio"
@@ -137,19 +81,6 @@ export const Header: React.FC<HeaderProps> = ({
           flexShrink: 0,
         }}
       />
-      <span
-        style={{
-          fontFamily: '"JetBrains Mono",monospace',
-          fontWeight: 700,
-          fontSize: isMobile ? 11 : 13,
-          letterSpacing: isMobile ? 1.5 : 3,
-          color: "#00ff88",
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-        }}
-      >
-        STRUDEL STUDIO
-      </span>
     </div>
   );
 
@@ -172,7 +103,6 @@ export const Header: React.FC<HeaderProps> = ({
         borderBottom: "1px solid rgba(255,255,255,0.14)",
         boxShadow: "0 10px 24px rgba(0,0,0,0.42)",
         overflow: "hidden",
-        animation: livePulseAnimation,
       }}
     >
       <div
@@ -203,7 +133,6 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         >
           {logo}
-          {statusPill}
           <div style={{ flex: 1 }} />
 
           <button
@@ -395,7 +324,6 @@ export const Header: React.FC<HeaderProps> = ({
             }}
           >
             {logo}
-            {statusPill}
           </div>
 
           <div
