@@ -5,6 +5,7 @@ interface FractalFieldProps {
   audioData: AudioData;
   colorScheme?: "neon" | "pastel" | "fire" | "ocean";
   mode?: "lissajous" | "julia";
+  isPlaying?: boolean;
 }
 
 // ─── colour palettes ──────────────────────────────────────────────────────────
@@ -154,6 +155,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
   audioData,
   colorScheme = "neon",
   mode = "lissajous",
+  isPlaying = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -237,12 +239,21 @@ export const FractalField: React.FC<FractalFieldProps> = ({
       rafRef.current = requestAnimationFrame(draw);
     };
 
+    if (!isPlaying) {
+      const { width: w, height: h } = sizeRef.current;
+      frameRef.current = 0;
+      ctx.clearRect(0, 0, w, h);
+      return () => {
+        ro.disconnect();
+      };
+    }
+
     rafRef.current = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, mode]);
+  }, [colorScheme, mode, isPlaying]);
 
   return (
     <canvas

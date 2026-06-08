@@ -17,6 +17,7 @@ interface Particle {
 interface ParticleFieldProps {
   audioData: AudioData;
   colorScheme?: "neon" | "pastel" | "fire" | "ocean";
+  isPlaying?: boolean;
 }
 
 const SCHEME_HUES: Record<string, [number, number]> = {
@@ -51,12 +52,15 @@ function spawnParticle(
 export const ParticleField: React.FC<ParticleFieldProps> = ({
   audioData,
   colorScheme = "neon",
+  isPlaying = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef<number>(0);
   const audioRef = useRef(audioData);
   const sizeRef = useRef({ width: 0, height: 0 });
+  const prevBassRef = useRef(0);
+  const phaseRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -93,23 +97,39 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
     }
 
     const draw = () => {
-      const { bass, mid, treble, volume } = audioRef.current;
+      const { bass, mid, treble, volume, frequencies, waveform } =
+        audioRef.current;
       const { width: w, height: h } = sizeRef.current;
+      phaseRef.current += 0.05 + treble * 0.18;
 
       // fade trail
       ctx.fillStyle = "rgba(5,5,8,0.18)";
       ctx.fillRect(0, 0, w, h);
 
       // spawn new particles driven by audio energy
-      const spawnCount = Math.floor((bass * 4 + mid * 2 + treble) * 3);
+      const bassAttack = Math.max(0, bass - prevBassRef.current);
+      prevBassRef.current = bass;
+      const centroid = frequencies.length
+        ? frequencies.reduce((acc, value, idx) => acc + value * idx, 0) /
+          Math.max(
+            1,
+            frequencies.reduce((acc, value) => acc + value, 0),
+          )
+        : 0;
+      const centroidNorm = frequencies.length
+        ? centroid / frequencies.length
+        : 0.5;
+
+      const energy = bass * 1.8 + mid * 1.15 + treble * 0.9 + volume * 0.8;
+      const spawnCount = Math.floor(energy * 4 + bassAttack * 8);
       for (let i = 0; i < spawnCount; i++) {
         if (particlesRef.current.length < MAX_PARTICLES) {
           particlesRef.current.push(spawnParticle(w, h, hueRange));
         }
       }
 
-      const bassBoost = 1 + bass * 6;
-      const midDrift = 1 + mid * 2;
+      const bassBoost = 1 + bass * 6 + bassAttack * 2;
+      const midDrift = 1 + mid * 2.4;
 
       particlesRef.current = particlesRef.current.filter((p) => {
         p.life--;
@@ -126,6 +146,15 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
         p.radius = p.baseRadius * bassBoost;
         p.vx += (Math.random() - 0.5) * 0.1 * midDrift;
         p.vy += (Math.random() - 0.5) * 0.1 * midDrift;
+
+        if (waveform.length > 0) {
+          const idx = Math.floor((p.x / Math.max(1, w)) * waveform.length);
+          const wave = waveform[Math.min(idx, waveform.length - 1)] / 128 - 1;
+          p.vy += wave * (0.08 + mid * 0.08);
+        }
+
+        p.vx += Math.sin(phaseRef.current + p.y * 0.01) * (0.04 + treble * 0.1);
+        p.vx += (centroidNorm - 0.5) * 0.12;
         p.vy -= treble * 0.08; // treble lifts particles
         p.vx *= 0.98;
         p.vy *= 0.98;
@@ -151,13 +180,23 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       rafRef.current = requestAnimationFrame(draw);
     };
 
+    if (!isPlaying) {
+      const { width: w, height: h } = sizeRef.current;
+      particlesRef.current = [];
+      prevBassRef.current = 0;
+      ctx.clearRect(0, 0, w, h);
+      return () => {
+        ro.disconnect();
+      };
+    }
+
     rafRef.current = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme]);
+  }, [colorScheme, isPlaying]);
 
   return (
     <canvas

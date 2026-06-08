@@ -6,6 +6,7 @@ interface SpectrumAnalyzerProps {
   colorScheme?: "neon" | "pastel" | "fire" | "ocean";
   barCount?: number;
   showWaveform?: boolean;
+  isPlaying?: boolean;
 }
 
 const GRADIENTS: Record<string, [string, string][]> = {
@@ -36,11 +37,13 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
   colorScheme = "neon",
   barCount = 80,
   showWaveform = true,
+  isPlaying = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const audioRef = useRef(audioData);
   const sizeRef = useRef({ width: 0, height: 0 });
+  const prevBassRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -75,12 +78,25 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
 
       // spectrum bars
       const barW = w / barCount;
-      const step = Math.max(1, Math.floor(frequencies.length / barCount));
+      const bassAttack = Math.max(0, bass - prevBassRef.current);
+      prevBassRef.current = bass;
 
       for (let i = 0; i < barCount; i++) {
-        const idx = Math.min(i * step, frequencies.length - 1);
-        const val = frequencies[idx] / 255;
-        const barH = val * h * 0.75;
+        const start = Math.floor((i * frequencies.length) / barCount);
+        const end = Math.max(
+          start + 1,
+          Math.floor(((i + 1) * frequencies.length) / barCount),
+        );
+        let sumSq = 0;
+        for (let j = start; j < end; j++) {
+          const v = frequencies[j] / 255;
+          sumSq += v * v;
+        }
+
+        const rms = Math.sqrt(sumSq / Math.max(1, end - start));
+        const lowBoost = (1 - i / barCount) * bass * 0.35;
+        const val = Math.min(1, rms + lowBoost);
+        const barH = Math.pow(val, 0.85) * h * 0.82;
         const x = i * barW;
 
         const t = i / barCount;
@@ -91,7 +107,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
         grad.addColorStop(0, c1);
         grad.addColorStop(1, c2);
 
-        const glow = 4 + bass * 20;
+        const glow = 3 + bass * 14 + bassAttack * 28;
         ctx.shadowColor = c1;
         ctx.shadowBlur = glow;
         ctx.fillStyle = grad;
@@ -107,7 +123,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.strokeStyle = `rgba(255,255,255,0.25)`;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.2 + bass * 1.6;
         const sliceW = w / waveform.length;
         for (let i = 0; i < waveform.length; i++) {
           const v = waveform[i] / 128 - 1;
@@ -121,12 +137,21 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
       rafRef.current = requestAnimationFrame(draw);
     };
 
+    if (!isPlaying) {
+      const { width: w, height: h } = sizeRef.current;
+      prevBassRef.current = 0;
+      ctx.clearRect(0, 0, w, h);
+      return () => {
+        ro.disconnect();
+      };
+    }
+
     rafRef.current = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, barCount, showWaveform]);
+  }, [colorScheme, barCount, showWaveform, isPlaying]);
 
   return (
     <canvas

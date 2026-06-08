@@ -448,7 +448,11 @@ export const AudioVisualizer: React.FC = () => {
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       {(vizMode === "particles" || vizMode === "both") && (
         <div style={{ position: "absolute", inset: 0 }}>
-          <ParticleField audioData={audioData} colorScheme={colorScheme} />
+          <ParticleField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            isPlaying={status === "playing"}
+          />
         </div>
       )}
       {(vizMode === "spectrum" || vizMode === "both") && (
@@ -464,6 +468,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             barCount={96}
             showWaveform
+            isPlaying={status === "playing"}
           />
         </div>
       )}
@@ -473,6 +478,7 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             mode="lissajous"
+            isPlaying={status === "playing"}
           />
         </div>
       )}
@@ -482,6 +488,7 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             mode="julia"
+            isPlaying={status === "playing"}
           />
         </div>
       )}
