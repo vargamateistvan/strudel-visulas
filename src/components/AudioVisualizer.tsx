@@ -72,6 +72,7 @@ export const AudioVisualizer: React.FC = () => {
     activeNotes,
     activeLiterals,
     activeControls,
+    nPulse,
     getRecordingStream,
   } = useStrudel();
   const {
@@ -634,6 +635,7 @@ export const AudioVisualizer: React.FC = () => {
             activeNotes={activeNotes}
             activeLiterals={activeLiterals}
             activeControls={activeControls}
+            nPulse={nPulse}
             onCodeChange={onCodeChange}
           />
         </div>

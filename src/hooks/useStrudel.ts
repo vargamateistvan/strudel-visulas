@@ -304,6 +304,7 @@ export const useStrudel = () => {
   const [activeNotes, setActiveNotes] = useState<string[]>([]);
   const [activeLiterals, setActiveLiterals] = useState<string[]>([]);
   const [activeControls, setActiveControls] = useState<string[]>([]);
+  const [nPulse, setNPulse] = useState(0);
 
   const replRef = useRef<any>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -339,6 +340,7 @@ export const useStrudel = () => {
     setActiveNotes([]);
     setActiveLiterals([]);
     setActiveControls([]);
+    setNPulse(0);
   };
 
   const startReadingLoop = (analyser: AnalyserNode) => {
@@ -478,6 +480,9 @@ export const useStrudel = () => {
             nextLiterals.length > 0 ||
             nextControls.length > 0
           ) {
+            if (nextControls.includes("n")) {
+              setNPulse((prev) => prev + 1);
+            }
             setActiveNote(nextNotes[0]);
 
             const expiresInMs = 340;
@@ -596,6 +601,7 @@ export const useStrudel = () => {
     activeNotes,
     activeLiterals,
     activeControls,
+    nPulse,
     getRecordingStream,
   };
 };

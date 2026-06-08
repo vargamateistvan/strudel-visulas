@@ -16,6 +16,7 @@ interface StrudelEditorProps {
   activeNotes?: string[];
   activeLiterals?: string[];
   activeControls?: string[];
+  nPulse?: number;
   onCodeChange?: (code: string) => void;
 }
 
@@ -170,11 +171,21 @@ function renderStringWithNoteHighlights(
   raw: string,
   activePitchClasses: Set<string>,
   activeLiterals: Set<string>,
+  nPulse: number,
+  isNControlString: boolean,
 ): string {
   const TOKEN_IN_STRING_RE = /[A-Za-z_][A-Za-z0-9_#-]*|-?\d+(?:\.\d+)?/g;
+  const NUMBER_ONLY_RE = /^-?\d+(?:\.\d+)?$/;
   let out = "";
   let last = 0;
   let match: RegExpExecArray | null;
+  const numericTokens = Array.from(raw.matchAll(/-?\d+(?:\.\d+)?/g));
+  const forcedNumericIndex =
+    isNControlString && numericTokens.length > 0
+      ? ((nPulse % numericTokens.length) + numericTokens.length) %
+        numericTokens.length
+      : -1;
+  let seenNumeric = -1;
 
   while ((match = TOKEN_IN_STRING_RE.exec(raw)) !== null) {
     const [token] = match;
@@ -185,7 +196,12 @@ function renderStringWithNoteHighlights(
     const normalized = normalizePitchClass(token);
     const activeByPitch = activePitchClasses.has(normalized);
     const activeByLiteral = activeLiterals.has(token.toLowerCase());
-    const active = activeByPitch || activeByLiteral;
+    let activeByNPulse = false;
+    if (isNControlString && NUMBER_ONLY_RE.test(token)) {
+      seenNumeric += 1;
+      activeByNPulse = seenNumeric === forcedNumericIndex;
+    }
+    const active = activeByPitch || activeByLiteral || activeByNPulse;
     const classes = active ? "tok-note active-note-token" : "tok-note";
     out += `<span class="${classes}">${escapeHtml(token)}</span>`;
     last = index + token.length;
@@ -204,6 +220,7 @@ function renderHighlightedCode(
   activeNotes: string[],
   activeLiterals: string[],
   activeControls: string[],
+  nPulse: number,
 ): string {
   const activePitchClasses = new Set<string>();
   if (activeNote) {
@@ -215,6 +232,7 @@ function renderHighlightedCode(
   const literalSet = new Set(activeLiterals.map((v) => v.toLowerCase()));
   const controlSet = new Set(activeControls.map((v) => v.toLowerCase()));
   let out = "";
+  let previousIdent = "";
 
   let i = 0;
   while (i < code.length) {
@@ -245,10 +263,12 @@ function renderHighlightedCode(
       const token = code.slice(i, end);
       if (token.length >= 2) {
         const inner = token.slice(1, -1);
-        out += `<span class="tok-string">${escapeHtml(token[0])}${renderStringWithNoteHighlights(inner, activePitchClasses, literalSet)}${escapeHtml(token[token.length - 1])}</span>`;
+        const isNControlString = previousIdent.toLowerCase() === "n";
+        out += `<span class="tok-string">${escapeHtml(token[0])}${renderStringWithNoteHighlights(inner, activePitchClasses, literalSet, nPulse, isNControlString)}${escapeHtml(token[token.length - 1])}</span>`;
       } else {
         out += `<span class="tok-string">${escapeHtml(token)}</span>`;
       }
+      previousIdent = "";
       i = end;
       continue;
     }
@@ -257,6 +277,7 @@ function renderHighlightedCode(
     if (numberMatch) {
       out += `<span class="tok-number">${escapeHtml(numberMatch[0])}</span>`;
       i += numberMatch[0].length;
+      previousIdent = "";
       continue;
     }
 
@@ -269,6 +290,7 @@ function renderHighlightedCode(
       const classes = active ? "tok-note active-note-token" : "tok-note";
       out += `<span class="${classes}">${escapeHtml(token)}</span>`;
       i += token.length;
+      previousIdent = "";
       continue;
     }
 
@@ -288,18 +310,21 @@ function renderHighlightedCode(
         out += `<span class="${klass}">${escapeHtml(token)}</span>`;
       }
       i += token.length;
+      previousIdent = token;
       continue;
     }
 
     if ("[](){}<>.,:;~".includes(char)) {
       out += `<span class="tok-punct">${escapeHtml(char)}</span>`;
       i += 1;
+      if (!isWhitespace(char)) previousIdent = "";
       continue;
     }
 
     if ("+-*/=%!&|".includes(char)) {
       out += `<span class="tok-operator">${escapeHtml(char)}</span>`;
       i += 1;
+      previousIdent = "";
       continue;
     }
 
@@ -311,6 +336,7 @@ function renderHighlightedCode(
 
     out += escapeHtml(char);
     i += 1;
+    previousIdent = "";
   }
 
   return out;
@@ -329,6 +355,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   activeNotes = [],
   activeLiterals = [],
   activeControls = [],
+  nPulse = 0,
   onCodeChange,
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
@@ -373,6 +400,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     activeNotes,
     activeLiterals,
     activeControls,
+    nPulse,
   );
 
   return (
