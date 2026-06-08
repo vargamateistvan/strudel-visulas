@@ -14,7 +14,10 @@ import { ParticleField } from "../visualizations/ParticleField";
 import { SpectrumAnalyzer } from "../visualizations/SpectrumAnalyzer";
 import { FractalField } from "../visualizations/FractalField";
 import { buildMidiFromCode } from "../utils/midiExport";
-import { convertWebmToMp3 } from "../utils/mp3Export";
+import {
+  convertWebmToMp3,
+  type Mp3QualityPreset,
+} from "../utils/mp3Export";
 
 export const AudioVisualizer: React.FC = () => {
   const {
@@ -49,9 +52,11 @@ export const AudioVisualizer: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>("audio");
+  const [mp3Quality, setMp3Quality] = useState<Mp3QualityPreset>("good");
   const [isExportingMp3, setIsExportingMp3] = useState(false);
   const [mp3Progress, setMp3Progress] = useState(0);
   const [mp3Status, setMp3Status] = useState("");
+  const [mp3Speed, setMp3Speed] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const displayStreamRef = useRef<MediaStream | null>(null);
@@ -136,8 +141,10 @@ export const AudioVisualizer: React.FC = () => {
           setMp3Status("Preparing MP3 export...");
 
           const mp3Blob = await convertWebmToMp3(blob, {
+            quality: mp3Quality,
             onProgress: (p) => setMp3Progress(p),
             onStatus: (s) => setMp3Status(s),
+            onSpeed: (speed) => setMp3Speed(speed),
           });
 
           const url = URL.createObjectURL(mp3Blob);
@@ -161,6 +168,7 @@ export const AudioVisualizer: React.FC = () => {
           setIsExportingMp3(false);
           setMp3Status("");
           setMp3Progress(0);
+          setMp3Speed("");
         }
       };
 
@@ -178,6 +186,7 @@ export const AudioVisualizer: React.FC = () => {
     getRecordingStream,
     isExportingMp3,
     isRecording,
+    mp3Quality,
     pickAudioMimeType,
     status,
   ]);
@@ -400,6 +409,9 @@ export const AudioVisualizer: React.FC = () => {
         recordingLabel={recordingLabel}
         recordingMode={recordingMode}
         onRecordingMode={setRecordingMode}
+        mp3Quality={mp3Quality}
+        onMp3Quality={setMp3Quality}
+        isExportingMp3={isExportingMp3}
         onRecordStart={startRecording}
         onRecordStop={stopAudioRecording}
       />
@@ -441,6 +453,18 @@ export const AudioVisualizer: React.FC = () => {
             </div>
             <div
               style={{
+                color: "#6cd4b8",
+                fontSize: 11,
+                marginBottom: 6,
+                fontFamily: '"JetBrains Mono",monospace',
+                textTransform: "uppercase",
+                letterSpacing: 1,
+              }}
+            >
+              quality: {mp3Quality}
+            </div>
+            <div
+              style={{
                 color: "#9bb3a3",
                 fontSize: 12,
                 marginBottom: 10,
@@ -477,7 +501,7 @@ export const AudioVisualizer: React.FC = () => {
                 fontSize: 11,
               }}
             >
-              {Math.round(mp3Progress * 100)}%
+              {Math.round(mp3Progress * 100)}%{mp3Speed ? ` • ${mp3Speed}` : ""}
             </div>
           </div>
         </div>

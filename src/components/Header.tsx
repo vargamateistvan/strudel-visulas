@@ -2,6 +2,7 @@ import React from "react";
 import type { StrudelStatus } from "../hooks/useStrudel";
 
 export type RecordingMode = "audio" | "video" | "midi";
+export type Mp3Quality = "fast" | "good" | "best";
 
 interface HeaderProps {
   status: StrudelStatus;
@@ -13,6 +14,9 @@ interface HeaderProps {
   recordingLabel: string;
   recordingMode: RecordingMode;
   onRecordingMode: (mode: RecordingMode) => void;
+  mp3Quality: Mp3Quality;
+  onMp3Quality: (quality: Mp3Quality) => void;
+  isExportingMp3: boolean;
   onRecordStart: () => void;
   onRecordStop: () => void;
 }
@@ -41,6 +45,9 @@ export const Header: React.FC<HeaderProps> = ({
   recordingLabel,
   recordingMode,
   onRecordingMode,
+  mp3Quality,
+  onMp3Quality,
+  isExportingMp3,
   onRecordStart,
   onRecordStop,
 }) => {
@@ -159,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({
       <select
         value={recordingMode}
         onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
-        disabled={isRecording}
+        disabled={isRecording || isExportingMp3}
         style={{
           marginRight: 10,
           background: "rgba(255,255,255,0.05)",
@@ -174,6 +181,32 @@ export const Header: React.FC<HeaderProps> = ({
         <option value="audio">AUDIO</option>
         <option value="video">VIDEO</option>
         <option value="midi">MIDI</option>
+      </select>
+
+      <select
+        value={mp3Quality}
+        onChange={(e) => onMp3Quality(e.target.value as Mp3Quality)}
+        disabled={recordingMode !== "audio" || isRecording || isExportingMp3}
+        title={
+          recordingMode === "audio"
+            ? "MP3 quality preset"
+            : "MP3 quality applies to AUDIO mode"
+        }
+        style={{
+          marginRight: 10,
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          borderRadius: 6,
+          padding: "6px 9px",
+          color: recordingMode === "audio" ? "#c7d2dd" : "#7b8792",
+          fontSize: 11,
+          fontFamily: '"JetBrains Mono",monospace',
+          opacity: recordingMode === "audio" ? 1 : 0.7,
+        }}
+      >
+        <option value="fast">MP3 FAST</option>
+        <option value="good">MP3 GOOD</option>
+        <option value="best">MP3 BEST</option>
       </select>
 
       {isRecording ? (
@@ -199,28 +232,32 @@ export const Header: React.FC<HeaderProps> = ({
       ) : (
         <button
           onClick={onRecordStart}
-          disabled={status !== "playing"}
+          disabled={status !== "playing" || isExportingMp3}
           style={{
             marginRight: 10,
             background:
-              status === "playing"
+              status === "playing" && !isExportingMp3
                 ? "linear-gradient(135deg,#ff7a7a,#ff4d4d)"
                 : "rgba(255,122,122,0.14)",
             border: "none",
             borderRadius: 6,
             padding: "6px 12px",
-            cursor: status === "playing" ? "pointer" : "default",
-            color: status === "playing" ? "#fff" : "#ff9a9a",
-            opacity: status === "playing" ? 1 : 0.6,
+            cursor:
+              status === "playing" && !isExportingMp3 ? "pointer" : "default",
+            color:
+              status === "playing" && !isExportingMp3 ? "#fff" : "#ff9a9a",
+            opacity: status === "playing" && !isExportingMp3 ? 1 : 0.6,
             fontSize: 11,
             fontFamily: '"JetBrains Mono",monospace',
             fontWeight: 700,
             letterSpacing: 1,
           }}
           title={
-            status === "playing"
+            status === "playing" && !isExportingMp3
               ? "Record audio (WebM)"
-              : "Start playback first to record"
+              : isExportingMp3
+                ? "MP3 export in progress"
+                : "Start playback first to record"
           }
         >
           ● REC
