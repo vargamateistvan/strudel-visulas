@@ -18,6 +18,41 @@ import { buildMidiFromCode } from "../utils/midiExport";
 import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
 
 const EDITOR_COLOR_PRESET_KEY = "strudel:editor-color-preset:v1";
+const COLOR_SCHEME_KEY = "strudel:color-scheme:v1";
+const VIZ_MODE_KEY = "strudel:viz-mode:v1";
+const EDITOR_OPACITY_KEY = "strudel:editor-opacity:v1";
+const MP3_QUALITY_KEY = "strudel:mp3-quality:v1";
+
+function isColorScheme(value: string): value is ColorScheme {
+  return (
+    value === "neon" ||
+    value === "pastel" ||
+    value === "fire" ||
+    value === "ocean"
+  );
+}
+
+function isVizMode(value: string): value is VizMode {
+  return (
+    value === "particles" ||
+    value === "spectrum" ||
+    value === "lissajous" ||
+    value === "julia" ||
+    value === "both"
+  );
+}
+
+function isMp3Quality(value: string): value is Mp3QualityPreset {
+  return value === "fast" || value === "good" || value === "best";
+}
+
+function parseOpacity(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 0 || parsed > 1) return null;
+  return parsed;
+}
 
 function isEditorColorPreset(value: string): value is EditorColorPreset {
   return (
@@ -49,9 +84,17 @@ export const AudioVisualizer: React.FC = () => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
-  const [colorScheme, setColorScheme] = useState<ColorScheme>("neon");
-  const [vizMode, setVizMode] = useState<VizMode>("particles");
-  const [editorOpacity, setEditorOpacity] = useState(0.45);
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(() => {
+    const saved = localStorage.getItem(COLOR_SCHEME_KEY);
+    return saved && isColorScheme(saved) ? saved : "neon";
+  });
+  const [vizMode, setVizMode] = useState<VizMode>(() => {
+    const saved = localStorage.getItem(VIZ_MODE_KEY);
+    return saved && isVizMode(saved) ? saved : "particles";
+  });
+  const [editorOpacity, setEditorOpacity] = useState(() => {
+    return parseOpacity(localStorage.getItem(EDITOR_OPACITY_KEY)) ?? 0.45;
+  });
   const [editorColorPreset, setEditorColorPreset] = useState<EditorColorPreset>(
     () => {
       const saved = localStorage.getItem(EDITOR_COLOR_PRESET_KEY);
@@ -64,7 +107,10 @@ export const AudioVisualizer: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>("audio");
-  const [mp3Quality, setMp3Quality] = useState<Mp3QualityPreset>("good");
+  const [mp3Quality, setMp3Quality] = useState<Mp3QualityPreset>(() => {
+    const saved = localStorage.getItem(MP3_QUALITY_KEY);
+    return saved && isMp3Quality(saved) ? saved : "good";
+  });
   const [isExportingMp3, setIsExportingMp3] = useState(false);
   const [mp3Progress, setMp3Progress] = useState(0);
   const [mp3Status, setMp3Status] = useState("");
@@ -332,6 +378,22 @@ export const AudioVisualizer: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(EDITOR_COLOR_PRESET_KEY, editorColorPreset);
   }, [editorColorPreset]);
+
+  useEffect(() => {
+    localStorage.setItem(COLOR_SCHEME_KEY, colorScheme);
+  }, [colorScheme]);
+
+  useEffect(() => {
+    localStorage.setItem(VIZ_MODE_KEY, vizMode);
+  }, [vizMode]);
+
+  useEffect(() => {
+    localStorage.setItem(EDITOR_OPACITY_KEY, String(editorOpacity));
+  }, [editorOpacity]);
+
+  useEffect(() => {
+    localStorage.setItem(MP3_QUALITY_KEY, mp3Quality);
+  }, [mp3Quality]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
