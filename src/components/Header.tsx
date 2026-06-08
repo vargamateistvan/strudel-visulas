@@ -58,6 +58,11 @@ export const Header: React.FC<HeaderProps> = ({
   const dotColor = STATUS_COLOR[status];
   const controlSize = isMobile ? 10 : 11;
   const [mobileAdvancedOpen, setMobileAdvancedOpen] = useState(false);
+  const chromeBg = "rgba(0,0,0,0.94)";
+  const surfaceSoft = "rgba(10,10,10,0.9)";
+  const surfaceStrong = "rgba(16,16,16,0.95)";
+  const borderSoft = "1px solid rgba(255,255,255,0.2)";
+  const livePulseAnimation = "none";
 
   useEffect(() => {
     onMobileAdvancedOpenChange?.(isMobile && mobileAdvancedOpen);
@@ -69,6 +74,92 @@ export const Header: React.FC<HeaderProps> = ({
     }
   }, [isMobile]);
 
+  const baseButtonStyle: React.CSSProperties = {
+    borderRadius: 6,
+    cursor: "pointer",
+    fontSize: controlSize,
+    fontFamily: '"JetBrains Mono",monospace',
+    fontWeight: 700,
+    letterSpacing: 1,
+    flexShrink: 0,
+    transition: "all 0.18s ease",
+  };
+
+  const statusPill = (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "3px 10px",
+        borderRadius: 20,
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.16)",
+        boxShadow: "none",
+        flexShrink: 0,
+        animation: livePulseAnimation,
+      }}
+    >
+      <div
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: dotColor,
+          boxShadow: status === "playing" ? `0 0 8px ${dotColor}` : "none",
+          animation:
+            status === "loading" ? "pulse 0.8s ease-in-out infinite" : "none",
+        }}
+      />
+      <span
+        style={{
+          fontSize: 10,
+          fontFamily: '"JetBrains Mono",monospace',
+          fontWeight: 700,
+          letterSpacing: 1.5,
+          color: dotColor,
+        }}
+      >
+        {STATUS_LABEL[status]}
+      </span>
+    </div>
+  );
+
+  const logo = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div
+        style={{
+          width: isMobile ? 22 : 28,
+          height: isMobile ? 22 : 28,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg,#00ff88,#00ffff)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: isMobile ? 12 : 14,
+          fontWeight: 900,
+          color: "#000",
+          flexShrink: 0,
+        }}
+      >
+        S
+      </div>
+      <span
+        style={{
+          fontFamily: '"JetBrains Mono",monospace',
+          fontWeight: 700,
+          fontSize: isMobile ? 11 : 13,
+          letterSpacing: isMobile ? 1.5 : 3,
+          color: "#00ff88",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+        }}
+      >
+        STRUDEL STUDIO
+      </span>
+    </div>
+  );
+
   return (
     <header
       style={{
@@ -77,360 +168,398 @@ export const Header: React.FC<HeaderProps> = ({
         left: 0,
         right: 0,
         zIndex: 40,
-        minHeight: isMobile ? 96 : 48,
+        minHeight: isMobile ? 100 : 52,
         display: "flex",
-        alignItems: isMobile ? "stretch" : "center",
-        flexDirection: isMobile ? "column" : "row",
+        alignItems: "stretch",
+        flexDirection: "column",
         gap: isMobile ? 6 : 0,
-        padding: isMobile ? "8px 10px" : "0 20px",
-        background: "rgba(5,5,12,0.7)",
+        padding: isMobile ? "8px 10px" : "0 18px",
+        background: chromeBg,
         backdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.14)",
+        boxShadow: "0 10px 24px rgba(0,0,0,0.42)",
+        overflow: "hidden",
+        animation: livePulseAnimation,
       }}
     >
-      {/* Logo / title + status */}
       <div
+        aria-hidden="true"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 10,
-          width: "100%",
+          position: "absolute",
+          left: "-10%",
+          top: -24,
+          width: "120%",
+          height: 56,
+          pointerEvents: "none",
+          background:
+            "linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.04) 100%)",
+          backgroundSize: "200% 100%",
+          filter: "blur(14px)",
+          animation: "none",
         }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: isMobile ? 22 : 28,
-              height: isMobile ? 22 : 28,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg,#00ff88,#00ffff)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: isMobile ? 12 : 14,
-              fontWeight: 900,
-              color: "#000",
-              flexShrink: 0,
-            }}
-          >
-            S
-          </div>
-          <span
-            style={{
-              fontFamily: '"JetBrains Mono",monospace',
-              fontWeight: 700,
-              fontSize: isMobile ? 11 : 13,
-              letterSpacing: isMobile ? 1.5 : 3,
-              color: "#00ff88",
-              textTransform: "uppercase",
-            }}
-          >
-            STRUDEL STUDIO
-          </span>
-        </div>
+      />
 
-        {/* Status pill */}
+      {!isMobile && (
         <div
           style={{
+            height: 52,
             display: "flex",
             alignItems: "center",
-            gap: 6,
-            padding: "3px 10px",
-            borderRadius: 20,
-            background: `${dotColor}18`,
-            border: `1px solid ${dotColor}44`,
-            flexShrink: 0,
+            gap: 10,
+            width: "100%",
           }}
         >
+          {logo}
+          {statusPill}
+          <div style={{ flex: 1 }} />
+
+          <button
+            onClick={onPresetsOpen}
+            style={{
+              ...baseButtonStyle,
+              background: surfaceStrong,
+              border: borderSoft,
+              padding: "6px 12px",
+              color: "#e5e7eb",
+              textShadow: "none",
+              boxShadow: "none",
+            }}
+          >
+            PRESETS
+          </button>
+
+          <select
+            value={recordingMode}
+            onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
+            disabled={isRecording || isExportingMp3}
+            style={{
+              background: surfaceStrong,
+              border: borderSoft,
+              borderRadius: 6,
+              padding: "6px 9px",
+              color: "#e5e7eb",
+              fontSize: controlSize,
+              fontFamily: '"JetBrains Mono",monospace',
+              flexShrink: 0,
+              boxShadow: "none",
+            }}
+          >
+            <option value="audio">AUDIO</option>
+            <option value="video">VIDEO</option>
+            <option value="midi">MIDI</option>
+          </select>
+
+          <select
+            value={mp3Quality}
+            onChange={(e) => onMp3Quality(e.target.value as Mp3Quality)}
+            disabled={
+              recordingMode !== "audio" || isRecording || isExportingMp3
+            }
+            style={{
+              background: surfaceStrong,
+              border: borderSoft,
+              borderRadius: 6,
+              padding: "6px 9px",
+              color: recordingMode === "audio" ? "#e5e7eb" : "#7c828c",
+              fontSize: controlSize,
+              fontFamily: '"JetBrains Mono",monospace',
+              opacity: recordingMode === "audio" ? 1 : 0.7,
+              flexShrink: 0,
+              boxShadow: "none",
+            }}
+          >
+            <option value="fast">MP3 FAST</option>
+            <option value="good">MP3 GOOD</option>
+            <option value="best">MP3 BEST</option>
+          </select>
+
+          {isRecording ? (
+            <button
+              onClick={onRecordStop}
+              style={{
+                ...baseButtonStyle,
+                background: "linear-gradient(135deg,#ff5f70,#ff2f58)",
+                border: "none",
+                padding: "6px 12px",
+                color: "#fff",
+                boxShadow: "0 0 13px rgba(255,47,88,0.44)",
+                textShadow: "0 0 7px rgba(255,255,255,0.22)",
+              }}
+            >
+              ● STOP REC {recordingLabel}
+            </button>
+          ) : (
+            <button
+              onClick={onRecordStart}
+              disabled={status !== "playing" || isExportingMp3}
+              style={{
+                ...baseButtonStyle,
+                background:
+                  status === "playing" && !isExportingMp3
+                    ? "linear-gradient(135deg,#ff7a7a,#ff4d4d)"
+                    : "rgba(255,122,122,0.14)",
+                border: "none",
+                padding: "6px 12px",
+                cursor:
+                  status === "playing" && !isExportingMp3
+                    ? "pointer"
+                    : "default",
+                color:
+                  status === "playing" && !isExportingMp3 ? "#fff" : "#ff9a9a",
+                opacity: status === "playing" && !isExportingMp3 ? 1 : 0.6,
+                boxShadow:
+                  status === "playing" && !isExportingMp3
+                    ? "0 0 11px rgba(255,70,70,0.32)"
+                    : "none",
+              }}
+            >
+              ● REC
+            </button>
+          )}
+
+          {status === "playing" ? (
+            <button
+              onClick={onStop}
+              style={{
+                ...baseButtonStyle,
+                background: surfaceStrong,
+                border: borderSoft,
+                padding: "6px 16px",
+                color: "#e5e7eb",
+                boxShadow: "none",
+                textShadow: "none",
+              }}
+            >
+              ■ STOP
+            </button>
+          ) : (
+            <button
+              onClick={onPlay}
+              disabled={status === "loading"}
+              style={{
+                ...baseButtonStyle,
+                background:
+                  status === "loading"
+                    ? "rgba(0,255,136,0.15)"
+                    : "linear-gradient(135deg,#00ff88,#00ffcc)",
+                border: "none",
+                padding: "6px 16px",
+                cursor: status === "loading" ? "default" : "pointer",
+                color: status === "loading" ? "#00ff88" : "#000",
+                opacity: status === "loading" ? 0.6 : 1,
+                boxShadow:
+                  status === "loading"
+                    ? "none"
+                    : "0 0 14px rgba(0,255,166,0.3), 0 0 4px rgba(255,255,255,0.2) inset",
+              }}
+            >
+              {status === "loading" ? "... LOADING" : "▶ PLAY"}
+            </button>
+          )}
+
+          <button
+            onClick={onSettingsOpen}
+            title="Settings"
+            style={{
+              ...baseButtonStyle,
+              background: surfaceStrong,
+              border: borderSoft,
+              padding: "6px 10px",
+              color: "#d1d5db",
+              fontSize: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              boxShadow: "none",
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            <span>SETTINGS</span>
+          </button>
+        </div>
+      )}
+
+      {isMobile && (
+        <>
           <div
             style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: dotColor,
-              boxShadow: status === "playing" ? `0 0 8px ${dotColor}` : "none",
-              animation:
-                status === "loading"
-                  ? "pulse 0.8s ease-in-out infinite"
-                  : "none",
-            }}
-          />
-          <span
-            style={{
-              fontSize: 10,
-              fontFamily: '"JetBrains Mono",monospace',
-              fontWeight: 700,
-              letterSpacing: 1.5,
-              color: dotColor,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              width: "100%",
+              flexShrink: 0,
             }}
           >
-            {STATUS_LABEL[status]}
-          </span>
-        </div>
-      </div>
+            {logo}
+            {statusPill}
+          </div>
 
-      {/* Controls row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          width: "100%",
-          overflowX: isMobile ? "auto" : "visible",
-          paddingBottom: isMobile ? 2 : 0,
-        }}
-      >
-        {/* Presets button */}
-        <button
-          onClick={onPresetsOpen}
-          style={{
-            background: "rgba(122,230,255,0.1)",
-            border: "1px solid rgba(122,230,255,0.35)",
-            borderRadius: 6,
-            padding: isMobile ? "6px 10px" : "6px 12px",
-            cursor: "pointer",
-            color: "#7ae6ff",
-            fontSize: controlSize,
-            fontFamily: '"JetBrains Mono",monospace',
-            fontWeight: 700,
-            letterSpacing: 1,
-            flexShrink: 0,
-          }}
-        >
-          PRESETS
-        </button>
-
-        {/* Recording advanced controls */}
-        {!isMobile && (
-          <>
-            <select
-              value={recordingMode}
-              onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
-              disabled={isRecording || isExportingMp3}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              overflowX: "auto",
+              paddingBottom: 2,
+              flexWrap: "nowrap",
+            }}
+          >
+            <button
+              onClick={onPresetsOpen}
               style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: 6,
-                padding: "6px 9px",
-                color: "#c7d2dd",
-                fontSize: controlSize,
-                fontFamily: '"JetBrains Mono",monospace',
-                flexShrink: 0,
+                ...baseButtonStyle,
+                background: surfaceStrong,
+                border: borderSoft,
+                padding: "6px 10px",
+                color: "#e5e7eb",
+                textShadow: "none",
+                boxShadow: "none",
               }}
             >
-              <option value="audio">AUDIO</option>
-              <option value="video">VIDEO</option>
-              <option value="midi">MIDI</option>
-            </select>
+              PRESETS
+            </button>
 
-            <select
-              value={mp3Quality}
-              onChange={(e) => onMp3Quality(e.target.value as Mp3Quality)}
-              disabled={
-                recordingMode !== "audio" || isRecording || isExportingMp3
-              }
-              title={
-                recordingMode === "audio"
-                  ? "MP3 quality preset"
-                  : "MP3 quality applies to AUDIO mode"
-              }
+            <button
+              onClick={() => setMobileAdvancedOpen((v) => !v)}
               style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: 6,
-                padding: "6px 9px",
-                color: recordingMode === "audio" ? "#c7d2dd" : "#7b8792",
-                fontSize: controlSize,
-                fontFamily: '"JetBrains Mono",monospace',
-                opacity: recordingMode === "audio" ? 1 : 0.7,
-                flexShrink: 0,
+                ...baseButtonStyle,
+                background: surfaceSoft,
+                border: borderSoft,
+                padding: "6px 10px",
+                color: "#d1d5db",
+              }}
+              title="Toggle recording options"
+            >
+              OPTIONS {mobileAdvancedOpen ? "▴" : "▾"}
+            </button>
+
+            {isRecording ? (
+              <button
+                onClick={onRecordStop}
+                style={{
+                  ...baseButtonStyle,
+                  background: "linear-gradient(135deg,#ff5f70,#ff2f58)",
+                  border: "none",
+                  padding: "6px 10px",
+                  color: "#fff",
+                  boxShadow: "0 0 13px rgba(255,47,88,0.44)",
+                }}
+              >
+                ● STOP REC {recordingLabel}
+              </button>
+            ) : (
+              <button
+                onClick={onRecordStart}
+                disabled={status !== "playing" || isExportingMp3}
+                style={{
+                  ...baseButtonStyle,
+                  background:
+                    status === "playing" && !isExportingMp3
+                      ? "linear-gradient(135deg,#ff7a7a,#ff4d4d)"
+                      : "rgba(255,122,122,0.14)",
+                  border: "none",
+                  padding: "6px 10px",
+                  cursor:
+                    status === "playing" && !isExportingMp3
+                      ? "pointer"
+                      : "default",
+                  color:
+                    status === "playing" && !isExportingMp3
+                      ? "#fff"
+                      : "#ff9a9a",
+                  opacity: status === "playing" && !isExportingMp3 ? 1 : 0.6,
+                  boxShadow:
+                    status === "playing" && !isExportingMp3
+                      ? "0 0 11px rgba(255,70,70,0.32)"
+                      : "none",
+                }}
+              >
+                ● REC
+              </button>
+            )}
+
+            {status === "playing" ? (
+              <button
+                onClick={onStop}
+                style={{
+                  ...baseButtonStyle,
+                  background: surfaceStrong,
+                  border: borderSoft,
+                  padding: "6px 12px",
+                  color: "#e5e7eb",
+                  boxShadow: "none",
+                }}
+              >
+                ■ STOP
+              </button>
+            ) : (
+              <button
+                onClick={onPlay}
+                disabled={status === "loading"}
+                style={{
+                  ...baseButtonStyle,
+                  background:
+                    status === "loading"
+                      ? "rgba(0,255,136,0.15)"
+                      : "linear-gradient(135deg,#00ff88,#00ffcc)",
+                  border: "none",
+                  padding: "6px 12px",
+                  cursor: status === "loading" ? "default" : "pointer",
+                  color: status === "loading" ? "#00ff88" : "#000",
+                  boxShadow:
+                    status === "loading"
+                      ? "none"
+                      : "0 0 14px rgba(0,255,166,0.3), 0 0 4px rgba(255,255,255,0.2) inset",
+                  opacity: status === "loading" ? 0.6 : 1,
+                }}
+              >
+                {status === "loading" ? "... LOADING" : "▶ PLAY"}
+              </button>
+            )}
+
+            <button
+              onClick={onSettingsOpen}
+              style={{
+                ...baseButtonStyle,
+                background: surfaceStrong,
+                border: borderSoft,
+                padding: "6px 8px",
+                color: "#d1d5db",
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                boxShadow: "none",
               }}
             >
-              <option value="fast">MP3 FAST</option>
-              <option value="good">MP3 GOOD</option>
-              <option value="best">MP3 BEST</option>
-            </select>
-          </>
-        )}
-
-        {isMobile && (
-          <button
-            onClick={() => setMobileAdvancedOpen((v) => !v)}
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: 6,
-              padding: "6px 10px",
-              cursor: "pointer",
-              color: "#c7d2dd",
-              fontSize: controlSize,
-              fontFamily: '"JetBrains Mono",monospace',
-              letterSpacing: 0.8,
-              flexShrink: 0,
-            }}
-            title="Toggle recording options"
-          >
-            OPTIONS {mobileAdvancedOpen ? "▴" : "▾"}
-          </button>
-        )}
-
-        {isRecording ? (
-          <button
-            onClick={onRecordStop}
-            style={{
-              background: "linear-gradient(135deg,#ff5f70,#ff2f58)",
-              border: "none",
-              borderRadius: 6,
-              padding: isMobile ? "6px 10px" : "6px 12px",
-              cursor: "pointer",
-              color: "#fff",
-              fontSize: controlSize,
-              fontFamily: '"JetBrains Mono",monospace',
-              fontWeight: 700,
-              letterSpacing: 1,
-              boxShadow: "0 0 12px rgba(255,47,88,0.35)",
-              flexShrink: 0,
-            }}
-          >
-            ● STOP REC {recordingLabel}
-          </button>
-        ) : (
-          <button
-            onClick={onRecordStart}
-            disabled={status !== "playing" || isExportingMp3}
-            style={{
-              background:
-                status === "playing" && !isExportingMp3
-                  ? "linear-gradient(135deg,#ff7a7a,#ff4d4d)"
-                  : "rgba(255,122,122,0.14)",
-              border: "none",
-              borderRadius: 6,
-              padding: isMobile ? "6px 10px" : "6px 12px",
-              cursor:
-                status === "playing" && !isExportingMp3 ? "pointer" : "default",
-              color:
-                status === "playing" && !isExportingMp3 ? "#fff" : "#ff9a9a",
-              opacity: status === "playing" && !isExportingMp3 ? 1 : 0.6,
-              fontSize: controlSize,
-              fontFamily: '"JetBrains Mono",monospace',
-              fontWeight: 700,
-              letterSpacing: 1,
-              flexShrink: 0,
-            }}
-            title={
-              status === "playing" && !isExportingMp3
-                ? "Record audio (WebM)"
-                : isExportingMp3
-                  ? "MP3 export in progress"
-                  : "Start playback first to record"
-            }
-          >
-            ● REC
-          </button>
-        )}
-
-        {/* Play / Stop button */}
-        {status === "playing" ? (
-          <button
-            onClick={onStop}
-            style={{
-              background: "linear-gradient(135deg,#ff3366,#ff0088)",
-              border: "none",
-              borderRadius: 6,
-              padding: isMobile ? "6px 12px" : "6px 16px",
-              cursor: "pointer",
-              color: "#fff",
-              fontSize: controlSize,
-              fontFamily: '"JetBrains Mono",monospace',
-              fontWeight: 700,
-              letterSpacing: 1,
-              boxShadow: "0 0 12px rgba(255,0,136,0.35)",
-              flexShrink: 0,
-            }}
-          >
-            ■ STOP
-          </button>
-        ) : (
-          <button
-            onClick={onPlay}
-            disabled={status === "loading"}
-            style={{
-              background:
-                status === "loading"
-                  ? "rgba(0,255,136,0.15)"
-                  : "linear-gradient(135deg,#00ff88,#00ffcc)",
-              border: "none",
-              borderRadius: 6,
-              padding: isMobile ? "6px 12px" : "6px 16px",
-              cursor: status === "loading" ? "default" : "pointer",
-              color: status === "loading" ? "#00ff88" : "#000",
-              fontSize: controlSize,
-              fontFamily: '"JetBrains Mono",monospace',
-              fontWeight: 700,
-              letterSpacing: 1,
-              boxShadow:
-                status === "loading" ? "none" : "0 0 12px rgba(0,255,136,0.3)",
-              opacity: status === "loading" ? 0.6 : 1,
-              flexShrink: 0,
-            }}
-          >
-            {status === "loading" ? "… LOADING" : "▶ PLAY"}
-          </button>
-        )}
-
-        {/* Settings button */}
-        <button
-          onClick={onSettingsOpen}
-          title="Settings"
-          style={{
-            background: "none",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 6,
-            padding: isMobile ? "6px 8px" : "6px 10px",
-            cursor: "pointer",
-            color: "#888",
-            fontSize: isMobile ? 14 : 16,
-            lineHeight: 1,
-            transition: "all 0.2s",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            flexShrink: 0,
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = "#00ff88";
-            (e.currentTarget as HTMLButtonElement).style.borderColor =
-              "rgba(0,255,136,0.4)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = "#888";
-            (e.currentTarget as HTMLButtonElement).style.borderColor =
-              "rgba(255,255,255,0.1)";
-          }}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-          <span
-            style={{
-              fontSize: controlSize,
-              fontFamily: '"JetBrains Mono",monospace',
-              letterSpacing: 1,
-            }}
-          >
-            SETTINGS
-          </span>
-        </button>
-      </div>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              <span>SETTINGS</span>
+            </button>
+          </div>
+        </>
+      )}
 
       {isMobile && mobileAdvancedOpen && (
         <div
@@ -447,13 +576,14 @@ export const Header: React.FC<HeaderProps> = ({
             disabled={isRecording || isExportingMp3}
             style={{
               flex: 1,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.2)",
+              background: surfaceStrong,
+              border: borderSoft,
               borderRadius: 6,
               padding: "7px 8px",
-              color: "#c7d2dd",
+              color: "#e5e7eb",
               fontSize: controlSize,
               fontFamily: '"JetBrains Mono",monospace',
+              boxShadow: "none",
             }}
           >
             <option value="audio">AUDIO</option>
@@ -469,14 +599,15 @@ export const Header: React.FC<HeaderProps> = ({
             }
             style={{
               flex: 1,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.2)",
+              background: surfaceStrong,
+              border: borderSoft,
               borderRadius: 6,
               padding: "7px 8px",
-              color: recordingMode === "audio" ? "#c7d2dd" : "#7b8792",
+              color: recordingMode === "audio" ? "#e5e7eb" : "#7c828c",
               fontSize: controlSize,
               fontFamily: '"JetBrains Mono",monospace',
               opacity: recordingMode === "audio" ? 1 : 0.7,
+              boxShadow: "none",
             }}
           >
             <option value="fast">MP3 FAST</option>

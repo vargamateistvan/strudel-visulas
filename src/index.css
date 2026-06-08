@@ -119,6 +119,31 @@ code {
   }
 }
 
+@keyframes headerNeonSweep {
+  0% {
+    transform: translateX(-8%) scaleX(1);
+    background-position: 0% 50%;
+  }
+  50% {
+    transform: translateX(8%) scaleX(1.03);
+    background-position: 100% 50%;
+  }
+  100% {
+    transform: translateX(-8%) scaleX(1);
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes headerLivePulse {
+  0%,
+  100% {
+    filter: saturate(1);
+  }
+  50% {
+    filter: saturate(1.12);
+  }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
