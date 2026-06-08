@@ -69,6 +69,9 @@ export const AudioVisualizer: React.FC = () => {
     error,
     loadMsg,
     activeNote,
+    activeNotes,
+    activeLiterals,
+    activeControls,
     getRecordingStream,
   } = useStrudel();
   const {
@@ -628,6 +631,9 @@ export const AudioVisualizer: React.FC = () => {
             opacity={editorOpacity}
             colorPreset={editorColorPreset}
             activeNote={activeNote}
+            activeNotes={activeNotes}
+            activeLiterals={activeLiterals}
+            activeControls={activeControls}
             onCodeChange={onCodeChange}
           />
         </div>

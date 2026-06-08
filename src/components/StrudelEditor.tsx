@@ -13,6 +13,9 @@ interface StrudelEditorProps {
   opacity: number;
   colorPreset: EditorColorPreset;
   activeNote: string | null;
+  activeNotes?: string[];
+  activeLiterals?: string[];
+  activeControls?: string[];
   onCodeChange?: (code: string) => void;
 }
 
@@ -101,7 +104,7 @@ const EDITOR_THEME: Record<
   },
 };
 
-const NOTE_TOKEN_RE = /\b([a-g](?:b|#)?\d*)\b/gi;
+const NOTE_TOKEN_RE = /\b([a-g](?:b|#)?-?\d*)\b/gi;
 const NUMBER_RE = /^-?\d+(?:\.\d+)?/;
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_#]*/;
 
@@ -163,11 +166,54 @@ function isWhitespace(value: string): boolean {
   return value === " " || value === "\t" || value === "\n" || value === "\r";
 }
 
+function renderStringWithNoteHighlights(
+  raw: string,
+  activePitchClasses: Set<string>,
+  activeLiterals: Set<string>,
+): string {
+  const TOKEN_IN_STRING_RE = /[A-Za-z_][A-Za-z0-9_#-]*|-?\d+(?:\.\d+)?/g;
+  let out = "";
+  let last = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = TOKEN_IN_STRING_RE.exec(raw)) !== null) {
+    const [token] = match;
+    const index = match.index;
+    if (index > last) {
+      out += escapeHtml(raw.slice(last, index));
+    }
+    const normalized = normalizePitchClass(token);
+    const activeByPitch = activePitchClasses.has(normalized);
+    const activeByLiteral = activeLiterals.has(token.toLowerCase());
+    const active = activeByPitch || activeByLiteral;
+    const classes = active ? "tok-note active-note-token" : "tok-note";
+    out += `<span class="${classes}">${escapeHtml(token)}</span>`;
+    last = index + token.length;
+  }
+
+  if (last < raw.length) {
+    out += escapeHtml(raw.slice(last));
+  }
+
+  return out;
+}
+
 function renderHighlightedCode(
   code: string,
   activeNote: string | null,
+  activeNotes: string[],
+  activeLiterals: string[],
+  activeControls: string[],
 ): string {
-  const activePitchClass = normalizePitchClass(activeNote);
+  const activePitchClasses = new Set<string>();
+  if (activeNote) {
+    activePitchClasses.add(normalizePitchClass(activeNote));
+  }
+  for (const note of activeNotes) {
+    activePitchClasses.add(normalizePitchClass(note));
+  }
+  const literalSet = new Set(activeLiterals.map((v) => v.toLowerCase()));
+  const controlSet = new Set(activeControls.map((v) => v.toLowerCase()));
   let out = "";
 
   let i = 0;
@@ -196,7 +242,13 @@ function renderHighlightedCode(
         }
         end++;
       }
-      out += `<span class="tok-string">${escapeHtml(code.slice(i, end))}</span>`;
+      const token = code.slice(i, end);
+      if (token.length >= 2) {
+        const inner = token.slice(1, -1);
+        out += `<span class="tok-string">${escapeHtml(token[0])}${renderStringWithNoteHighlights(inner, activePitchClasses, literalSet)}${escapeHtml(token[token.length - 1])}</span>`;
+      } else {
+        out += `<span class="tok-string">${escapeHtml(token)}</span>`;
+      }
       i = end;
       continue;
     }
@@ -213,7 +265,7 @@ function renderHighlightedCode(
     if (noteMatch) {
       const token = noteMatch[0];
       const normalized = normalizePitchClass(token);
-      const active = activePitchClass !== "" && normalized === activePitchClass;
+      const active = activePitchClasses.has(normalized);
       const classes = active ? "tok-note active-note-token" : "tok-note";
       out += `<span class="${classes}">${escapeHtml(token)}</span>`;
       i += token.length;
@@ -223,10 +275,17 @@ function renderHighlightedCode(
     const identMatch = code.slice(i).match(IDENT_RE);
     if (identMatch) {
       const token = identMatch[0];
+      const isActiveControl = controlSet.has(token.toLowerCase());
       if (STRUDEL_KEYWORDS.has(token)) {
-        out += `<span class="tok-keyword">${escapeHtml(token)}</span>`;
+        const klass = isActiveControl
+          ? "tok-keyword active-note-token"
+          : "tok-keyword";
+        out += `<span class="${klass}">${escapeHtml(token)}</span>`;
       } else {
-        out += `<span class="tok-ident">${escapeHtml(token)}</span>`;
+        const klass = isActiveControl
+          ? "tok-ident active-note-token"
+          : "tok-ident";
+        out += `<span class="${klass}">${escapeHtml(token)}</span>`;
       }
       i += token.length;
       continue;
@@ -267,6 +326,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   opacity,
   colorPreset,
   activeNote,
+  activeNotes = [],
+  activeLiterals = [],
+  activeControls = [],
   onCodeChange,
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
@@ -305,7 +367,13 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   // Derive panel alpha from opacity prop
   const bgAlpha = (opacity * 0.75).toFixed(2);
   const theme = EDITOR_THEME[colorPreset];
-  const highlighted = renderHighlightedCode(code, activeNote);
+  const highlighted = renderHighlightedCode(
+    code,
+    activeNote,
+    activeNotes,
+    activeLiterals,
+    activeControls,
+  );
 
   return (
     <div
