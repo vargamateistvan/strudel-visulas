@@ -244,8 +244,7 @@ export const Header: React.FC<HeaderProps> = ({
             padding: "6px 12px",
             cursor:
               status === "playing" && !isExportingMp3 ? "pointer" : "default",
-            color:
-              status === "playing" && !isExportingMp3 ? "#fff" : "#ff9a9a",
+            color: status === "playing" && !isExportingMp3 ? "#fff" : "#ff9a9a",
             opacity: status === "playing" && !isExportingMp3 ? 1 : 0.6,
             fontSize: 11,
             fontFamily: '"JetBrains Mono",monospace',

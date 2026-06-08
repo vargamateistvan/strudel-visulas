@@ -14,10 +14,7 @@ import { ParticleField } from "../visualizations/ParticleField";
 import { SpectrumAnalyzer } from "../visualizations/SpectrumAnalyzer";
 import { FractalField } from "../visualizations/FractalField";
 import { buildMidiFromCode } from "../utils/midiExport";
-import {
-  convertWebmToMp3,
-  type Mp3QualityPreset,
-} from "../utils/mp3Export";
+import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
 
 export const AudioVisualizer: React.FC = () => {
   const {
