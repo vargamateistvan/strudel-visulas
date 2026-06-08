@@ -5,6 +5,7 @@ import { Layout } from "./Layout";
 import { Header, type RecordingMode } from "./Header";
 import { StrudelEditor } from "./StrudelEditor";
 import { PresetsDialog } from "./PresetsDialog";
+import { HowItWorksDialog } from "./HowItWorksDialog";
 import {
   SettingsDrawer,
   type ColorScheme,
@@ -102,6 +103,7 @@ export const AudioVisualizer: React.FC = () => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [colorScheme, setColorScheme] = useState<ColorScheme>(() => {
     const saved = localStorage.getItem(COLOR_SCHEME_KEY);
     return saved && isColorScheme(saved) ? saved : "neon";
@@ -575,6 +577,7 @@ export const AudioVisualizer: React.FC = () => {
         onMobileAdvancedOpenChange={setMobileHeaderExpanded}
         onSettingsOpen={() => setDrawerOpen(true)}
         onPresetsOpen={() => setPresetsOpen(true)}
+        onHowItWorksOpen={() => setHelpOpen(true)}
         onPlay={() => play(code)}
         onStop={stop}
         isRecording={isRecording}
@@ -753,6 +756,8 @@ export const AudioVisualizer: React.FC = () => {
           }
         }}
       />
+
+      <HowItWorksDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* splash — covers everything until first click */}
       {!splashDone && (

@@ -10,6 +10,7 @@ interface HeaderProps {
   onMobileAdvancedOpenChange?: (open: boolean) => void;
   onSettingsOpen: () => void;
   onPresetsOpen: () => void;
+  onHowItWorksOpen: () => void;
   onPlay: () => void;
   onStop: () => void;
   isRecording: boolean;
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   onMobileAdvancedOpenChange,
   onSettingsOpen,
   onPresetsOpen,
+  onHowItWorksOpen,
   onPlay,
   onStop,
   isRecording,
@@ -148,6 +150,21 @@ export const Header: React.FC<HeaderProps> = ({
             }}
           >
             PRESETS
+          </button>
+
+          <button
+            onClick={onHowItWorksOpen}
+            style={{
+              ...baseButtonStyle,
+              background: "rgba(0,220,255,0.12)",
+              border: "1px solid rgba(0,220,255,0.3)",
+              padding: "6px 12px",
+              color: "#9defff",
+              textShadow: "none",
+              boxShadow: "none",
+            }}
+          >
+            HOW IT WORKS
           </button>
 
           <select
@@ -350,6 +367,20 @@ export const Header: React.FC<HeaderProps> = ({
               }}
             >
               PRESETS
+            </button>
+
+            <button
+              onClick={onHowItWorksOpen}
+              style={{
+                ...baseButtonStyle,
+                background: "rgba(0,220,255,0.12)",
+                border: "1px solid rgba(0,220,255,0.3)",
+                padding: "6px 10px",
+                color: "#9defff",
+                boxShadow: "none",
+              }}
+            >
+              HELP
             </button>
 
             <button
