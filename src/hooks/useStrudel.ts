@@ -216,6 +216,53 @@ function extractTriggeredActivity(hap: any): {
   };
 }
 
+function hasNonFiniteNumber(
+  value: unknown,
+  depth = 0,
+  seen?: WeakSet<object>,
+): boolean {
+  if (depth > 7 || value == null) return false;
+  if (typeof value === "number") return !Number.isFinite(value);
+  if (typeof value !== "object") return false;
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (hasNonFiniteNumber(item, depth + 1, seen)) return true;
+    }
+    return false;
+  }
+
+  const localSeen = seen ?? new WeakSet<object>();
+  if (localSeen.has(value as object)) return false;
+  localSeen.add(value as object);
+
+  const obj = value as Record<string, unknown>;
+  try {
+    const valueOf =
+      typeof (value as { valueOf?: () => unknown }).valueOf === "function"
+        ? (value as { valueOf: () => unknown }).valueOf()
+        : undefined;
+    if (typeof valueOf === "number" && !Number.isFinite(valueOf)) {
+      return true;
+    }
+  } catch {
+    // ignore valueOf edge-cases
+  }
+
+  for (const key of Object.keys(obj)) {
+    if (hasNonFiniteNumber(obj[key], depth + 1, localSeen)) return true;
+  }
+  return false;
+}
+
+function isNonFiniteAudioParamError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err ?? "");
+  return (
+    message.includes("AudioParam") &&
+    (message.includes("non-finite") || message.includes("non finite"))
+  );
+}
+
 const EMPTY: AudioData = {
   frequencies: new Uint8Array(512),
   waveform: new Uint8Array(512),
@@ -372,6 +419,7 @@ export const useStrudel = () => {
   const activeNoteTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeLiteralTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeControlTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const lastBadTriggerWarnRef = useRef(0);
 
   const clearAllActiveNotes = () => {
     if (activeNoteTimeoutRef.current) {
@@ -526,6 +574,23 @@ export const useStrudel = () => {
           cps: any,
           t: any,
         ) => {
+          if (
+            !Number.isFinite(deadline) ||
+            !Number.isFinite(hapDuration) ||
+            !Number.isFinite(cps) ||
+            !Number.isFinite(t) ||
+            hasNonFiniteNumber(hap)
+          ) {
+            const now = Date.now();
+            if (now - lastBadTriggerWarnRef.current > 2000) {
+              console.warn(
+                "[useStrudel] skipped invalid trigger with non-finite values",
+              );
+              lastBadTriggerWarnRef.current = now;
+            }
+            return;
+          }
+
           const {
             notes: nextNotes,
             literals: nextLiterals,
@@ -610,7 +675,34 @@ export const useStrudel = () => {
               activeNoteTimeoutRef.current = null;
             }, 380);
           }
-          return webaudioOutput(hap, deadline, hapDuration, cps, t);
+          const handleOutputError = (err: unknown) => {
+            if (isNonFiniteAudioParamError(err)) {
+              const now = Date.now();
+              if (now - lastBadTriggerWarnRef.current > 2000) {
+                console.warn(
+                  "[useStrudel] skipped trigger due to invalid AudioParam value",
+                );
+                lastBadTriggerWarnRef.current = now;
+              }
+              return;
+            }
+            throw err;
+          };
+
+          try {
+            const output = webaudioOutput(hap, deadline, hapDuration, cps, t);
+            if (
+              output &&
+              typeof output === "object" &&
+              "then" in output &&
+              typeof (output as Promise<unknown>).then === "function"
+            ) {
+              return (output as Promise<unknown>).catch(handleOutputError);
+            }
+            return output;
+          } catch (err) {
+            return handleOutputError(err);
+          }
         },
       });
       await r.evaluate(code);
