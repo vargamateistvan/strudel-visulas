@@ -14,6 +14,7 @@ import { ParticleField } from "../visualizations/ParticleField";
 import { SpectrumAnalyzer } from "../visualizations/SpectrumAnalyzer";
 import { FractalField } from "../visualizations/FractalField";
 import { buildMidiFromCode } from "../utils/midiExport";
+import { convertWebmToMp3 } from "../utils/mp3Export";
 
 export const AudioVisualizer: React.FC = () => {
   const {
@@ -48,6 +49,9 @@ export const AudioVisualizer: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingMode, setRecordingMode] = useState<RecordingMode>("audio");
+  const [isExportingMp3, setIsExportingMp3] = useState(false);
+  const [mp3Progress, setMp3Progress] = useState(0);
+  const [mp3Status, setMp3Status] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const displayStreamRef = useRef<MediaStream | null>(null);
@@ -95,6 +99,7 @@ export const AudioVisualizer: React.FC = () => {
     try {
       if (status !== "playing") return;
       if (isRecording) return;
+      if (isExportingMp3) return;
       if (typeof MediaRecorder === "undefined") {
         window.alert("MediaRecorder is not supported in this browser.");
         return;
@@ -117,19 +122,46 @@ export const AudioVisualizer: React.FC = () => {
           timerRef.current = null;
         }
       };
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         const blobType = recorder.mimeType || mimeType || "audio/webm";
-        const blob = new Blob(chunksRef.current, { type: blobType });
-        const ext = blobType.includes("ogg") ? "ogg" : "webm";
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `strudel-recording-${ts}.${ext}`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
         setIsRecording(false);
         setRecordingSeconds(0);
+
+        const blob = new Blob(chunksRef.current, { type: blobType });
+        const ts = new Date().toISOString().replace(/[:.]/g, "-");
+
+        try {
+          setIsExportingMp3(true);
+          setMp3Progress(0);
+          setMp3Status("Preparing MP3 export...");
+
+          const mp3Blob = await convertWebmToMp3(blob, {
+            onProgress: (p) => setMp3Progress(p),
+            onStatus: (s) => setMp3Status(s),
+          });
+
+          const url = URL.createObjectURL(mp3Blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `strudel-recording-${ts}.mp3`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (e: any) {
+          const ext = blobType.includes("ogg") ? "ogg" : "webm";
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `strudel-recording-${ts}.${ext}`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          window.alert(
+            `MP3 conversion failed, downloaded original ${ext.toUpperCase()} instead. ${e?.message ?? ""}`,
+          );
+        } finally {
+          setIsExportingMp3(false);
+          setMp3Status("");
+          setMp3Progress(0);
+        }
       };
 
       recorderRef.current = recorder;
@@ -142,7 +174,13 @@ export const AudioVisualizer: React.FC = () => {
     } catch (e: any) {
       window.alert(e?.message ?? "Failed to start recording.");
     }
-  }, [getRecordingStream, isRecording, pickAudioMimeType, status]);
+  }, [
+    getRecordingStream,
+    isExportingMp3,
+    isRecording,
+    pickAudioMimeType,
+    status,
+  ]);
 
   const startVideoRecording = useCallback(async () => {
     try {
@@ -231,6 +269,7 @@ export const AudioVisualizer: React.FC = () => {
   }, [code]);
 
   const startRecording = useCallback(() => {
+    if (isExportingMp3) return;
     if (recordingMode === "audio") {
       startAudioRecording();
       return;
@@ -240,7 +279,13 @@ export const AudioVisualizer: React.FC = () => {
       return;
     }
     exportMidi();
-  }, [exportMidi, recordingMode, startAudioRecording, startVideoRecording]);
+  }, [
+    exportMidi,
+    isExportingMp3,
+    recordingMode,
+    startAudioRecording,
+    startVideoRecording,
+  ]);
 
   // Preload modules in the background while idle so first play is instant
   useEffect(() => {
@@ -358,6 +403,85 @@ export const AudioVisualizer: React.FC = () => {
         onRecordStart={startRecording}
         onRecordStop={stopAudioRecording}
       />
+
+      {isExportingMp3 && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 80,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(2,4,8,0.72)",
+            backdropFilter: "blur(6px)",
+          }}
+        >
+          <div
+            style={{
+              width: "min(420px, 86vw)",
+              background: "rgba(7,12,20,0.92)",
+              border: "1px solid rgba(0,255,136,0.28)",
+              borderRadius: 12,
+              padding: 16,
+              boxShadow: "0 0 30px rgba(0,255,136,0.18)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"JetBrains Mono",monospace',
+                fontSize: 12,
+                letterSpacing: 1,
+                color: "#00ff88",
+                marginBottom: 8,
+                textTransform: "uppercase",
+              }}
+            >
+              Exporting MP3
+            </div>
+            <div
+              style={{
+                color: "#9bb3a3",
+                fontSize: 12,
+                marginBottom: 10,
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              {mp3Status || "Converting..."}
+            </div>
+            <div
+              style={{
+                width: "100%",
+                height: 8,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.08)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.max(4, Math.round(mp3Progress * 100))}%`,
+                  height: "100%",
+                  background: "linear-gradient(90deg,#00ff88,#00d7ff)",
+                  boxShadow: "0 0 12px rgba(0,255,136,0.35)",
+                  transition: "width 0.18s ease",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 8,
+                textAlign: "right",
+                color: "#8db9a9",
+                fontFamily: '"JetBrains Mono",monospace',
+                fontSize: 11,
+              }}
+            >
+              {Math.round(mp3Progress * 100)}%
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* main content below header */}
       <div

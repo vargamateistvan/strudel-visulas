@@ -27,29 +27,29 @@ function writeVarLen(value: number): number[] {
 }
 
 const FLAT_MAP: Record<string, string> = {
-  cb: 'b',
-  db: 'c#',
-  eb: 'd#',
-  fb: 'e',
-  gb: 'f#',
-  ab: 'g#',
-  bb: 'a#',
-  'e#': 'f',
-  'b#': 'c',
+  cb: "b",
+  db: "c#",
+  eb: "d#",
+  fb: "e",
+  gb: "f#",
+  ab: "g#",
+  bb: "a#",
+  "e#": "f",
+  "b#": "c",
 };
 
 const NOTE_INDEX: Record<string, number> = {
   c: 0,
-  'c#': 1,
+  "c#": 1,
   d: 2,
-  'd#': 3,
+  "d#": 3,
   e: 4,
   f: 5,
-  'f#': 6,
+  "f#": 6,
   g: 7,
-  'g#': 8,
+  "g#": 8,
   a: 9,
-  'a#': 10,
+  "a#": 10,
   b: 11,
 };
 
@@ -70,13 +70,13 @@ function extractNoteTokens(code: string): string[] {
   while ((m = noteCallRe.exec(code)) !== null) {
     const pattern = m[2];
     const raw = pattern
-      .replace(/[\[\]<>(),]/g, ' ')
+      .replace(/[\[\]<>(),]/g, " ")
       .split(/\s+/)
       .map((x) => x.trim())
       .filter(Boolean);
 
     for (const t of raw) {
-      if (t === '~') continue;
+      if (t === "~") continue;
       if (/^[a-g](?:b|#)?-?\d*$/i.test(t)) tokens.push(t);
     }
   }
@@ -125,5 +125,5 @@ export function buildMidiFromCode(code: string): Blob {
   ];
 
   const bytes = new Uint8Array([...header, ...trackChunk]);
-  return new Blob([bytes], { type: 'audio/midi' });
+  return new Blob([bytes], { type: "audio/midi" });
 }

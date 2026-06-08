@@ -1,7 +1,7 @@
-import React from 'react';
-import type { StrudelStatus } from '../hooks/useStrudel';
+import React from "react";
+import type { StrudelStatus } from "../hooks/useStrudel";
 
-export type RecordingMode = 'audio' | 'video' | 'midi';
+export type RecordingMode = "audio" | "video" | "midi";
 
 interface HeaderProps {
   status: StrudelStatus;
@@ -18,17 +18,17 @@ interface HeaderProps {
 }
 
 const STATUS_COLOR: Record<StrudelStatus, string> = {
-  idle:    '#333',
-  loading: '#ffcc00',
-  playing: '#00ff88',
-  error:   '#ff3366',
+  idle: "#333",
+  loading: "#ffcc00",
+  playing: "#00ff88",
+  error: "#ff3366",
 };
 
 const STATUS_LABEL: Record<StrudelStatus, string> = {
-  idle:    'IDLE',
-  loading: 'LOADING',
-  playing: 'LIVE',
-  error:   'ERROR',
+  idle: "IDLE",
+  loading: "LOADING",
+  playing: "LIVE",
+  error: "ERROR",
 };
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,64 +47,88 @@ export const Header: React.FC<HeaderProps> = ({
   const dotColor = STATUS_COLOR[status];
 
   return (
-    <header style={{
-      position: 'absolute',
-      top: 0, left: 0, right: 0,
-      zIndex: 40,
-      height: 48,
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 20px',
-      background: 'rgba(5,5,12,0.7)',
-      backdropFilter: 'blur(16px)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-    }}>
+    <header
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 40,
+        height: 48,
+        display: "flex",
+        alignItems: "center",
+        padding: "0 20px",
+        background: "rgba(5,5,12,0.7)",
+        backdropFilter: "blur(16px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
       {/* Logo / title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{
-          width: 28, height: 28,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg,#00ff88,#00ffff)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14, fontWeight: 900, color: '#000',
-          flexShrink: 0,
-        }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg,#00ff88,#00ffff)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 14,
+            fontWeight: 900,
+            color: "#000",
+            flexShrink: 0,
+          }}
+        >
           S
         </div>
-        <span style={{
-          fontFamily: '"JetBrains Mono",monospace',
-          fontWeight: 700,
-          fontSize: 13,
-          letterSpacing: 3,
-          color: '#00ff88',
-          textTransform: 'uppercase',
-        }}>
+        <span
+          style={{
+            fontFamily: '"JetBrains Mono",monospace',
+            fontWeight: 700,
+            fontSize: 13,
+            letterSpacing: 3,
+            color: "#00ff88",
+            textTransform: "uppercase",
+          }}
+        >
           STRUDEL STUDIO
         </span>
       </div>
 
       {/* Status pill */}
-      <div style={{
-        marginLeft: 20,
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '3px 10px',
-        borderRadius: 20,
-        background: `${dotColor}18`,
-        border: `1px solid ${dotColor}44`,
-      }}>
-        <div style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: dotColor,
-          boxShadow: status === 'playing' ? `0 0 8px ${dotColor}` : 'none',
-          animation: status === 'loading' ? 'pulse 0.8s ease-in-out infinite' : 'none',
-        }} />
-        <span style={{
-          fontSize: 10,
-          fontFamily: '"JetBrains Mono",monospace',
-          fontWeight: 700,
-          letterSpacing: 1.5,
-          color: dotColor,
-        }}>
+      <div
+        style={{
+          marginLeft: 20,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "3px 10px",
+          borderRadius: 20,
+          background: `${dotColor}18`,
+          border: `1px solid ${dotColor}44`,
+        }}
+      >
+        <div
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: dotColor,
+            boxShadow: status === "playing" ? `0 0 8px ${dotColor}` : "none",
+            animation:
+              status === "loading" ? "pulse 0.8s ease-in-out infinite" : "none",
+          }}
+        />
+        <span
+          style={{
+            fontSize: 10,
+            fontFamily: '"JetBrains Mono",monospace',
+            fontWeight: 700,
+            letterSpacing: 1.5,
+            color: dotColor,
+          }}
+        >
           {STATUS_LABEL[status]}
         </span>
       </div>
@@ -116,12 +140,12 @@ export const Header: React.FC<HeaderProps> = ({
         onClick={onPresetsOpen}
         style={{
           marginRight: 10,
-          background: 'rgba(122,230,255,0.1)',
-          border: '1px solid rgba(122,230,255,0.35)',
+          background: "rgba(122,230,255,0.1)",
+          border: "1px solid rgba(122,230,255,0.35)",
           borderRadius: 6,
-          padding: '6px 12px',
-          cursor: 'pointer',
-          color: '#7ae6ff',
+          padding: "6px 12px",
+          cursor: "pointer",
+          color: "#7ae6ff",
           fontSize: 11,
           fontFamily: '"JetBrains Mono",monospace',
           fontWeight: 700,
@@ -138,11 +162,11 @@ export const Header: React.FC<HeaderProps> = ({
         disabled={isRecording}
         style={{
           marginRight: 10,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.2)',
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.2)",
           borderRadius: 6,
-          padding: '6px 9px',
-          color: '#c7d2dd',
+          padding: "6px 9px",
+          color: "#c7d2dd",
           fontSize: 11,
           fontFamily: '"JetBrains Mono",monospace',
         }}
@@ -157,17 +181,17 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={onRecordStop}
           style={{
             marginRight: 10,
-            background: 'linear-gradient(135deg,#ff5f70,#ff2f58)',
-            border: 'none',
+            background: "linear-gradient(135deg,#ff5f70,#ff2f58)",
+            border: "none",
             borderRadius: 6,
-            padding: '6px 12px',
-            cursor: 'pointer',
-            color: '#fff',
+            padding: "6px 12px",
+            cursor: "pointer",
+            color: "#fff",
             fontSize: 11,
             fontFamily: '"JetBrains Mono",monospace',
             fontWeight: 700,
             letterSpacing: 1,
-            boxShadow: '0 0 12px rgba(255,47,88,0.35)',
+            boxShadow: "0 0 12px rgba(255,47,88,0.35)",
           }}
         >
           ● STOP REC {recordingLabel}
@@ -175,46 +199,51 @@ export const Header: React.FC<HeaderProps> = ({
       ) : (
         <button
           onClick={onRecordStart}
-          disabled={status !== 'playing'}
+          disabled={status !== "playing"}
           style={{
             marginRight: 10,
-            background: status === 'playing'
-              ? 'linear-gradient(135deg,#ff7a7a,#ff4d4d)'
-              : 'rgba(255,122,122,0.14)',
-            border: 'none',
+            background:
+              status === "playing"
+                ? "linear-gradient(135deg,#ff7a7a,#ff4d4d)"
+                : "rgba(255,122,122,0.14)",
+            border: "none",
             borderRadius: 6,
-            padding: '6px 12px',
-            cursor: status === 'playing' ? 'pointer' : 'default',
-            color: status === 'playing' ? '#fff' : '#ff9a9a',
-            opacity: status === 'playing' ? 1 : 0.6,
+            padding: "6px 12px",
+            cursor: status === "playing" ? "pointer" : "default",
+            color: status === "playing" ? "#fff" : "#ff9a9a",
+            opacity: status === "playing" ? 1 : 0.6,
             fontSize: 11,
             fontFamily: '"JetBrains Mono",monospace',
             fontWeight: 700,
             letterSpacing: 1,
           }}
-          title={status === 'playing' ? 'Record audio (WebM)' : 'Start playback first to record'}
+          title={
+            status === "playing"
+              ? "Record audio (WebM)"
+              : "Start playback first to record"
+          }
         >
           ● REC
         </button>
       )}
 
       {/* Play / Stop button */}
-      {status === 'playing' ? (
+      {status === "playing" ? (
         <button
           onClick={onStop}
           style={{
             marginRight: 10,
-            background: 'linear-gradient(135deg,#ff3366,#ff0088)',
-            border: 'none',
+            background: "linear-gradient(135deg,#ff3366,#ff0088)",
+            border: "none",
             borderRadius: 6,
-            padding: '6px 16px',
-            cursor: 'pointer',
-            color: '#fff',
+            padding: "6px 16px",
+            cursor: "pointer",
+            color: "#fff",
             fontSize: 11,
             fontFamily: '"JetBrains Mono",monospace',
             fontWeight: 700,
             letterSpacing: 1,
-            boxShadow: '0 0 12px rgba(255,0,136,0.35)',
+            boxShadow: "0 0 12px rgba(255,0,136,0.35)",
           }}
         >
           ■ STOP
@@ -222,26 +251,28 @@ export const Header: React.FC<HeaderProps> = ({
       ) : (
         <button
           onClick={onPlay}
-          disabled={status === 'loading'}
+          disabled={status === "loading"}
           style={{
             marginRight: 10,
-            background: status === 'loading'
-              ? 'rgba(0,255,136,0.15)'
-              : 'linear-gradient(135deg,#00ff88,#00ffcc)',
-            border: 'none',
+            background:
+              status === "loading"
+                ? "rgba(0,255,136,0.15)"
+                : "linear-gradient(135deg,#00ff88,#00ffcc)",
+            border: "none",
             borderRadius: 6,
-            padding: '6px 16px',
-            cursor: status === 'loading' ? 'default' : 'pointer',
-            color: status === 'loading' ? '#00ff88' : '#000',
+            padding: "6px 16px",
+            cursor: status === "loading" ? "default" : "pointer",
+            color: status === "loading" ? "#00ff88" : "#000",
             fontSize: 11,
             fontFamily: '"JetBrains Mono",monospace',
             fontWeight: 700,
             letterSpacing: 1,
-            boxShadow: status === 'loading' ? 'none' : '0 0 12px rgba(0,255,136,0.3)',
-            opacity: status === 'loading' ? 0.6 : 1,
+            boxShadow:
+              status === "loading" ? "none" : "0 0 12px rgba(0,255,136,0.3)",
+            opacity: status === "loading" ? 0.6 : 1,
           }}
         >
-          {status === 'loading' ? '… LOADING' : '▶ PLAY'}
+          {status === "loading" ? "… LOADING" : "▶ PLAY"}
         </button>
       )}
 
@@ -250,31 +281,50 @@ export const Header: React.FC<HeaderProps> = ({
         onClick={onSettingsOpen}
         title="Settings"
         style={{
-          background: 'none',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: "none",
+          border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: 6,
-          padding: '6px 10px',
-          cursor: 'pointer',
-          color: '#888',
+          padding: "6px 10px",
+          cursor: "pointer",
+          color: "#888",
           fontSize: 16,
           lineHeight: 1,
-          transition: 'all 0.2s',
-          display: 'flex', alignItems: 'center', gap: 6,
+          transition: "all 0.2s",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
         }}
-        onMouseEnter={e => {
-          (e.currentTarget as HTMLButtonElement).style.color = '#00ff88';
-          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,136,0.4)';
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.color = "#00ff88";
+          (e.currentTarget as HTMLButtonElement).style.borderColor =
+            "rgba(0,255,136,0.4)";
         }}
-        onMouseLeave={e => {
-          (e.currentTarget as HTMLButtonElement).style.color = '#888';
-          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)';
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.color = "#888";
+          (e.currentTarget as HTMLButtonElement).style.borderColor =
+            "rgba(255,255,255,0.1)";
         }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
-        <span style={{ fontSize: 11, fontFamily: '"JetBrains Mono",monospace', letterSpacing: 1 }}>SETTINGS</span>
+        <span
+          style={{
+            fontSize: 11,
+            fontFamily: '"JetBrains Mono",monospace',
+            letterSpacing: 1,
+          }}
+        >
+          SETTINGS
+        </span>
       </button>
     </header>
   );
