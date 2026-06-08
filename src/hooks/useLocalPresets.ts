@@ -83,6 +83,40 @@ stack
 ).cpm(124/4)`,
   },
   {
+    id: "builtin-daft-punk-inspired-funk-grid",
+    name: "Daft Punk (Inspired Funk Grid)",
+    code: `stack(
+  n("0 0 ~ 3 5 ~ 3 0").scale("a2:minor").s("gm_synth_bass_1").lpf(1400).gain(0.9),
+  n("0 2 3 2 0 7 5 3").scale("a4:dorian").s("gm_lead_2_sawtooth").gain(0.45).delay(0.22).dfb(0.42),
+  s("bd*4").bank("RolandTR909").gain(0.85),
+  s("~ sd ~ sd").bank("RolandTR909").gain(0.52),
+  s("hh*16").bank("RolandTR909").gain(0.11),
+  s("~ cp ~ ~ cp ~ ~ ~").bank("RolandTR909").gain(0.33)
+).cpm(124/4)`,
+  },
+  {
+    id: "builtin-french-touch-filter-disco",
+    name: "French Touch Filter Disco (Inspired)",
+    code: `stack(
+  n("0 3 5 7 5 3 2 0").scale("g3:minor").s("gm_lead_2_sawtooth").lpf(segment(8, range(600, 4200))).gain(0.6),
+  n("0 ~ 0 ~ 3 ~ 5 ~").scale("g2:minor").s("gm_synth_bass_1").lpf(1200).gain(0.84),
+  s("bd*4").bank("RolandTR909").gain(0.86),
+  s("~ sd ~ ~ ~ sd ~ ~").bank("RolandTR909").gain(0.5),
+  s("hh*16").bank("RolandTR909").gain(0.1)
+).cpm(122/4)`,
+  },
+  {
+    id: "builtin-neon-night-drive",
+    name: "Neon Night Drive",
+    code: `stack(
+  n("0 2 3 7 5 3 2 0").scale("d3:minor").s("gm_synth_strings_1").gain(0.42),
+  n("0 ~ 0 ~ 5 ~ 3 ~").scale("d2:minor").s("gm_synth_bass_1").lpf(1100).gain(0.86),
+  n("7 5 3 2").scale("d5:minor").s("gm_lead_1_square").delay(0.25).dfb(0.35).gain(0.33),
+  s("bd*4").bank("RolandTR909").gain(0.8),
+  s("hh*16").bank("RolandTR909").gain(0.09)
+).cpm(118/4)`,
+  },
+  {
     id: "builtin-sandstorm-inspired",
     name: "Sandstorm (Inspired Lead)",
     code: `stack(
