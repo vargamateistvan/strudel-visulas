@@ -2,7 +2,14 @@ import React from "react";
 import type { AudioData } from "../hooks/useStrudel";
 
 export type ColorScheme = "neon" | "pastel" | "fire" | "ocean";
-export type VizMode = "particles" | "spectrum" | "lissajous" | "julia" | "both";
+export type VizMode =
+  | "particles"
+  | "spectrum"
+  | "lissajous"
+  | "julia"
+  | "kaleidoscope"
+  | "kaleidoTunnel"
+  | "both";
 export type EditorColorPreset = "neon" | "amber" | "ice" | "mono";
 
 interface SettingsDrawerProps {
@@ -34,6 +41,16 @@ const VIZ_MODES: { key: VizMode; label: string; desc: string }[] = [
   },
   { key: "spectrum", label: "Spectrum", desc: "Frequency bar + waveform" },
   { key: "lissajous", label: "Lissajous", desc: "Phase-space oscilloscope" },
+  {
+    key: "kaleidoscope",
+    label: "Kaleidoscope",
+    desc: "Mirrored petals synced to rhythm",
+  },
+  {
+    key: "kaleidoTunnel",
+    label: "Kaleido Tunnel",
+    desc: "Fractal tunnel with mirrored rings",
+  },
   { key: "julia", label: "Julia Set", desc: "Audio-driven fractal" },
   { key: "both", label: "Layered", desc: "Particles + spectrum blend" },
 ];

@@ -33,10 +33,15 @@ function isColorScheme(value: string): value is ColorScheme {
 }
 
 function isVizMode(value: string): value is VizMode {
+  if (value === "mandelbrot" || value === "burningShip") {
+    return true;
+  }
   return (
     value === "particles" ||
     value === "spectrum" ||
     value === "lissajous" ||
+    value === "kaleidoscope" ||
+    value === "kaleidoTunnel" ||
     value === "julia" ||
     value === "both"
   );
@@ -488,6 +493,46 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             mode="julia"
+            isPlaying={status === "playing"}
+          />
+        </div>
+      )}
+      {vizMode === "kaleidoscope" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="kaleidoscope"
+            isPlaying={status === "playing"}
+          />
+        </div>
+      )}
+      {vizMode === "kaleidoTunnel" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="kaleidoTunnel"
+            isPlaying={status === "playing"}
+          />
+        </div>
+      )}
+      {(vizMode as string) === "mandelbrot" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="kaleidoscope"
+            isPlaying={status === "playing"}
+          />
+        </div>
+      )}
+      {(vizMode as string) === "burningShip" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="kaleidoTunnel"
             isPlaying={status === "playing"}
           />
         </div>
