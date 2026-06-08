@@ -156,7 +156,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
           top: 0,
           right: 0,
           height: "100%",
-          width: 280,
+          width: "min(320px, 88vw)",
           zIndex: 50,
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",

@@ -103,6 +103,10 @@ export const AudioVisualizer: React.FC = () => {
   );
   const [splashDone, setSplashDone] = useState(false);
   const [code, setCode] = useState(DEFAULT_PATTERN);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 900 : false,
+  );
+  const [mobileHeaderExpanded, setMobileHeaderExpanded] = useState(false);
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -396,6 +400,12 @@ export const AudioVisualizer: React.FC = () => {
   }, [mp3Quality]);
 
   useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 900);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
@@ -479,6 +489,8 @@ export const AudioVisualizer: React.FC = () => {
       {/* header */}
       <Header
         status={status}
+        isMobile={isMobile}
+        onMobileAdvancedOpenChange={setMobileHeaderExpanded}
         onSettingsOpen={() => setDrawerOpen(true)}
         onPresetsOpen={() => setPresetsOpen(true)}
         onPlay={() => play(code)}
@@ -589,17 +601,23 @@ export const AudioVisualizer: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          top: 48,
+          top: isMobile ? (mobileHeaderExpanded ? 142 : 96) : 48,
           left: 0,
           right: 0,
           bottom: 0,
-          padding: 24,
+          padding: isMobile ? 10 : 24,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 760, height: "70vh" }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 760,
+            height: isMobile ? "calc(100vh - 124px)" : "70vh",
+          }}
+        >
           <StrudelEditor
             code={code}
             play={play}
