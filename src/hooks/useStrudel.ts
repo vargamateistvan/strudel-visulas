@@ -103,6 +103,7 @@ stack(
 
 // Singleton promise so evalScope only runs once per page load
 let scopePromise: Promise<void> | null = null;
+let soundDepsPromise: Promise<void> | null = null;
 
 function loadScope(): Promise<void> {
   if (!scopePromise) {
@@ -113,10 +114,42 @@ function loadScope(): Promise<void> {
         import("@strudel/mini"),
         import("@strudel/tonal"),
         import("@strudel/webaudio"),
+        import("@strudel/soundfonts"),
       );
     })();
   }
   return scopePromise;
+}
+
+function loadSoundDependencies(): Promise<void> {
+  if (!soundDepsPromise) {
+    soundDepsPromise = (async () => {
+      const { registerSynthSounds, samples } = await import("superdough");
+      const { registerSoundfonts } = await import("@strudel/soundfonts");
+
+      // Built-in waveforms (sawtooth, square, triangle, sine)
+      registerSynthSounds();
+
+      // General MIDI keys like gm_lead_1_square, gm_synth_strings_1, ...
+      registerSoundfonts();
+
+      // Main sample ecosystem used by strudel patterns
+      await samples("github:tidalcycles/dirt-samples");
+
+      // Compatibility aliases for legacy bank("RolandTR909") patterns
+      await samples({
+        _base:
+          "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/",
+        RolandTR909_bd: "bd/BT0A0A7.wav",
+        RolandTR909_sd: "sd/rytm-00-hard.wav",
+        RolandTR909_hh: "hh/000_hh3closedhh.wav",
+        RolandTR909_oh: "ho/HHOD0.wav",
+        RolandTR909_cp: "cp/HANDCLP0.wav",
+        RolandTR909_cr: "cr/RIDED0.wav",
+      });
+    })();
+  }
+  return soundDepsPromise;
 }
 
 export const useStrudel = () => {
@@ -231,12 +264,14 @@ export const useStrudel = () => {
       await loadScope();
 
       const { webaudioRepl } = await import("@strudel/webaudio");
-      const { initAudio, registerSynthSounds } = await import("superdough");
+      const { initAudio } = await import("superdough");
       const { transpiler } = await import("@strudel/transpiler");
 
       setLoadMsg("Initialising audio…");
       await initAudio();
-      registerSynthSounds(); // registers sawtooth, triangle, square, sine, etc.
+
+      setLoadMsg("Loading sounds…");
+      await loadSoundDependencies();
 
       if (replRef.current) {
         replRef.current.stop();
