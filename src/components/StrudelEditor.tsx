@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { DEFAULT_PATTERN, type StrudelStatus } from "../hooks/useStrudel";
+import { type StrudelStatus } from "../hooks/useStrudel";
 import { LoadingOverlay } from "./LoadingOverlay";
 
 interface StrudelEditorProps {
+  code: string;
   play: (code: string) => Promise<void>;
   stop: () => void;
   status: StrudelStatus;
@@ -170,6 +171,7 @@ function renderHighlightedCode(
 }
 
 export const StrudelEditor: React.FC<StrudelEditorProps> = ({
+  code,
   play,
   stop,
   status,
@@ -179,11 +181,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   activeNote,
   onCodeChange,
 }) => {
-  const [code, setCode] = useState(DEFAULT_PATTERN);
   const [scrollTop, setScrollTop] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const updateCode = (c: string) => {
-    setCode(c);
     onCodeChange?.(c);
   };
   const isPlaying = status === "playing";

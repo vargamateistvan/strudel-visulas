@@ -1,11 +1,20 @@
 import React from 'react';
 import type { StrudelStatus } from '../hooks/useStrudel';
 
+export type RecordingMode = 'audio' | 'video' | 'midi';
+
 interface HeaderProps {
   status: StrudelStatus;
   onSettingsOpen: () => void;
+  onPresetsOpen: () => void;
   onPlay: () => void;
   onStop: () => void;
+  isRecording: boolean;
+  recordingLabel: string;
+  recordingMode: RecordingMode;
+  onRecordingMode: (mode: RecordingMode) => void;
+  onRecordStart: () => void;
+  onRecordStop: () => void;
 }
 
 const STATUS_COLOR: Record<StrudelStatus, string> = {
@@ -22,7 +31,19 @@ const STATUS_LABEL: Record<StrudelStatus, string> = {
   error:   'ERROR',
 };
 
-export const Header: React.FC<HeaderProps> = ({ status, onSettingsOpen, onPlay, onStop }) => {
+export const Header: React.FC<HeaderProps> = ({
+  status,
+  onSettingsOpen,
+  onPresetsOpen,
+  onPlay,
+  onStop,
+  isRecording,
+  recordingLabel,
+  recordingMode,
+  onRecordingMode,
+  onRecordStart,
+  onRecordStop,
+}) => {
   const dotColor = STATUS_COLOR[status];
 
   return (
@@ -89,6 +110,93 @@ export const Header: React.FC<HeaderProps> = ({ status, onSettingsOpen, onPlay, 
       </div>
 
       <div style={{ flex: 1 }} />
+
+      {/* Presets button */}
+      <button
+        onClick={onPresetsOpen}
+        style={{
+          marginRight: 10,
+          background: 'rgba(122,230,255,0.1)',
+          border: '1px solid rgba(122,230,255,0.35)',
+          borderRadius: 6,
+          padding: '6px 12px',
+          cursor: 'pointer',
+          color: '#7ae6ff',
+          fontSize: 11,
+          fontFamily: '"JetBrains Mono",monospace',
+          fontWeight: 700,
+          letterSpacing: 1,
+        }}
+      >
+        PRESETS
+      </button>
+
+      {/* Recording button */}
+      <select
+        value={recordingMode}
+        onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
+        disabled={isRecording}
+        style={{
+          marginRight: 10,
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: 6,
+          padding: '6px 9px',
+          color: '#c7d2dd',
+          fontSize: 11,
+          fontFamily: '"JetBrains Mono",monospace',
+        }}
+      >
+        <option value="audio">AUDIO</option>
+        <option value="video">VIDEO</option>
+        <option value="midi">MIDI</option>
+      </select>
+
+      {isRecording ? (
+        <button
+          onClick={onRecordStop}
+          style={{
+            marginRight: 10,
+            background: 'linear-gradient(135deg,#ff5f70,#ff2f58)',
+            border: 'none',
+            borderRadius: 6,
+            padding: '6px 12px',
+            cursor: 'pointer',
+            color: '#fff',
+            fontSize: 11,
+            fontFamily: '"JetBrains Mono",monospace',
+            fontWeight: 700,
+            letterSpacing: 1,
+            boxShadow: '0 0 12px rgba(255,47,88,0.35)',
+          }}
+        >
+          ● STOP REC {recordingLabel}
+        </button>
+      ) : (
+        <button
+          onClick={onRecordStart}
+          disabled={status !== 'playing'}
+          style={{
+            marginRight: 10,
+            background: status === 'playing'
+              ? 'linear-gradient(135deg,#ff7a7a,#ff4d4d)'
+              : 'rgba(255,122,122,0.14)',
+            border: 'none',
+            borderRadius: 6,
+            padding: '6px 12px',
+            cursor: status === 'playing' ? 'pointer' : 'default',
+            color: status === 'playing' ? '#fff' : '#ff9a9a',
+            opacity: status === 'playing' ? 1 : 0.6,
+            fontSize: 11,
+            fontFamily: '"JetBrains Mono",monospace',
+            fontWeight: 700,
+            letterSpacing: 1,
+          }}
+          title={status === 'playing' ? 'Record audio (WebM)' : 'Start playback first to record'}
+        >
+          ● REC
+        </button>
+      )}
 
       {/* Play / Stop button */}
       {status === 'playing' ? (

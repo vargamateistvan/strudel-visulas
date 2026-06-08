@@ -128,6 +128,8 @@ export const useStrudel = () => {
 
   const replRef = useRef<any>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const mediaDestConnectedRef = useRef(false);
   const rafRef = useRef<number>(0);
 
   const startReadingLoop = (analyser: AnalyserNode) => {
@@ -190,6 +192,36 @@ export const useStrudel = () => {
     }
   };
 
+  const getRecordingStream = useCallback(async (): Promise<MediaStream> => {
+    const { initAudio, getAudioContext, getSuperdoughAudioController } =
+      await import("superdough");
+
+    await initAudio();
+    const ctx = getAudioContext();
+    const controller = getSuperdoughAudioController();
+    const destGain = controller?.output?.destinationGain;
+
+    if (!destGain) {
+      throw new Error("Audio output is not ready yet");
+    }
+
+    if (!mediaDestRef.current || mediaDestRef.current.context !== ctx) {
+      mediaDestRef.current = ctx.createMediaStreamDestination();
+      mediaDestConnectedRef.current = false;
+    }
+
+    if (!mediaDestConnectedRef.current) {
+      destGain.connect(mediaDestRef.current);
+      mediaDestConnectedRef.current = true;
+    }
+
+    if (!mediaDestRef.current) {
+      throw new Error("Recording destination is not available");
+    }
+
+    return mediaDestRef.current.stream;
+  }, []);
+
   const play = useCallback(async (code: string) => {
     setError(null);
     setStatus("loading");
@@ -245,5 +277,14 @@ export const useStrudel = () => {
     [],
   );
 
-  return { play, stop, status, error, loadMsg, audioData, activeNote };
+  return {
+    play,
+    stop,
+    status,
+    error,
+    loadMsg,
+    audioData,
+    activeNote,
+    getRecordingStream,
+  };
 };
