@@ -13,6 +13,67 @@ interface PresetsDialogProps {
   onLoad: (id: string) => void;
 }
 
+function slugifyName(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildExportBaseName(newName: string): string {
+  const fromName = slugifyName(newName);
+  if (fromName) return fromName;
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `strudel-pattern-${stamp}`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function createHtmlExport(code: string): string {
+  const escaped = escapeHtml(code);
+  return [
+    "<!doctype html>",
+    '<html lang="en">',
+    "<head>",
+    '  <meta charset="utf-8" />',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+    "  <title>Strudel Pattern Export</title>",
+    "  <style>",
+    "    body { margin: 0; padding: 24px; background: #090d14; color: #d6ffe7; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; }",
+    "    h1 { margin: 0 0 12px; font-size: 16px; color: #00ff88; letter-spacing: 0.08em; }",
+    "    pre { margin: 0; padding: 16px; border: 1px solid rgba(0,255,136,0.35); border-radius: 10px; background: rgba(255,255,255,0.03); overflow: auto; white-space: pre-wrap; }",
+    "  </style>",
+    "</head>",
+    "<body>",
+    "  <h1>Strudel Pattern</h1>",
+    `  <pre><code>${escaped}</code></pre>`,
+    "</body>",
+    "</html>",
+  ].join("\n");
+}
+
+function downloadContent(
+  filename: string,
+  content: string,
+  mimeType: string,
+): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1200);
+}
+
 function formatDate(value: string): string {
   try {
     return new Date(value).toLocaleString();
@@ -159,6 +220,51 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
           >
             SAVE AS NEW
           </button>
+          <button
+            onClick={() => {
+              const base = buildExportBaseName(newName);
+              downloadContent(
+                `${base}.txt`,
+                currentCode,
+                "text/plain;charset=utf-8",
+              );
+            }}
+            style={{
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "#d3dde8",
+              borderRadius: 8,
+              padding: "10px 12px",
+              fontFamily: '"JetBrains Mono",monospace',
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 0.8,
+              cursor: "pointer",
+            }}
+          >
+            EXPORT .TXT
+          </button>
+          <button
+            onClick={() => {
+              const base = buildExportBaseName(newName);
+              const html = createHtmlExport(currentCode);
+              downloadContent(`${base}.html`, html, "text/html;charset=utf-8");
+            }}
+            style={{
+              background: "rgba(0,220,255,0.12)",
+              border: "1px solid rgba(0,220,255,0.28)",
+              color: "#7ae6ff",
+              borderRadius: 8,
+              padding: "10px 12px",
+              fontFamily: '"JetBrains Mono",monospace',
+              fontWeight: 700,
+              fontSize: 11,
+              letterSpacing: 0.8,
+              cursor: "pointer",
+            }}
+          >
+            EXPORT .HTML
+          </button>
         </div>
 
         <div style={{ padding: "10px 16px" }}>
@@ -262,6 +368,51 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
                       }}
                     >
                       OVERWRITE
+                    </button>
+                    <button
+                      onClick={() => {
+                        const base = buildExportBaseName(preset.name);
+                        downloadContent(
+                          `${base}.txt`,
+                          preset.code,
+                          "text/plain;charset=utf-8",
+                        );
+                      }}
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        color: "#cfd7e2",
+                        borderRadius: 6,
+                        padding: "6px 9px",
+                        cursor: "pointer",
+                        fontFamily: '"JetBrains Mono",monospace',
+                        fontSize: 10,
+                      }}
+                    >
+                      TXT
+                    </button>
+                    <button
+                      onClick={() => {
+                        const base = buildExportBaseName(preset.name);
+                        const html = createHtmlExport(preset.code);
+                        downloadContent(
+                          `${base}.html`,
+                          html,
+                          "text/html;charset=utf-8",
+                        );
+                      }}
+                      style={{
+                        background: "rgba(0,220,255,0.1)",
+                        border: "1px solid rgba(0,220,255,0.28)",
+                        color: "#7ae6ff",
+                        borderRadius: 6,
+                        padding: "6px 9px",
+                        cursor: "pointer",
+                        fontFamily: '"JetBrains Mono",monospace',
+                        fontSize: 10,
+                      }}
+                    >
+                      HTML
                     </button>
                     {editingId === preset.id ? (
                       <button
