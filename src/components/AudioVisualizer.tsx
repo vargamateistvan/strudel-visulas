@@ -8,6 +8,7 @@ import { PresetsDialog } from "./PresetsDialog";
 import {
   SettingsDrawer,
   type ColorScheme,
+  type EditorColorPreset,
   type VizMode,
 } from "./SettingsDrawer";
 import { ParticleField } from "../visualizations/ParticleField";
@@ -15,6 +16,14 @@ import { SpectrumAnalyzer } from "../visualizations/SpectrumAnalyzer";
 import { FractalField } from "../visualizations/FractalField";
 import { buildMidiFromCode } from "../utils/midiExport";
 import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
+
+const EDITOR_COLOR_PRESET_KEY = "strudel:editor-color-preset:v1";
+
+function isEditorColorPreset(value: string): value is EditorColorPreset {
+  return (
+    value === "neon" || value === "amber" || value === "ice" || value === "mono"
+  );
+}
 
 export const AudioVisualizer: React.FC = () => {
   const {
@@ -43,6 +52,12 @@ export const AudioVisualizer: React.FC = () => {
   const [colorScheme, setColorScheme] = useState<ColorScheme>("neon");
   const [vizMode, setVizMode] = useState<VizMode>("particles");
   const [editorOpacity, setEditorOpacity] = useState(0.45);
+  const [editorColorPreset, setEditorColorPreset] = useState<EditorColorPreset>(
+    () => {
+      const saved = localStorage.getItem(EDITOR_COLOR_PRESET_KEY);
+      return saved && isEditorColorPreset(saved) ? saved : "neon";
+    },
+  );
   const [splashDone, setSplashDone] = useState(false);
   const [code, setCode] = useState(DEFAULT_PATTERN);
 
@@ -315,6 +330,10 @@ export const AudioVisualizer: React.FC = () => {
   }, [code, saveDraft]);
 
   useEffect(() => {
+    localStorage.setItem(EDITOR_COLOR_PRESET_KEY, editorColorPreset);
+  }, [editorColorPreset]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
@@ -527,6 +546,7 @@ export const AudioVisualizer: React.FC = () => {
             error={error}
             loadMsg={loadMsg}
             opacity={editorOpacity}
+            colorPreset={editorColorPreset}
             activeNote={activeNote}
             onCodeChange={onCodeChange}
           />
@@ -543,6 +563,8 @@ export const AudioVisualizer: React.FC = () => {
         onVizMode={setVizMode}
         editorOpacity={editorOpacity}
         onEditorOpacity={setEditorOpacity}
+        editorColorPreset={editorColorPreset}
+        onEditorColorPreset={setEditorColorPreset}
         audioData={audioData}
       />
 

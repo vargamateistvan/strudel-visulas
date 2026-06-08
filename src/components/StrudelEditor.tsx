@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { type StrudelStatus } from "../hooks/useStrudel";
+import { type EditorColorPreset } from "./SettingsDrawer";
 import { LoadingOverlay } from "./LoadingOverlay";
 
 interface StrudelEditorProps {
@@ -10,9 +11,95 @@ interface StrudelEditorProps {
   error: string | null;
   loadMsg: string;
   opacity: number;
+  colorPreset: EditorColorPreset;
   activeNote: string | null;
   onCodeChange?: (code: string) => void;
 }
+
+const EDITOR_THEME: Record<
+  EditorColorPreset,
+  {
+    border: string;
+    glow: string;
+    text: string;
+    caret: string;
+    activeBg: string;
+    activeShadow: string;
+    comment: string;
+    string: string;
+    number: string;
+    keyword: string;
+    ident: string;
+    note: string;
+    punct: string;
+    operator: string;
+  }
+> = {
+  neon: {
+    border: "rgba(0,255,136,0.12)",
+    glow: "rgba(0,255,136,0.08)",
+    text: "rgba(200,255,220,0.74)",
+    caret: "#00ff88",
+    activeBg: "rgba(0,255,136,0.28)",
+    activeShadow: "0 0 14px rgba(0,255,136,0.55)",
+    comment: "rgba(120,140,140,0.9)",
+    string: "#b7f7d3",
+    number: "#f3d17a",
+    keyword: "#7ae6ff",
+    ident: "rgba(200,255,220,0.74)",
+    note: "#8dffb8",
+    punct: "rgba(182,255,214,0.9)",
+    operator: "#6fdcff",
+  },
+  amber: {
+    border: "rgba(255,179,71,0.16)",
+    glow: "rgba(255,179,71,0.1)",
+    text: "rgba(255,230,190,0.78)",
+    caret: "#ffb347",
+    activeBg: "rgba(255,179,71,0.3)",
+    activeShadow: "0 0 14px rgba(255,179,71,0.55)",
+    comment: "rgba(160,140,100,0.9)",
+    string: "#ffdca8",
+    number: "#fff07a",
+    keyword: "#ffca7a",
+    ident: "rgba(255,234,204,0.8)",
+    note: "#ffe2a2",
+    punct: "rgba(255,222,172,0.92)",
+    operator: "#ffd88c",
+  },
+  ice: {
+    border: "rgba(102,224,255,0.16)",
+    glow: "rgba(102,224,255,0.1)",
+    text: "rgba(215,248,255,0.8)",
+    caret: "#66e0ff",
+    activeBg: "rgba(102,224,255,0.26)",
+    activeShadow: "0 0 14px rgba(102,224,255,0.52)",
+    comment: "rgba(128,156,168,0.9)",
+    string: "#c8f6ff",
+    number: "#ffe3a4",
+    keyword: "#7dd8ff",
+    ident: "rgba(218,248,255,0.82)",
+    note: "#a4eeff",
+    punct: "rgba(190,245,255,0.93)",
+    operator: "#90e4ff",
+  },
+  mono: {
+    border: "rgba(192,199,209,0.2)",
+    glow: "rgba(192,199,209,0.1)",
+    text: "rgba(224,230,238,0.82)",
+    caret: "#c0c7d1",
+    activeBg: "rgba(192,199,209,0.26)",
+    activeShadow: "0 0 14px rgba(192,199,209,0.5)",
+    comment: "rgba(129,139,152,0.9)",
+    string: "#dfe5ee",
+    number: "#c8d0dc",
+    keyword: "#e2e7ef",
+    ident: "rgba(224,230,238,0.82)",
+    note: "#d4dbe5",
+    punct: "rgba(210,218,227,0.92)",
+    operator: "#bfc8d3",
+  },
+};
 
 const NOTE_TOKEN_RE = /\b([a-g](?:b|#)?\d*)\b/gi;
 const NUMBER_RE = /^-?\d+(?:\.\d+)?/;
@@ -178,6 +265,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   error,
   loadMsg,
   opacity,
+  colorPreset,
   activeNote,
   onCodeChange,
 }) => {
@@ -217,6 +305,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
 
   // Derive panel alpha from opacity prop
   const bgAlpha = (opacity * 0.75).toFixed(2);
+  const theme = EDITOR_THEME[colorPreset];
   const highlighted = renderHighlightedCode(code, activeNote);
 
   return (
@@ -229,9 +318,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         borderRadius: 10,
         overflow: "hidden",
         background: `rgba(5,5,12,${bgAlpha})`,
-        border: "1px solid rgba(0,255,136,0.12)",
-        boxShadow:
-          "0 0 40px rgba(0,255,136,0.08), inset 0 0 30px rgba(0,0,0,0.2)",
+        border: `1px solid ${theme.border}`,
+        boxShadow: `0 0 40px ${theme.glow}, inset 0 0 30px rgba(0,0,0,0.2)`,
         backdropFilter: `blur(${Math.round(opacity * 16)}px)`,
       }}
     >
@@ -283,7 +371,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           lineHeight: 1.75,
           color: "transparent",
           background: "transparent",
-          caretColor: "#00ff88",
+          caretColor: theme.caret,
           whiteSpace: "pre",
           overflow: "auto",
         }}
@@ -300,7 +388,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           fontFamily: '"JetBrains Mono",ui-monospace,monospace',
           fontSize: 13,
           lineHeight: 1.75,
-          color: `rgba(200,255,220,${Math.max(opacity, 0.6)})`,
+          color: theme.text,
         }}
       >
         <pre
@@ -316,37 +404,37 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
 
       <style>{`
         .active-note-token {
-          background: rgba(0, 255, 136, 0.28);
+          background: ${theme.activeBg};
           color: #ffffff;
           border-radius: 3px;
-          box-shadow: 0 0 14px rgba(0, 255, 136, 0.55);
+          box-shadow: ${theme.activeShadow};
         }
         .tok-comment {
-          color: rgba(120, 140, 140, 0.9);
+          color: ${theme.comment};
           font-style: italic;
         }
         .tok-string {
-          color: #b7f7d3;
+          color: ${theme.string};
         }
         .tok-number {
-          color: #f3d17a;
+          color: ${theme.number};
         }
         .tok-keyword {
-          color: #7ae6ff;
+          color: ${theme.keyword};
           font-weight: 600;
         }
         .tok-ident {
-          color: rgba(200,255,220,${Math.max(opacity, 0.72)});
+          color: ${theme.ident};
         }
         .tok-note {
-          color: #8dffb8;
-          text-shadow: 0 0 10px rgba(0, 255, 136, 0.16);
+          color: ${theme.note};
+          text-shadow: 0 0 10px ${theme.glow};
         }
         .tok-punct {
-          color: rgba(182, 255, 214, 0.9);
+          color: ${theme.punct};
         }
         .tok-operator {
-          color: #6fdcff;
+          color: ${theme.operator};
         }
       `}</style>
     </div>
