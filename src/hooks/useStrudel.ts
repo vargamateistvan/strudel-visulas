@@ -247,6 +247,7 @@ stack(
 // Singleton promise so evalScope only runs once per page load
 let scopePromise: Promise<void> | null = null;
 let soundDepsPromise: Promise<void> | null = null;
+let audioInitPromise: Promise<void> | null = null;
 let logFilterInstalled = false;
 let loggerConfigured = false;
 
@@ -339,6 +340,16 @@ function loadSoundDependencies(): Promise<void> {
     })();
   }
   return soundDepsPromise;
+}
+
+function initAudioOnce(): Promise<void> {
+  if (!audioInitPromise) {
+    audioInitPromise = (async () => {
+      const { initAudio } = await import("superdough");
+      await initAudio();
+    })();
+  }
+  return audioInitPromise;
 }
 
 export const useStrudel = () => {
@@ -486,11 +497,10 @@ export const useStrudel = () => {
 
       const { webaudioRepl, webaudioOutput } =
         await import("@strudel/webaudio");
-      const { initAudio } = await import("superdough");
       const { transpiler } = await import("@strudel/transpiler");
 
       setLoadMsg("Initialising audio…");
-      await initAudio();
+      await initAudioOnce();
 
       setLoadMsg("Loading sounds…");
       await loadSoundDependencies();
