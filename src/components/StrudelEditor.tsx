@@ -245,7 +245,7 @@ function renderHighlightedCode(
     }
 
     if (isWhitespace(char)) {
-      out += char === " " ? "&nbsp;" : char === "\t" ? "&nbsp;&nbsp;" : char;
+      out += char === "\t" ? "  " : char;
       i += 1;
       continue;
     }
@@ -270,7 +270,6 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   onCodeChange,
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
   const updateCode = (c: string) => {
     onCodeChange?.(c);
   };
@@ -350,7 +349,6 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         onChange={(e) => updateCode(e.target.value)}
         onScroll={(e) => {
           setScrollTop(e.currentTarget.scrollTop);
-          setScrollLeft(e.currentTarget.scrollLeft);
         }}
         onKeyDown={onKeyDown}
         spellCheck={false}
@@ -372,8 +370,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           color: "transparent",
           background: "transparent",
           caretColor: theme.caret,
-          whiteSpace: "pre",
-          overflow: "auto",
+          whiteSpace: "pre-wrap",
+          overflowX: "hidden",
+          overflowY: "auto",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
         }}
       />
 
@@ -395,8 +396,10 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           style={{
             margin: 0,
             padding: "16px 18px",
-            whiteSpace: "pre",
-            transform: `translate(${-scrollLeft}px, ${-scrollTop}px)`,
+            whiteSpace: "pre-wrap",
+            overflowWrap: "anywhere",
+            wordBreak: "break-word",
+            transform: `translate(0px, ${-scrollTop}px)`,
           }}
           dangerouslySetInnerHTML={{ __html: highlighted }}
         />
