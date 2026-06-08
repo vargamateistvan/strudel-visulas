@@ -247,6 +247,51 @@ stack(
 // Singleton promise so evalScope only runs once per page load
 let scopePromise: Promise<void> | null = null;
 let soundDepsPromise: Promise<void> | null = null;
+let logFilterInstalled = false;
+let loggerConfigured = false;
+
+const NOISY_RUNTIME_PATTERNS = [
+  "[superdough] Deprecation warning: it seems your code path is setting 'node.onended = callback' instead of using the onceEnded helper",
+  "[cyclist] start",
+  "[cyclist] stop",
+  "skip query: too late",
+  "[eval] code updated",
+];
+
+function isNoisyRuntimeLog(args: unknown[]): boolean {
+  const first = args[0];
+  if (typeof first !== "string") return false;
+  return NOISY_RUNTIME_PATTERNS.some((pattern) => first.includes(pattern));
+}
+
+function installRuntimeLogFilter(): void {
+  if (logFilterInstalled || import.meta.env.PROD) return;
+
+  const originalLog = console.log.bind(console);
+  const originalWarn = console.warn.bind(console);
+
+  console.log = (...args: unknown[]) => {
+    if (isNoisyRuntimeLog(args)) return;
+    originalLog(...args);
+  };
+
+  console.warn = (...args: unknown[]) => {
+    if (isNoisyRuntimeLog(args)) return;
+    originalWarn(...args);
+  };
+
+  logFilterInstalled = true;
+}
+
+async function configureSuperdoughLogger(): Promise<void> {
+  if (loggerConfigured || import.meta.env.PROD) return;
+  const { setLogger } = await import("superdough");
+  setLogger((...args: unknown[]) => {
+    if (isNoisyRuntimeLog(args)) return;
+    console.log(...args);
+  });
+  loggerConfigured = true;
+}
 
 function loadScope(): Promise<void> {
   if (!scopePromise) {
@@ -267,6 +312,7 @@ function loadScope(): Promise<void> {
 function loadSoundDependencies(): Promise<void> {
   if (!soundDepsPromise) {
     soundDepsPromise = (async () => {
+      await configureSuperdoughLogger();
       const { registerSynthSounds, samples } = await import("superdough");
       const { registerSoundfonts } = await import("@strudel/soundfonts");
 
@@ -589,6 +635,10 @@ export const useStrudel = () => {
     },
     [],
   );
+
+  useEffect(() => {
+    installRuntimeLogFilter();
+  }, []);
 
   return {
     play,
