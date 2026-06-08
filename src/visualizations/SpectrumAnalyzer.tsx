@@ -40,6 +40,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const audioRef = useRef(audioData);
+  const sizeRef = useRef({ width: 0, height: 0 });
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -51,8 +52,14 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
     const ctx = canvas.getContext("2d")!;
 
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const width = canvas.offsetWidth;
+      const height = canvas.offsetHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      sizeRef.current = { width, height };
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -62,8 +69,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
 
     const draw = () => {
       const { frequencies, waveform, bass } = audioRef.current;
-      const w = canvas.width;
-      const h = canvas.height;
+      const { width: w, height: h } = sizeRef.current;
 
       ctx.clearRect(0, 0, w, h);
 

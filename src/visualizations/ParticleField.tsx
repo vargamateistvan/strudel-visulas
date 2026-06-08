@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import type { AudioData } from '../hooks/useStrudel';
+import React, { useEffect, useRef } from "react";
+import type { AudioData } from "../hooks/useStrudel";
 
 interface Particle {
   x: number;
@@ -16,17 +16,21 @@ interface Particle {
 
 interface ParticleFieldProps {
   audioData: AudioData;
-  colorScheme?: 'neon' | 'pastel' | 'fire' | 'ocean';
+  colorScheme?: "neon" | "pastel" | "fire" | "ocean";
 }
 
 const SCHEME_HUES: Record<string, [number, number]> = {
-  neon:   [120, 300],
+  neon: [120, 300],
   pastel: [180, 360],
-  fire:   [0,   60],
-  ocean:  [180, 240],
+  fire: [0, 60],
+  ocean: [180, 240],
 };
 
-function spawnParticle(w: number, h: number, hueRange: [number, number]): Particle {
+function spawnParticle(
+  w: number,
+  h: number,
+  hueRange: [number, number],
+): Particle {
   const angle = Math.random() * Math.PI * 2;
   const speed = 0.3 + Math.random() * 0.8;
   const life = 80 + Math.random() * 120;
@@ -46,23 +50,32 @@ function spawnParticle(w: number, h: number, hueRange: [number, number]): Partic
 
 export const ParticleField: React.FC<ParticleFieldProps> = ({
   audioData,
-  colorScheme = 'neon',
+  colorScheme = "neon",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef<number>(0);
   const audioRef = useRef(audioData);
+  const sizeRef = useRef({ width: 0, height: 0 });
 
-  useEffect(() => { audioRef.current = audioData; }, [audioData]);
+  useEffect(() => {
+    audioRef.current = audioData;
+  }, [audioData]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
 
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      const width = canvas.offsetWidth;
+      const height = canvas.offsetHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      sizeRef.current = { width, height };
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -81,11 +94,10 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
 
     const draw = () => {
       const { bass, mid, treble, volume } = audioRef.current;
-      const w = canvas.width;
-      const h = canvas.height;
+      const { width: w, height: h } = sizeRef.current;
 
       // fade trail
-      ctx.fillStyle = 'rgba(5,5,8,0.18)';
+      ctx.fillStyle = "rgba(5,5,8,0.18)";
       ctx.fillRect(0, 0, w, h);
 
       // spawn new particles driven by audio energy
@@ -97,38 +109,39 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       }
 
       const bassBoost = 1 + bass * 6;
-      const midDrift  = 1 + mid  * 2;
+      const midDrift = 1 + mid * 2;
 
-      particlesRef.current = particlesRef.current.filter(p => {
+      particlesRef.current = particlesRef.current.filter((p) => {
         p.life--;
         if (p.life <= 0) return false;
 
         const progress = p.life / p.maxLife;
-        p.alpha = progress < 0.2
-          ? progress / 0.2 * 0.8
-          : progress > 0.8
-            ? (1 - (progress - 0.8) / 0.2) * 0.8
-            : 0.8;
+        p.alpha =
+          progress < 0.2
+            ? (progress / 0.2) * 0.8
+            : progress > 0.8
+              ? (1 - (progress - 0.8) / 0.2) * 0.8
+              : 0.8;
 
         p.radius = p.baseRadius * bassBoost;
         p.vx += (Math.random() - 0.5) * 0.1 * midDrift;
         p.vy += (Math.random() - 0.5) * 0.1 * midDrift;
-        p.vy -= treble * 0.08;             // treble lifts particles
+        p.vy -= treble * 0.08; // treble lifts particles
         p.vx *= 0.98;
         p.vy *= 0.98;
 
         p.x = (p.x + p.vx + w) % w;
         p.y = (p.y + p.vy + h) % h;
 
-        const sat  = 70 + volume * 30;
-        const lum  = 45 + bass   * 25;
+        const sat = 70 + volume * 30;
+        const lum = 45 + bass * 25;
         const glow = p.radius * (2 + bass * 4);
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.shadowColor = `hsla(${p.hue},${sat}%,${lum}%,1)`;
-        ctx.shadowBlur  = glow;
-        ctx.fillStyle   = `hsla(${p.hue},${sat}%,${lum}%,${p.alpha})`;
+        ctx.shadowBlur = glow;
+        ctx.fillStyle = `hsla(${p.hue},${sat}%,${lum}%,${p.alpha})`;
         ctx.fill();
 
         return true;
@@ -149,7 +162,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: '100%', display: 'block' }}
+      style={{ width: "100%", height: "100%", display: "block" }}
     />
   );
 };
