@@ -13,7 +13,8 @@ import { SpectrumAnalyzer } from "../visualizations/SpectrumAnalyzer";
 import { FractalField } from "../visualizations/FractalField";
 
 export const AudioVisualizer: React.FC = () => {
-  const { audioData, play, stop, status, error, loadMsg } = useStrudel();
+  const { audioData, play, stop, status, error, loadMsg, activeNote } =
+    useStrudel();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [colorScheme, setColorScheme] = useState<ColorScheme>("neon");
@@ -117,6 +118,7 @@ export const AudioVisualizer: React.FC = () => {
             error={error}
             loadMsg={loadMsg}
             opacity={editorOpacity}
+            activeNote={activeNote}
             onCodeChange={setCode}
           />
         </div>
@@ -203,7 +205,13 @@ export const AudioVisualizer: React.FC = () => {
             >
               STRUDEL STUDIO
             </p>
-            <p style={{ fontSize: 13, color: "#555", fontFamily: '"JetBrains Mono",monospace' }}>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#555",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
               click anywhere to start
             </p>
           </div>
