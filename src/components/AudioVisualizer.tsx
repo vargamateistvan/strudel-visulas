@@ -22,6 +22,7 @@ const COLOR_SCHEME_KEY = "strudel:color-scheme:v1";
 const VIZ_MODE_KEY = "strudel:viz-mode:v1";
 const EDITOR_OPACITY_KEY = "strudel:editor-opacity:v1";
 const MP3_QUALITY_KEY = "strudel:mp3-quality:v1";
+const KICK_SENSITIVITY_KEY = "strudel:kick-sensitivity:v1";
 
 function isColorScheme(value: string): value is ColorScheme {
   return (
@@ -56,6 +57,14 @@ function parseOpacity(value: string | null): number | null {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return null;
   if (parsed < 0 || parsed > 1) return null;
+  return parsed;
+}
+
+function parseKickSensitivity(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 0.5 || parsed > 3) return null;
   return parsed;
 }
 
@@ -103,6 +112,11 @@ export const AudioVisualizer: React.FC = () => {
   });
   const [editorOpacity, setEditorOpacity] = useState(() => {
     return parseOpacity(localStorage.getItem(EDITOR_OPACITY_KEY)) ?? 0.45;
+  });
+  const [kickSensitivity, setKickSensitivity] = useState(() => {
+    return (
+      parseKickSensitivity(localStorage.getItem(KICK_SENSITIVITY_KEY)) ?? 1
+    );
   });
   const [editorColorPreset, setEditorColorPreset] = useState<EditorColorPreset>(
     () => {
@@ -405,6 +419,10 @@ export const AudioVisualizer: React.FC = () => {
   }, [editorOpacity]);
 
   useEffect(() => {
+    localStorage.setItem(KICK_SENSITIVITY_KEY, String(kickSensitivity));
+  }, [kickSensitivity]);
+
+  useEffect(() => {
     localStorage.setItem(MP3_QUALITY_KEY, mp3Quality);
   }, [mp3Quality]);
 
@@ -457,6 +475,7 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -474,6 +493,7 @@ export const AudioVisualizer: React.FC = () => {
             barCount={96}
             showWaveform
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -484,6 +504,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             mode="lissajous"
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -494,6 +515,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             mode="julia"
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -504,6 +526,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             mode="kaleidoscope"
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -514,6 +537,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             mode="kaleidoTunnel"
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -524,6 +548,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             mode="kaleidoscope"
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -534,6 +559,7 @@ export const AudioVisualizer: React.FC = () => {
             colorScheme={colorScheme}
             mode="kaleidoTunnel"
             isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
           />
         </div>
       )}
@@ -701,6 +727,8 @@ export const AudioVisualizer: React.FC = () => {
         onColorScheme={setColorScheme}
         vizMode={vizMode}
         onVizMode={setVizMode}
+        kickSensitivity={kickSensitivity}
+        onKickSensitivity={setKickSensitivity}
         editorOpacity={editorOpacity}
         onEditorOpacity={setEditorOpacity}
         editorColorPreset={editorColorPreset}

@@ -18,6 +18,7 @@ interface ParticleFieldProps {
   audioData: AudioData;
   colorScheme?: "neon" | "pastel" | "fire" | "ocean";
   isPlaying?: boolean;
+  kickSensitivity?: number;
 }
 
 const SCHEME_HUES: Record<string, [number, number]> = {
@@ -53,6 +54,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
   audioData,
   colorScheme = "neon",
   isPlaying = false,
+  kickSensitivity = 1,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -107,7 +109,8 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       ctx.fillRect(0, 0, w, h);
 
       // spawn new particles driven by audio energy
-      const bassAttack = Math.max(0, bass - prevBassRef.current);
+      const bassAttack =
+        Math.max(0, bass - prevBassRef.current) * kickSensitivity;
       prevBassRef.current = bass;
       const centroid = frequencies.length
         ? frequencies.reduce((acc, value, idx) => acc + value * idx, 0) /
@@ -120,16 +123,25 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
         ? centroid / frequencies.length
         : 0.5;
 
-      const energy = bass * 1.8 + mid * 1.15 + treble * 0.9 + volume * 0.8;
-      const spawnCount = Math.floor(energy * 4 + bassAttack * 8);
+      const energy =
+        bass * (1.35 + 0.5 * kickSensitivity) +
+        mid * 1.15 +
+        treble * 0.9 +
+        volume * 0.8;
+      const spawnCount = Math.floor(
+        energy * (3 + kickSensitivity) + bassAttack * (4 + 8 * kickSensitivity),
+      );
       for (let i = 0; i < spawnCount; i++) {
         if (particlesRef.current.length < MAX_PARTICLES) {
           particlesRef.current.push(spawnParticle(w, h, hueRange));
         }
       }
 
-      const bassBoost = 1 + bass * 6 + bassAttack * 2;
-      const midDrift = 1 + mid * 2.4;
+      const bassBoost =
+        1 +
+        bass * (4 + 2 * kickSensitivity) +
+        bassAttack * (1.2 + 1.6 * kickSensitivity);
+      const midDrift = 1 + mid * (1.8 + 0.7 * kickSensitivity);
 
       particlesRef.current = particlesRef.current.filter((p) => {
         p.life--;
@@ -164,7 +176,9 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
 
         const sat = 70 + volume * 30;
         const lum = 45 + bass * 25;
-        const glow = p.radius * (2 + bass * 4);
+        const glow =
+          p.radius *
+          (2 + bass * (2.5 + 1.8 * kickSensitivity) + bassAttack * 2);
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
@@ -196,7 +210,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, isPlaying]);
+  }, [colorScheme, isPlaying, kickSensitivity]);
 
   return (
     <canvas

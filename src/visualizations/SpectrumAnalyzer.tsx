@@ -7,6 +7,7 @@ interface SpectrumAnalyzerProps {
   barCount?: number;
   showWaveform?: boolean;
   isPlaying?: boolean;
+  kickSensitivity?: number;
 }
 
 const GRADIENTS: Record<string, [string, string][]> = {
@@ -38,6 +39,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
   barCount = 80,
   showWaveform = true,
   isPlaying = false,
+  kickSensitivity = 1,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -78,7 +80,8 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
 
       // spectrum bars
       const barW = w / barCount;
-      const bassAttack = Math.max(0, bass - prevBassRef.current);
+      const bassAttack =
+        Math.max(0, bass - prevBassRef.current) * kickSensitivity;
       prevBassRef.current = bass;
 
       for (let i = 0; i < barCount; i++) {
@@ -94,9 +97,10 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
         }
 
         const rms = Math.sqrt(sumSq / Math.max(1, end - start));
-        const lowBoost = (1 - i / barCount) * bass * 0.35;
+        const lowBoost =
+          (1 - i / barCount) * bass * (0.25 + 0.2 * kickSensitivity);
         const val = Math.min(1, rms + lowBoost);
-        const barH = Math.pow(val, 0.85) * h * 0.82;
+        const barH = Math.pow(val, 0.82) * h * (0.74 + 0.08 * kickSensitivity);
         const x = i * barW;
 
         const t = i / barCount;
@@ -107,7 +111,10 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
         grad.addColorStop(0, c1);
         grad.addColorStop(1, c2);
 
-        const glow = 3 + bass * 14 + bassAttack * 28;
+        const glow =
+          3 +
+          bass * (10 + 6 * kickSensitivity) +
+          bassAttack * (22 + 18 * kickSensitivity);
         ctx.shadowColor = c1;
         ctx.shadowBlur = glow;
         ctx.fillStyle = grad;
@@ -123,7 +130,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.strokeStyle = `rgba(255,255,255,0.25)`;
-        ctx.lineWidth = 1.2 + bass * 1.6;
+        ctx.lineWidth = 1.2 + bass * (1.2 + 0.8 * kickSensitivity);
         const sliceW = w / waveform.length;
         for (let i = 0; i < waveform.length; i++) {
           const v = waveform[i] / 128 - 1;
@@ -151,7 +158,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, barCount, showWaveform, isPlaying]);
+  }, [colorScheme, barCount, showWaveform, isPlaying, kickSensitivity]);
 
   return (
     <canvas

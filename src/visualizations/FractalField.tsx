@@ -12,6 +12,7 @@ interface FractalFieldProps {
     | "mandelbrot"
     | "burningShip";
   isPlaying?: boolean;
+  kickSensitivity?: number;
 }
 
 // ─── colour palettes ──────────────────────────────────────────────────────────
@@ -424,6 +425,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
   colorScheme = "neon",
   mode = "lissajous",
   isPlaying = false,
+  kickSensitivity = 1,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -431,6 +433,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
   const frameRef = useRef(0);
   const imgBufRef = useRef<ImageData | null>(null);
   const sizeRef = useRef({ width: 0, height: 0 });
+  const prevBassRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -472,6 +475,13 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     const draw = () => {
       const { waveform, frequencies, bass, mid, treble, volume } =
         audioRef.current;
+      const bassAttack =
+        Math.max(0, bass - prevBassRef.current) * kickSensitivity;
+      prevBassRef.current = bass;
+      const bassReactive = Math.min(1, bass + bassAttack * 0.8);
+      const midReactive = Math.min(1, mid + bassAttack * 0.25);
+      const trebleReactive = Math.min(1, treble + bassAttack * 0.2);
+      const volumeReactive = Math.min(1, volume + bassAttack * 0.12);
       const { width: w, height: h } = sizeRef.current;
       frameRef.current++;
 
@@ -481,10 +491,10 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           w,
           h,
           waveform,
-          bass,
-          mid,
-          treble,
-          volume,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
           colorScheme,
         );
       } else if (mode === "kaleidoscope") {
@@ -493,10 +503,10 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           w,
           h,
           waveform,
-          bass,
-          mid,
-          treble,
-          volume,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
           colorScheme,
           frameRef.current,
         );
@@ -506,10 +516,10 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           w,
           h,
           frequencies,
-          bass,
-          mid,
-          treble,
-          volume,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
           colorScheme,
           frameRef.current,
         );
@@ -524,10 +534,10 @@ export const FractalField: React.FC<FractalFieldProps> = ({
               w,
               h,
               imgBufRef.current,
-              bass,
-              mid,
-              treble,
-              volume,
+              bassReactive,
+              midReactive,
+              trebleReactive,
+              volumeReactive,
               colorScheme,
               frameRef.current,
             );
@@ -537,10 +547,10 @@ export const FractalField: React.FC<FractalFieldProps> = ({
               w,
               h,
               imgBufRef.current,
-              bass,
-              mid,
-              treble,
-              volume,
+              bassReactive,
+              midReactive,
+              trebleReactive,
+              volumeReactive,
               colorScheme,
               frameRef.current,
             );
@@ -550,9 +560,9 @@ export const FractalField: React.FC<FractalFieldProps> = ({
               w,
               h,
               imgBufRef.current,
-              bass,
-              mid,
-              treble,
+              bassReactive,
+              midReactive,
+              trebleReactive,
               colorScheme,
               frameRef.current,
             );
@@ -566,6 +576,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     if (!isPlaying) {
       const { width: w, height: h } = sizeRef.current;
       frameRef.current = 0;
+      prevBassRef.current = 0;
       ctx.clearRect(0, 0, w, h);
       return () => {
         ro.disconnect();
@@ -577,7 +588,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, mode, isPlaying]);
+  }, [colorScheme, mode, isPlaying, kickSensitivity]);
 
   return (
     <canvas

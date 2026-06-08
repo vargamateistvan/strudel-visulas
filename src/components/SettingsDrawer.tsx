@@ -19,6 +19,8 @@ interface SettingsDrawerProps {
   onColorScheme: (s: ColorScheme) => void;
   vizMode: VizMode;
   onVizMode: (m: VizMode) => void;
+  kickSensitivity: number;
+  onKickSensitivity: (v: number) => void;
   editorOpacity: number;
   onEditorOpacity: (v: number) => void;
   editorColorPreset: EditorColorPreset;
@@ -144,6 +146,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onColorScheme,
   vizMode,
   onVizMode,
+  kickSensitivity,
+  onKickSensitivity,
   editorOpacity,
   onEditorOpacity,
   editorColorPreset,
@@ -349,6 +353,45 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   <div style={{ fontSize: 10, color: "#333" }}>{desc}</div>
                 </button>
               ))}
+            </div>
+          </section>
+
+          {/* Editor opacity */}
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              Kick Sensitivity
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="range"
+                min={50}
+                max={300}
+                value={Math.round(kickSensitivity * 100)}
+                onChange={(e) =>
+                  onKickSensitivity(parseInt(e.target.value, 10) / 100)
+                }
+                style={{ flex: 1 }}
+              />
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: '"JetBrains Mono",monospace',
+                  color: "#444",
+                  width: 36,
+                  textAlign: "right",
+                }}
+              >
+                {kickSensitivity.toFixed(2)}x
+              </span>
             </div>
           </section>
 
