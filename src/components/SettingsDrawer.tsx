@@ -34,8 +34,8 @@ const VIZ_MODES: { key: VizMode; label: string; desc: string }[] = [
 const FreqBar = ({ label, value, color }: { label: string; value: number; color: string }) => (
   <div style={{ marginBottom: 8 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-      <span style={{ fontSize: 10, color: '#555', fontFamily: 'monospace', letterSpacing: 1 }}>{label}</span>
-      <span style={{ fontSize: 10, color: '#444', fontFamily: 'monospace' }}>{Math.round(value * 100)}</span>
+      <span style={{ fontSize: 10, color: '#555', fontFamily: '"JetBrains Mono",monospace', letterSpacing: 1 }}>{label}</span>
+      <span style={{ fontSize: 10, color: '#444', fontFamily: '"JetBrains Mono",monospace' }}>{Math.round(value * 100)}</span>
     </div>
     <div style={{ height: 4, background: '#111', borderRadius: 2, overflow: 'hidden' }}>
       <div style={{
@@ -95,7 +95,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
           flexShrink: 0,
         }}>
           <span style={{
-            fontSize: 11, fontFamily: 'monospace',
+            fontSize: 11, fontFamily: '"JetBrains Mono",monospace',
             fontWeight: 700, letterSpacing: 2,
             color: '#00ff88', textTransform: 'uppercase',
           }}>
@@ -119,7 +119,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* Color scheme */}
           <section>
-            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: '"JetBrains Mono",monospace' }}>
               Color Scheme
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -152,7 +152,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     ))}
                   </div>
                   <span style={{
-                    fontSize: 12, fontFamily: 'monospace',
+                    fontSize: 12, fontFamily: '"JetBrains Mono",monospace',
                     color: colorScheme === key ? colors[0] : '#555',
                     fontWeight: colorScheme === key ? 700 : 400,
                   }}>
@@ -165,7 +165,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* Visualization mode */}
           <section>
-            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: '"JetBrains Mono",monospace' }}>
               Visualization
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -188,7 +188,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   }}
                 >
                   <div style={{
-                    fontSize: 12, fontFamily: 'monospace',
+                    fontSize: 12, fontFamily: '"JetBrains Mono",monospace',
                     color: vizMode === key ? '#00ff88' : '#555',
                     fontWeight: vizMode === key ? 700 : 400,
                     marginBottom: 2,
@@ -203,7 +203,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* Editor opacity */}
           <section>
-            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: '"JetBrains Mono",monospace' }}>
               Editor Opacity
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -212,7 +212,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 onChange={e => onEditorOpacity(parseInt(e.target.value) / 100)}
                 style={{ flex: 1 }}
               />
-              <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#444', width: 32, textAlign: 'right' }}>
+              <span style={{ fontSize: 11, fontFamily: '"JetBrains Mono",monospace', color: '#444', width: 32, textAlign: 'right' }}>
                 {Math.round(editorOpacity * 100)}%
               </span>
             </div>
@@ -220,7 +220,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* Frequency meters */}
           <section>
-            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 10, color: '#333', marginBottom: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: '"JetBrains Mono",monospace' }}>
               Frequency
             </p>
             <FreqBar label="BASS"   value={audioData.bass}   color="#00ff88" />
@@ -231,12 +231,12 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* Keyboard hints */}
           <section style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 16 }}>
-            <p style={{ fontSize: 10, color: '#333', marginBottom: 8, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 10, color: '#333', marginBottom: 8, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: '"JetBrains Mono",monospace' }}>
               Shortcuts
             </p>
             {[['⌘ + Enter', 'Play / Stop'], ['Tab', 'Indent']].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#00ff88', background: 'rgba(0,255,136,0.08)', padding: '2px 6px', borderRadius: 3 }}>{k}</span>
+                <span style={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', color: '#00ff88', background: 'rgba(0,255,136,0.08)', padding: '2px 6px', borderRadius: 3 }}>{k}</span>
                 <span style={{ fontSize: 10, color: '#333' }}>{v}</span>
               </div>
             ))}

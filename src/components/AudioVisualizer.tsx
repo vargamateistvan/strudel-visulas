@@ -191,7 +191,7 @@ export const AudioVisualizer: React.FC = () => {
           <div style={{ textAlign: "center" }}>
             <p
               style={{
-                fontFamily: "monospace",
+                fontFamily: '"JetBrains Mono",monospace',
                 fontSize: 22,
                 fontWeight: 700,
                 color: "#00ff88",
@@ -203,7 +203,7 @@ export const AudioVisualizer: React.FC = () => {
             >
               STRUDEL STUDIO
             </p>
-            <p style={{ fontSize: 13, color: "#555", fontFamily: "monospace" }}>
+            <p style={{ fontSize: 13, color: "#555", fontFamily: '"JetBrains Mono",monospace' }}>
               click anywhere to start
             </p>
           </div>

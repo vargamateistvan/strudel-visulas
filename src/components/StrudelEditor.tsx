@@ -67,7 +67,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           padding: '6px 14px', flexShrink: 0,
           background: 'rgba(255,51,102,0.1)',
           borderBottom: '1px solid rgba(255,51,102,0.2)',
-          fontSize: 11, fontFamily: 'monospace', color: '#ff3366',
+          fontSize: 11, fontFamily: '"JetBrains Mono",monospace', color: '#ff3366',
           whiteSpace: 'pre-wrap',
         }}>
           {error}
@@ -86,7 +86,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           flex: 1, width: '100%',
           resize: 'none', border: 'none', outline: 'none',
           padding: '16px 18px',
-          fontFamily: '"Fira Code","Cascadia Code",ui-monospace,monospace',
+          fontFamily: '"JetBrains Mono",ui-monospace,monospace',
           fontSize: 13,
           lineHeight: 1.75,
           color: `rgba(200,255,220,${Math.max(opacity, 0.6)})`,

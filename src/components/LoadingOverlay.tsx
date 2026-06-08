@@ -42,7 +42,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ message }) => (
 
     <div style={{ textAlign: 'center' }}>
       <p style={{
-        fontFamily: 'monospace',
+        fontFamily: '"JetBrains Mono",monospace',
         fontSize: 12,
         color: '#00ff88',
         letterSpacing: 2,
@@ -51,7 +51,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ message }) => (
       }}>
         {message || 'Loading…'}
       </p>
-      <p style={{ fontSize: 10, color: '#333', fontFamily: 'monospace' }}>
+      <p style={{ fontSize: 10, color: '#333', fontFamily: '"JetBrains Mono",monospace' }}>
         strudel studio
       </p>
     </div>
