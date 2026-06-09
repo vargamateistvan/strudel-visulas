@@ -20,6 +20,7 @@ interface ParticleFieldProps {
   customColors?: [string, string, string];
   isPlaying?: boolean;
   kickSensitivity?: number;
+  particleDensity?: number;
 }
 
 const SCHEME_HUES: Record<string, [number, number]> = {
@@ -74,6 +75,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
   customColors,
   isPlaying = false,
   kickSensitivity = 1,
+  particleDensity = 220,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -106,7 +108,10 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    const MAX_PARTICLES = 220;
+    const MAX_PARTICLES = Math.max(
+      80,
+      Math.min(420, Math.round(particleDensity)),
+    );
     const hueRange: [number, number] =
       colorScheme === "custom" && customColors
         ? [hexToHue(customColors[0]), hexToHue(customColors[2])]
@@ -232,7 +237,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, customColors, isPlaying, kickSensitivity]);
+  }, [colorScheme, customColors, isPlaying, kickSensitivity, particleDensity]);
 
   return (
     <canvas

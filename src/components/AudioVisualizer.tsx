@@ -40,6 +40,9 @@ type VisualSettings = {
   kickSensitivity: number;
   fractalQuality: number;
   mandelbulbSize: number;
+  particleDensity: number;
+  spectrumBarCount: number;
+  spectrumWaveform: boolean;
 };
 
 type VisualSettingsMap = Partial<Record<VizMode, VisualSettings>>;
@@ -48,6 +51,9 @@ const DEFAULT_VISUAL_SETTINGS: VisualSettings = {
   kickSensitivity: 1,
   fractalQuality: 2,
   mandelbulbSize: 1.28,
+  particleDensity: 220,
+  spectrumBarCount: 96,
+  spectrumWaveform: true,
 };
 
 function isColorScheme(value: string): value is ColorScheme {
@@ -177,6 +183,9 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
   const kickRaw = value.kickSensitivity;
   const fractalRaw = value.fractalQuality;
   const mandelbulbSizeRaw = value.mandelbulbSize;
+  const particleDensityRaw = value.particleDensity;
+  const spectrumBarCountRaw = value.spectrumBarCount;
+  const spectrumWaveformRaw = value.spectrumWaveform;
   if (
     typeof kickRaw !== "number" ||
     typeof fractalRaw !== "number" ||
@@ -198,7 +207,33 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
       ? mandelbulbSizeRaw
       : DEFAULT_VISUAL_SETTINGS.mandelbulbSize;
 
-  return { kickSensitivity, fractalQuality, mandelbulbSize };
+  const particleDensity =
+    typeof particleDensityRaw === "number" &&
+    particleDensityRaw >= 80 &&
+    particleDensityRaw <= 420
+      ? Math.round(particleDensityRaw)
+      : DEFAULT_VISUAL_SETTINGS.particleDensity;
+
+  const spectrumBarCount =
+    typeof spectrumBarCountRaw === "number" &&
+    spectrumBarCountRaw >= 32 &&
+    spectrumBarCountRaw <= 180
+      ? Math.round(spectrumBarCountRaw)
+      : DEFAULT_VISUAL_SETTINGS.spectrumBarCount;
+
+  const spectrumWaveform =
+    typeof spectrumWaveformRaw === "boolean"
+      ? spectrumWaveformRaw
+      : DEFAULT_VISUAL_SETTINGS.spectrumWaveform;
+
+  return {
+    kickSensitivity,
+    fractalQuality,
+    mandelbulbSize,
+    particleDensity,
+    spectrumBarCount,
+    spectrumWaveform,
+  };
 }
 
 function loadVisualSettingsMap(): VisualSettingsMap {
@@ -251,6 +286,9 @@ function loadVisualSettingsMap(): VisualSettingsMap {
       kickSensitivity: legacyKick,
       fractalQuality: legacyFractal,
       mandelbulbSize: legacyMandelbulbSize,
+      particleDensity: DEFAULT_VISUAL_SETTINGS.particleDensity,
+      spectrumBarCount: DEFAULT_VISUAL_SETTINGS.spectrumBarCount,
+      spectrumWaveform: DEFAULT_VISUAL_SETTINGS.spectrumWaveform,
     };
   }
   return fallback;
@@ -340,6 +378,9 @@ export const AudioVisualizer: React.FC = () => {
   const kickSensitivity = currentVisualSettings.kickSensitivity;
   const fractalQuality = currentVisualSettings.fractalQuality;
   const mandelbulbSize = currentVisualSettings.mandelbulbSize;
+  const particleDensity = currentVisualSettings.particleDensity;
+  const spectrumBarCount = currentVisualSettings.spectrumBarCount;
+  const spectrumWaveform = currentVisualSettings.spectrumWaveform;
   const activeCustomPreset =
     customColorPresets.find((p) => p.id === activeCustomColorPresetId) ??
     customColorPresets[0] ??
@@ -389,6 +430,54 @@ export const AudioVisualizer: React.FC = () => {
           [vizMode]: {
             ...existing,
             mandelbulbSize: Math.max(0.7, Math.min(2.2, value)),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
+  const setParticleDensityForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            particleDensity: Math.max(80, Math.min(420, Math.round(value))),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
+  const setSpectrumBarCountForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            spectrumBarCount: Math.max(32, Math.min(180, Math.round(value))),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
+  const setSpectrumWaveformForViz = useCallback(
+    (value: boolean) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            spectrumWaveform: value,
           },
         };
       });
@@ -808,6 +897,7 @@ export const AudioVisualizer: React.FC = () => {
             customColors={customColors}
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            particleDensity={particleDensity}
           />
         </div>
       )}
@@ -823,8 +913,8 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             customColors={customColors}
-            barCount={96}
-            showWaveform
+            barCount={spectrumBarCount}
+            showWaveform={spectrumWaveform}
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
           />
@@ -1148,6 +1238,12 @@ export const AudioVisualizer: React.FC = () => {
         onVizMode={setVizMode}
         kickSensitivity={kickSensitivity}
         onKickSensitivity={setKickSensitivityForViz}
+        particleDensity={particleDensity}
+        onParticleDensity={setParticleDensityForViz}
+        spectrumBarCount={spectrumBarCount}
+        onSpectrumBarCount={setSpectrumBarCountForViz}
+        spectrumWaveform={spectrumWaveform}
+        onSpectrumWaveform={setSpectrumWaveformForViz}
         fractalQuality={fractalQuality}
         onFractalQuality={setFractalQualityForViz}
         mandelbulbSize={mandelbulbSize}

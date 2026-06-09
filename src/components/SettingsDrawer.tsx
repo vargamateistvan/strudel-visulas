@@ -43,6 +43,12 @@ interface SettingsDrawerProps {
   onVizMode: (m: VizMode) => void;
   kickSensitivity: number;
   onKickSensitivity: (v: number) => void;
+  particleDensity: number;
+  onParticleDensity: (v: number) => void;
+  spectrumBarCount: number;
+  onSpectrumBarCount: (v: number) => void;
+  spectrumWaveform: boolean;
+  onSpectrumWaveform: (enabled: boolean) => void;
   fractalQuality: number;
   onFractalQuality: (v: number) => void;
   mandelbulbSize: number;
@@ -202,6 +208,12 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onVizMode,
   kickSensitivity,
   onKickSensitivity,
+  particleDensity,
+  onParticleDensity,
+  spectrumBarCount,
+  onSpectrumBarCount,
+  spectrumWaveform,
+  onSpectrumWaveform,
   fractalQuality,
   onFractalQuality,
   mandelbulbSize,
@@ -215,6 +227,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   const show3DFractalQuality =
     vizMode === "mandelbulb" || vizMode === "mandelbox";
   const showMandelbulbSize = vizMode === "mandelbulb";
+  const showParticleDensity = vizMode === "particles" || vizMode === "both";
+  const showSpectrumSettings = vizMode === "spectrum" || vizMode === "both";
 
   return (
     <>
@@ -626,6 +640,105 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               </span>
             </div>
           </section>
+
+          {showParticleDensity && (
+            <section>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "#333",
+                  marginBottom: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Particle Density
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="range"
+                  min={80}
+                  max={420}
+                  value={particleDensity}
+                  onChange={(e) =>
+                    onParticleDensity(parseInt(e.target.value, 10))
+                  }
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: "#444",
+                    width: 40,
+                    textAlign: "right",
+                  }}
+                >
+                  {particleDensity}
+                </span>
+              </div>
+            </section>
+          )}
+
+          {showSpectrumSettings && (
+            <section>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "#333",
+                  marginBottom: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Spectrum Detail
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="range"
+                  min={32}
+                  max={180}
+                  value={spectrumBarCount}
+                  onChange={(e) =>
+                    onSpectrumBarCount(parseInt(e.target.value, 10))
+                  }
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: "#444",
+                    width: 34,
+                    textAlign: "right",
+                  }}
+                >
+                  {spectrumBarCount}
+                </span>
+              </div>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 10,
+                  fontFamily: '"JetBrains Mono",monospace',
+                  fontSize: 11,
+                  color: "#555",
+                }}
+              >
+                Waveform Overlay
+                <input
+                  type="checkbox"
+                  checked={spectrumWaveform}
+                  onChange={(e) => onSpectrumWaveform(e.target.checked)}
+                />
+              </label>
+            </section>
+          )}
 
           {show3DFractalQuality && (
             <section>
