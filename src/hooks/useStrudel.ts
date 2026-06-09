@@ -375,6 +375,16 @@ function parseMasterVolume(value: string | null): number {
   return clampMasterVolume(parsed);
 }
 
+function getHighlightDurationMs(hapDuration: number): number {
+  if (!Number.isFinite(hapDuration) || hapDuration <= 0) {
+    return 340;
+  }
+
+  // webaudioRepl defaultOutput provides hapDuration in seconds.
+  const durationMs = Math.round(hapDuration * 1000);
+  return Math.max(120, Math.min(1200, durationMs));
+}
+
 function isNoisyRuntimeLog(args: unknown[]): boolean {
   const first = args[0];
   if (typeof first !== "string") return false;
@@ -738,7 +748,7 @@ export const useStrudel = () => {
                 );
               }
 
-              const expiresInMs = 340;
+              const expiresInMs = getHighlightDurationMs(hapDuration);
 
               setActiveMiniLocations((prev) => {
                 const next = new Map(
@@ -857,7 +867,7 @@ export const useStrudel = () => {
               activeNoteTimeoutRef.current = window.setTimeout(() => {
                 setActiveNote(null);
                 activeNoteTimeoutRef.current = null;
-              }, 380);
+              }, expiresInMs + 40);
             }
             const handleOutputError = (err: unknown) => {
               if (isNonFiniteAudioParamError(err)) {
