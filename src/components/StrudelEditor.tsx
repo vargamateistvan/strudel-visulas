@@ -10,8 +10,10 @@ import {
   STRUDEL_LANGUAGE_ID,
   STRUDEL_MARKER_OWNER,
   createStrudelDecorations,
+  createStrudelLocationDecorations,
   createStrudelMarkers,
   registerStrudelLanguage,
+  type SourceLocationRange,
 } from "./editor/StrudelEditorLanguage";
 import { EditorChrome } from "./editor/EditorChrome";
 import { EditorToolbar } from "./editor/EditorToolbar";
@@ -37,6 +39,7 @@ interface StrudelEditorProps {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
+  activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
 }
 
@@ -200,6 +203,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
+  activeMiniLocations,
   onCodeChange,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -354,6 +358,14 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const model = editor.getModel();
     if (!model) return;
 
+    const source = model.getValue();
+    const locationDecorations = createStrudelLocationDecorations(
+      source,
+      activeMiniLocations ?? [],
+      monaco,
+      true,
+    );
+
     const activeTokens =
       activeNotes && activeNotes.length > 0
         ? activeNotes
@@ -364,19 +376,16 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     if (
       !livePlayingNoteHighlights ||
       status !== "playing" ||
-      activeTokens.length === 0
+      (locationDecorations.length === 0 && activeTokens.length === 0)
     ) {
       noteDecorationsRef.current?.clear();
       return;
     }
 
-    const source = model.getValue();
-    const decorations = createStrudelDecorations(
-      source,
-      activeTokens,
-      monaco,
-      true,
-    );
+    const decorations =
+      locationDecorations.length > 0
+        ? locationDecorations
+        : createStrudelDecorations(source, activeTokens, monaco, true);
 
     if (!noteDecorationsRef.current) {
       noteDecorationsRef.current =
@@ -385,7 +394,13 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     }
 
     noteDecorationsRef.current.set(decorations);
-  }, [activeNote, activeNotes, livePlayingNoteHighlights, status]);
+  }, [
+    activeMiniLocations,
+    activeNote,
+    activeNotes,
+    livePlayingNoteHighlights,
+    status,
+  ]);
 
   const scheduleActiveHighlights = useCallback(
     (immediate = false) => {
@@ -426,7 +441,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const isLiveActive =
       livePlayingNoteHighlights &&
       status === "playing" &&
-      ((activeNotes && activeNotes.length > 0) || Boolean(activeNote));
+      ((activeMiniLocations && activeMiniLocations.length > 0) ||
+        (activeNotes && activeNotes.length > 0) ||
+        Boolean(activeNote));
 
     if (!isLiveActive) {
       scheduleActiveHighlights(true);
@@ -435,6 +452,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
 
     scheduleActiveHighlights();
   }, [
+    activeMiniLocations,
     activeNote,
     activeNotes,
     code,

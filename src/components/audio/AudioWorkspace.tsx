@@ -1,6 +1,7 @@
 import { EditorViewport } from "./EditorViewport";
 import { Mp3ExportOverlay } from "./Mp3ExportOverlay";
 import type { StrudelStatus } from "../../hooks/useStrudel";
+import type { SourceLocationRange } from "../editor/StrudelEditorLanguage";
 
 type AudioWorkspaceProps = {
   code: string;
@@ -17,6 +18,7 @@ type AudioWorkspaceProps = {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
+  activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
   isExportingMp3: boolean;
   mp3Quality: "fast" | "good" | "best";
@@ -42,6 +44,7 @@ export function AudioWorkspace({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
+  activeMiniLocations,
   onCodeChange,
   isExportingMp3,
   mp3Quality,
@@ -90,6 +93,7 @@ export function AudioWorkspace({
           livePlayingNoteHighlights={livePlayingNoteHighlights}
           activeNote={activeNote}
           activeNotes={activeNotes}
+          activeMiniLocations={activeMiniLocations}
           onCodeChange={onCodeChange}
         />
       </div>

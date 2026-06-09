@@ -11,6 +11,11 @@ export interface AudioData {
   treble: number;
 }
 
+export interface ActiveMiniLocation {
+  start: number;
+  end: number;
+}
+
 const NOTE_NAMES = [
   "C",
   "C#",
@@ -219,6 +224,46 @@ function extractTriggeredActivity(hap: unknown): {
   };
 }
 
+function extractMiniLocations(hap: unknown): ActiveMiniLocation[] {
+  if (typeof hap !== "object" || hap == null) return [];
+  const context = (hap as Record<string, unknown>).context;
+  if (typeof context !== "object" || context == null) return [];
+  const rawLocations = (context as Record<string, unknown>).locations;
+  if (!Array.isArray(rawLocations)) return [];
+
+  const out: ActiveMiniLocation[] = [];
+  const seen = new Set<string>();
+
+  for (const location of rawLocations) {
+    let start: number | null = null;
+    let end: number | null = null;
+
+    if (Array.isArray(location) && location.length >= 2) {
+      const rawStart = Number(location[0]);
+      const rawEnd = Number(location[1]);
+      if (Number.isFinite(rawStart) && Number.isFinite(rawEnd)) {
+        start = Math.floor(rawStart);
+        end = Math.floor(rawEnd);
+      }
+    } else if (typeof location === "object" && location != null) {
+      const rawStart = Number((location as Record<string, unknown>).start);
+      const rawEnd = Number((location as Record<string, unknown>).end);
+      if (Number.isFinite(rawStart) && Number.isFinite(rawEnd)) {
+        start = Math.floor(rawStart);
+        end = Math.floor(rawEnd);
+      }
+    }
+
+    if (start == null || end == null || end <= start) continue;
+    const key = `${start}:${end}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ start, end });
+  }
+
+  return out;
+}
+
 function hasNonFiniteNumber(
   value: unknown,
   depth = 0,
@@ -411,6 +456,9 @@ export const useStrudel = () => {
   const [audioData, setAudioData] = useState<AudioData>(EMPTY);
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [activeNotes, setActiveNotes] = useState<string[]>([]);
+  const [activeMiniLocations, setActiveMiniLocations] = useState<
+    ActiveMiniLocation[]
+  >([]);
   const [activeLiterals, setActiveLiterals] = useState<string[]>([]);
   const [activeControls, setActiveControls] = useState<string[]>([]);
   const [masterVolume, setMasterVolume] = useState<number>(() =>
@@ -425,6 +473,7 @@ export const useStrudel = () => {
   const rafRef = useRef<number>(0);
   const activeNoteTimeoutRef = useRef<number | null>(null);
   const activeNoteTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const activeMiniLocationTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeLiteralTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeControlTimeoutsRef = useRef<Map<string, number>>(new Map());
   const lastBadTriggerWarnRef = useRef(0);
@@ -448,6 +497,11 @@ export const useStrudel = () => {
     }
     activeNoteTimeoutsRef.current.clear();
 
+    for (const timeoutId of activeMiniLocationTimeoutsRef.current.values()) {
+      window.clearTimeout(timeoutId);
+    }
+    activeMiniLocationTimeoutsRef.current.clear();
+
     for (const timeoutId of activeLiteralTimeoutsRef.current.values()) {
       window.clearTimeout(timeoutId);
     }
@@ -460,6 +514,7 @@ export const useStrudel = () => {
 
     setActiveNote(null);
     setActiveNotes([]);
+    setActiveMiniLocations([]);
     setActiveLiterals([]);
     setActiveControls([]);
   };
@@ -669,8 +724,10 @@ export const useStrudel = () => {
               literals: nextLiterals,
               controls: nextControls,
             } = extractTriggeredActivity(hap);
+            const nextMiniLocations = extractMiniLocations(hap);
             if (
               nextNotes.length > 0 ||
+              nextMiniLocations.length > 0 ||
               nextLiterals.length > 0 ||
               nextControls.length > 0
             ) {
@@ -682,6 +739,41 @@ export const useStrudel = () => {
               }
 
               const expiresInMs = 340;
+
+              setActiveMiniLocations((prev) => {
+                const next = new Map(
+                  prev.map((range) => [`${range.start}:${range.end}`, range]),
+                );
+                let hasNewLocations = false;
+
+                for (const range of nextMiniLocations) {
+                  const key = `${range.start}:${range.end}`;
+                  if (!next.has(key)) {
+                    next.set(key, range);
+                    hasNewLocations = true;
+                  }
+
+                  const prevTimeout =
+                    activeMiniLocationTimeoutsRef.current.get(key);
+                  if (prevTimeout) {
+                    window.clearTimeout(prevTimeout);
+                  }
+
+                  const timeoutId = window.setTimeout(() => {
+                    activeMiniLocationTimeoutsRef.current.delete(key);
+                    setActiveMiniLocations((curr) => {
+                      const filtered = curr.filter(
+                        (r) => `${r.start}:${r.end}` !== key,
+                      );
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
+                  }, expiresInMs);
+                  activeMiniLocationTimeoutsRef.current.set(key, timeoutId);
+                }
+
+                return hasNewLocations ? Array.from(next.values()) : prev;
+              });
+
               setActiveNotes((prev) => {
                 const next = new Set(prev);
                 let hasNewNotes = false;
@@ -866,6 +958,7 @@ export const useStrudel = () => {
     audioData,
     activeNote,
     activeNotes,
+    activeMiniLocations,
     activeLiterals,
     activeControls,
     masterVolume,

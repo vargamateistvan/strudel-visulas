@@ -1,5 +1,6 @@
 import { StrudelEditor } from "../StrudelEditor";
 import type { StrudelStatus } from "../../hooks/useStrudel";
+import type { SourceLocationRange } from "../editor/StrudelEditorLanguage";
 
 type EditorViewportProps = {
   code: string;
@@ -16,6 +17,7 @@ type EditorViewportProps = {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
+  activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
 };
 
@@ -34,6 +36,7 @@ export function EditorViewport({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
+  activeMiniLocations,
   onCodeChange,
 }: EditorViewportProps) {
   return (
@@ -59,6 +62,7 @@ export function EditorViewport({
         livePlayingNoteHighlights={livePlayingNoteHighlights}
         activeNote={activeNote}
         activeNotes={activeNotes}
+        activeMiniLocations={activeMiniLocations}
         onCodeChange={onCodeChange}
       />
     </div>

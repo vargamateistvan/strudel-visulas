@@ -3,6 +3,11 @@ import type * as Monaco from "monaco-editor";
 export const STRUDEL_LANGUAGE_ID = "strudel";
 export const STRUDEL_MARKER_OWNER = "strudel-lint";
 
+export interface SourceLocationRange {
+  start: number;
+  end: number;
+}
+
 const SNIPPETS: Record<string, string> = {
   "Basic Beat":
     'stack(\n  sound("bd ~ bd ~"),\n  sound("~ sn ~ sn"),\n  sound("hh*8").gain(0.5)\n).cpm(120)',
@@ -202,6 +207,50 @@ function buildTokenDecorations(
         },
       });
     }
+  }
+
+  return decorations;
+}
+
+function buildLocationDecorations(
+  source: string,
+  locations: SourceLocationRange[],
+  monaco: typeof Monaco,
+  isPrimary = false,
+): Monaco.editor.IModelDeltaDecoration[] {
+  const decorations: Monaco.editor.IModelDeltaDecoration[] = [];
+  const seen = new Set<string>();
+
+  for (const location of locations) {
+    const start = Math.max(
+      0,
+      Math.min(source.length, Math.floor(location.start)),
+    );
+    const end = Math.max(
+      start,
+      Math.min(source.length, Math.floor(location.end)),
+    );
+    if (end <= start) continue;
+
+    const key = `${start}:${end}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const startPosition = getLineAndColumnFromOffset(source, start);
+    const endPosition = getLineAndColumnFromOffset(source, end);
+    decorations.push({
+      range: new monaco.Range(
+        startPosition.line,
+        startPosition.column,
+        endPosition.line,
+        endPosition.column,
+      ),
+      options: {
+        inlineClassName: isPrimary
+          ? "strudel-note-hit-active"
+          : "strudel-note-hit",
+      },
+    });
   }
 
   return decorations;
@@ -547,4 +596,13 @@ export function createStrudelDecorations(
   isPrimary = false,
 ): Monaco.editor.IModelDeltaDecoration[] {
   return buildTokenDecorations(source, tokens, monaco, isPrimary);
+}
+
+export function createStrudelLocationDecorations(
+  source: string,
+  locations: SourceLocationRange[],
+  monaco: typeof Monaco,
+  isPrimary = false,
+): Monaco.editor.IModelDeltaDecoration[] {
+  return buildLocationDecorations(source, locations, monaco, isPrimary);
 }
