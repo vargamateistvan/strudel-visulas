@@ -11,6 +11,7 @@ import { useAudioVisualizerPreferences } from "../hooks/useAudioVisualizerPrefer
 import { useAudioVisualizerCode } from "../hooks/useAudioVisualizerCode";
 import { useBackgroundVisualizerNode } from "../hooks/useBackgroundVisualizerNode";
 import { useAudioVisualizerHeaderActions } from "../hooks/useAudioVisualizerHeaderActions";
+import { useAudioVisualizerSettingsDrawerProps } from "../hooks/useAudioVisualizerSettingsDrawerProps";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import { SettingsDrawer } from "./SettingsDrawer";
@@ -177,6 +178,51 @@ export const AudioVisualizer: React.FC = () => {
     spectrumWaveform,
   });
 
+  const settingsDrawerProps = useAudioVisualizerSettingsDrawerProps({
+    open: drawerOpen,
+    onClose: closeDrawer,
+    colorScheme,
+    onColorScheme: setColorScheme,
+    customColorPresets,
+    activeCustomColorPresetId,
+    onSelectCustomColorPreset: selectCustomColorPreset,
+    onCreateCustomColorPreset: createCustomColorPreset,
+    onUpdateCustomColorPresetColor: updateCustomColorPresetColor,
+    onRenameCustomColorPreset: renameCustomColorPreset,
+    onDeleteCustomColorPreset: deleteCustomColorPreset,
+    vizMode,
+    onVizMode: setVizMode,
+    kickSensitivity,
+    onKickSensitivity: setKickSensitivityForViz,
+    particleDensity,
+    onParticleDensity: setParticleDensityForViz,
+    spectrumBarCount,
+    onSpectrumBarCount: setSpectrumBarCountForViz,
+    spectrumWaveform,
+    onSpectrumWaveform: setSpectrumWaveformForViz,
+    fractalQuality,
+    onFractalQuality: setFractalQualityForViz,
+    mandelbulbSize,
+    onMandelbulbSize: setMandelbulbSizeForViz,
+    editorOpacity,
+    onEditorOpacity: setEditorOpacity,
+    livePulseStrip,
+    onLivePulseStrip: setLivePulseStrip,
+    livePlayingNoteHighlights,
+    onLivePlayingNoteHighlights: setLivePlayingNoteHighlights,
+    recordingMode,
+    onRecordingMode: setRecordingMode,
+    mp3Quality,
+    onMp3Quality: setMp3Quality,
+    editorColorPreset,
+    onEditorColorPreset: setEditorColorPreset,
+    editorFontPreset,
+    onEditorFontPreset: setEditorFontPreset,
+    editorFontSize,
+    onEditorFontSize: setEditorFontSize,
+    audioData,
+  });
+
   return (
     <Layout backgroundVisualizer={background}>
       {/* header */}
@@ -224,50 +270,7 @@ export const AudioVisualizer: React.FC = () => {
       />
 
       {/* settings drawer */}
-      <SettingsDrawer
-        open={drawerOpen}
-        onClose={closeDrawer}
-        colorScheme={colorScheme}
-        onColorScheme={setColorScheme}
-        customColorPresets={customColorPresets}
-        activeCustomColorPresetId={activeCustomColorPresetId}
-        onSelectCustomColorPreset={selectCustomColorPreset}
-        onCreateCustomColorPreset={createCustomColorPreset}
-        onUpdateCustomColorPresetColor={updateCustomColorPresetColor}
-        onRenameCustomColorPreset={renameCustomColorPreset}
-        onDeleteCustomColorPreset={deleteCustomColorPreset}
-        vizMode={vizMode}
-        onVizMode={setVizMode}
-        kickSensitivity={kickSensitivity}
-        onKickSensitivity={setKickSensitivityForViz}
-        particleDensity={particleDensity}
-        onParticleDensity={setParticleDensityForViz}
-        spectrumBarCount={spectrumBarCount}
-        onSpectrumBarCount={setSpectrumBarCountForViz}
-        spectrumWaveform={spectrumWaveform}
-        onSpectrumWaveform={setSpectrumWaveformForViz}
-        fractalQuality={fractalQuality}
-        onFractalQuality={setFractalQualityForViz}
-        mandelbulbSize={mandelbulbSize}
-        onMandelbulbSize={setMandelbulbSizeForViz}
-        editorOpacity={editorOpacity}
-        onEditorOpacity={setEditorOpacity}
-        livePulseStrip={livePulseStrip}
-        onLivePulseStrip={setLivePulseStrip}
-        livePlayingNoteHighlights={livePlayingNoteHighlights}
-        onLivePlayingNoteHighlights={setLivePlayingNoteHighlights}
-        recordingMode={recordingMode}
-        onRecordingMode={setRecordingMode}
-        mp3Quality={mp3Quality}
-        onMp3Quality={setMp3Quality}
-        editorColorPreset={editorColorPreset}
-        onEditorColorPreset={setEditorColorPreset}
-        editorFontPreset={editorFontPreset}
-        onEditorFontPreset={setEditorFontPreset}
-        editorFontSize={editorFontSize}
-        onEditorFontSize={setEditorFontSize}
-        audioData={audioData}
-      />
+      <SettingsDrawer {...settingsDrawerProps} />
 
       <OverlayDialogs
         presetsOpen={presetsOpen}
