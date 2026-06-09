@@ -924,6 +924,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const [activeDiagnosticIndex, setActiveDiagnosticIndex] = useState(0);
   const [quickFixHistory, setQuickFixHistory] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const editorTopInset = 44;
 
   const updateCode = (c: string) => {
     onCodeChange?.(c);
@@ -1291,7 +1292,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           resize: "none",
           border: "none",
           outline: "none",
-          padding: "16px 18px",
+          padding: `${editorTopInset}px 18px 16px`,
           fontFamily: '"JetBrains Mono",ui-monospace,monospace',
           fontSize: 13,
           lineHeight: 1.75,
@@ -1327,7 +1328,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             fontSize: 10,
             letterSpacing: 0.5,
             borderRadius: 5,
-            padding: "3px 7px",
+            padding: "3px 7px 6px",
             cursor: "pointer",
             zIndex: 3,
           }}
@@ -1344,7 +1345,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             fontSize: 10,
             letterSpacing: 0.5,
             borderRadius: 5,
-            padding: "3px 7px",
+            padding: "3px 7px 6px",
             cursor: "pointer",
             zIndex: 3,
           }}
@@ -1361,7 +1362,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             fontSize: 10,
             letterSpacing: 0.5,
             borderRadius: 5,
-            padding: "3px 7px",
+            padding: "3px 7px 6px",
             cursor: "pointer",
             zIndex: 3,
           }}
@@ -1676,7 +1677,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           style={{
             position: "absolute",
             left: 2,
-            top: 16,
+            top: editorTopInset,
             bottom: 56,
             width: 10,
             zIndex: 3,
@@ -1733,7 +1734,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         <pre
           style={{
             margin: 0,
-            padding: "16px 18px",
+            padding: `${editorTopInset}px 18px 16px`,
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             wordBreak: "break-word",
