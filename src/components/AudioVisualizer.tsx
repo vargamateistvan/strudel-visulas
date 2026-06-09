@@ -24,6 +24,22 @@ const VIZ_MODE_KEY = "strudel:viz-mode:v1";
 const EDITOR_OPACITY_KEY = "strudel:editor-opacity:v1";
 const MP3_QUALITY_KEY = "strudel:mp3-quality:v1";
 const KICK_SENSITIVITY_KEY = "strudel:kick-sensitivity:v1";
+const FRACTAL_QUALITY_KEY = "strudel:fractal-quality:v1";
+const VISUAL_SETTINGS_KEY = "strudel:visual-settings:v1";
+
+type VisualSettings = {
+  kickSensitivity: number;
+  fractalQuality: number;
+  mandelbulbSize: number;
+};
+
+type VisualSettingsMap = Partial<Record<VizMode, VisualSettings>>;
+
+const DEFAULT_VISUAL_SETTINGS: VisualSettings = {
+  kickSensitivity: 1,
+  fractalQuality: 2,
+  mandelbulbSize: 1.28,
+};
 
 function isColorScheme(value: string): value is ColorScheme {
   return (
@@ -44,6 +60,11 @@ function isVizMode(value: string): value is VizMode {
     value === "lissajous" ||
     value === "kaleidoscope" ||
     value === "kaleidoTunnel" ||
+    value === "mandelbulb" ||
+    value === "mandelbox" ||
+    value === "ifs" ||
+    value === "thueMorse" ||
+    value === "lSystem" ||
     value === "julia" ||
     value === "both"
   );
@@ -69,10 +90,107 @@ function parseKickSensitivity(value: string | null): number | null {
   return parsed;
 }
 
+function parseFractalQuality(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 1 || parsed > 3) return null;
+  return Math.round(parsed);
+}
+
 function isEditorColorPreset(value: string): value is EditorColorPreset {
   return (
     value === "neon" || value === "amber" || value === "ice" || value === "mono"
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseVisualSettings(value: unknown): VisualSettings | null {
+  if (!isRecord(value)) return null;
+
+  const kickRaw = value.kickSensitivity;
+  const fractalRaw = value.fractalQuality;
+  const mandelbulbSizeRaw = value.mandelbulbSize;
+  if (
+    typeof kickRaw !== "number" ||
+    typeof fractalRaw !== "number" ||
+    typeof mandelbulbSizeRaw !== "number"
+  ) {
+    return null;
+  }
+
+  const kickSensitivity =
+    kickRaw >= 0.5 && kickRaw <= 3
+      ? kickRaw
+      : DEFAULT_VISUAL_SETTINGS.kickSensitivity;
+  const fractalQuality =
+    fractalRaw >= 1 && fractalRaw <= 3
+      ? Math.round(fractalRaw)
+      : DEFAULT_VISUAL_SETTINGS.fractalQuality;
+  const mandelbulbSize =
+    mandelbulbSizeRaw >= 0.7 && mandelbulbSizeRaw <= 2.2
+      ? mandelbulbSizeRaw
+      : DEFAULT_VISUAL_SETTINGS.mandelbulbSize;
+
+  return { kickSensitivity, fractalQuality, mandelbulbSize };
+}
+
+function loadVisualSettingsMap(): VisualSettingsMap {
+  const visualModes: VizMode[] = [
+    "particles",
+    "spectrum",
+    "lissajous",
+    "julia",
+    "mandelbulb",
+    "mandelbox",
+    "ifs",
+    "thueMorse",
+    "lSystem",
+    "kaleidoscope",
+    "kaleidoTunnel",
+    "both",
+  ];
+
+  const saved = localStorage.getItem(VISUAL_SETTINGS_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved) as unknown;
+      if (isRecord(parsed)) {
+        const out: VisualSettingsMap = {};
+        for (const mode of visualModes) {
+          const modeSettings = parseVisualSettings(parsed[mode]);
+          if (modeSettings) out[mode] = modeSettings;
+        }
+        if (Object.keys(out).length > 0) {
+          return out;
+        }
+      }
+    } catch {
+      // ignore invalid JSON and fall back to legacy keys
+    }
+  }
+
+  // Migration fallback for users coming from global settings keys.
+  const legacyKick =
+    parseKickSensitivity(localStorage.getItem(KICK_SENSITIVITY_KEY)) ??
+    DEFAULT_VISUAL_SETTINGS.kickSensitivity;
+  const legacyFractal =
+    parseFractalQuality(localStorage.getItem(FRACTAL_QUALITY_KEY)) ??
+    DEFAULT_VISUAL_SETTINGS.fractalQuality;
+  const legacyMandelbulbSize = DEFAULT_VISUAL_SETTINGS.mandelbulbSize;
+
+  const fallback: VisualSettingsMap = {};
+  for (const mode of visualModes) {
+    fallback[mode] = {
+      kickSensitivity: legacyKick,
+      fractalQuality: legacyFractal,
+      mandelbulbSize: legacyMandelbulbSize,
+    };
+  }
+  return fallback;
 }
 
 export const AudioVisualizer: React.FC = () => {
@@ -115,11 +233,9 @@ export const AudioVisualizer: React.FC = () => {
   const [editorOpacity, setEditorOpacity] = useState(() => {
     return parseOpacity(localStorage.getItem(EDITOR_OPACITY_KEY)) ?? 0.45;
   });
-  const [kickSensitivity, setKickSensitivity] = useState(() => {
-    return (
-      parseKickSensitivity(localStorage.getItem(KICK_SENSITIVITY_KEY)) ?? 1
-    );
-  });
+  const [visualSettings, setVisualSettings] = useState<VisualSettingsMap>(() =>
+    loadVisualSettingsMap(),
+  );
   const [editorColorPreset, setEditorColorPreset] = useState<EditorColorPreset>(
     () => {
       const saved = localStorage.getItem(EDITOR_COLOR_PRESET_KEY);
@@ -150,6 +266,59 @@ export const AudioVisualizer: React.FC = () => {
   const timerRef = useRef<number | null>(null);
 
   const recordingLabel = `${String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:${String(recordingSeconds % 60).padStart(2, "0")}`;
+  const currentVisualSettings =
+    visualSettings[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+  const kickSensitivity = currentVisualSettings.kickSensitivity;
+  const fractalQuality = currentVisualSettings.fractalQuality;
+  const mandelbulbSize = currentVisualSettings.mandelbulbSize;
+
+  const setKickSensitivityForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            kickSensitivity: value,
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
+  const setFractalQualityForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            fractalQuality: Math.max(1, Math.min(3, Math.round(value))),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
+  const setMandelbulbSizeForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            mandelbulbSize: Math.max(0.7, Math.min(2.2, value)),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
 
   const onCodeChange = useCallback((c: string) => {
     setCode(c);
@@ -421,8 +590,8 @@ export const AudioVisualizer: React.FC = () => {
   }, [editorOpacity]);
 
   useEffect(() => {
-    localStorage.setItem(KICK_SENSITIVITY_KEY, String(kickSensitivity));
-  }, [kickSensitivity]);
+    localStorage.setItem(VISUAL_SETTINGS_KEY, JSON.stringify(visualSettings));
+  }, [visualSettings]);
 
   useEffect(() => {
     localStorage.setItem(MP3_QUALITY_KEY, mp3Quality);
@@ -507,6 +676,7 @@ export const AudioVisualizer: React.FC = () => {
             mode="lissajous"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
           />
         </div>
       )}
@@ -518,6 +688,7 @@ export const AudioVisualizer: React.FC = () => {
             mode="julia"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
           />
         </div>
       )}
@@ -529,6 +700,7 @@ export const AudioVisualizer: React.FC = () => {
             mode="kaleidoscope"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
           />
         </div>
       )}
@@ -540,6 +712,68 @@ export const AudioVisualizer: React.FC = () => {
             mode="kaleidoTunnel"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "mandelbulb" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="mandelbulb"
+            isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+            mandelbulbSize={mandelbulbSize}
+          />
+        </div>
+      )}
+      {vizMode === "mandelbox" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="mandelbox"
+            isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "ifs" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="ifs"
+            isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "thueMorse" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="thueMorse"
+            isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "lSystem" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            mode="lindenmayer"
+            isPlaying={status === "playing"}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
           />
         </div>
       )}
@@ -551,6 +785,7 @@ export const AudioVisualizer: React.FC = () => {
             mode="kaleidoscope"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
           />
         </div>
       )}
@@ -562,6 +797,7 @@ export const AudioVisualizer: React.FC = () => {
             mode="kaleidoTunnel"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
           />
         </div>
       )}
@@ -731,7 +967,11 @@ export const AudioVisualizer: React.FC = () => {
         vizMode={vizMode}
         onVizMode={setVizMode}
         kickSensitivity={kickSensitivity}
-        onKickSensitivity={setKickSensitivity}
+        onKickSensitivity={setKickSensitivityForViz}
+        fractalQuality={fractalQuality}
+        onFractalQuality={setFractalQualityForViz}
+        mandelbulbSize={mandelbulbSize}
+        onMandelbulbSize={setMandelbulbSizeForViz}
         editorOpacity={editorOpacity}
         onEditorOpacity={setEditorOpacity}
         editorColorPreset={editorColorPreset}

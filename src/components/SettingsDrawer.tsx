@@ -7,6 +7,11 @@ export type VizMode =
   | "spectrum"
   | "lissajous"
   | "julia"
+  | "mandelbulb"
+  | "mandelbox"
+  | "ifs"
+  | "thueMorse"
+  | "lSystem"
   | "kaleidoscope"
   | "kaleidoTunnel"
   | "both";
@@ -21,6 +26,10 @@ interface SettingsDrawerProps {
   onVizMode: (m: VizMode) => void;
   kickSensitivity: number;
   onKickSensitivity: (v: number) => void;
+  fractalQuality: number;
+  onFractalQuality: (v: number) => void;
+  mandelbulbSize: number;
+  onMandelbulbSize: (v: number) => void;
   editorOpacity: number;
   onEditorOpacity: (v: number) => void;
   editorColorPreset: EditorColorPreset;
@@ -52,6 +61,27 @@ const VIZ_MODES: { key: VizMode; label: string; desc: string }[] = [
     key: "kaleidoTunnel",
     label: "Kaleido Tunnel",
     desc: "Fractal tunnel with mirrored rings",
+  },
+  {
+    key: "mandelbulb",
+    label: "Mandelbulb",
+    desc: "3D-like fractal slice with audio morph",
+  },
+  {
+    key: "mandelbox",
+    label: "Mandelbox",
+    desc: "Box-fold fractal field",
+  },
+  { key: "ifs", label: "IFS", desc: "Iterated function system attractor" },
+  {
+    key: "thueMorse",
+    label: "Thue-Morse",
+    desc: "Binary morphic stripe matrix",
+  },
+  {
+    key: "lSystem",
+    label: "L-System",
+    desc: "Lindenmayer turtle growth",
   },
   { key: "julia", label: "Julia Set", desc: "Audio-driven fractal" },
   { key: "both", label: "Layered", desc: "Particles + spectrum blend" },
@@ -148,12 +178,20 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onVizMode,
   kickSensitivity,
   onKickSensitivity,
+  fractalQuality,
+  onFractalQuality,
+  mandelbulbSize,
+  onMandelbulbSize,
   editorOpacity,
   onEditorOpacity,
   editorColorPreset,
   onEditorColorPreset,
   audioData,
 }) => {
+  const show3DFractalQuality =
+    vizMode === "mandelbulb" || vizMode === "mandelbox";
+  const showMandelbulbSize = vizMode === "mandelbulb";
+
   return (
     <>
       {/* backdrop */}
@@ -394,6 +432,91 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               </span>
             </div>
           </section>
+
+          {show3DFractalQuality && (
+            <section>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "#333",
+                  marginBottom: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                3D Fractal Quality
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={1}
+                  value={fractalQuality}
+                  onChange={(e) =>
+                    onFractalQuality(parseInt(e.target.value, 10))
+                  }
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: "#444",
+                    width: 68,
+                    textAlign: "right",
+                  }}
+                >
+                  {fractalQuality === 1
+                    ? "Low"
+                    : fractalQuality === 2
+                      ? "Balanced"
+                      : "High"}
+                </span>
+              </div>
+            </section>
+          )}
+
+          {showMandelbulbSize && (
+            <section>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "#333",
+                  marginBottom: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Mandelbulb Size
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="range"
+                  min={70}
+                  max={220}
+                  value={Math.round(mandelbulbSize * 100)}
+                  onChange={(e) =>
+                    onMandelbulbSize(parseInt(e.target.value, 10) / 100)
+                  }
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: "#444",
+                    width: 52,
+                    textAlign: "right",
+                  }}
+                >
+                  {mandelbulbSize.toFixed(2)}x
+                </span>
+              </div>
+            </section>
+          )}
 
           {/* Editor opacity */}
           <section>
