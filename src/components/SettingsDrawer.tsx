@@ -1,5 +1,7 @@
 import React from "react";
 import type { AudioData } from "../hooks/useStrudel";
+import type { RecordingMode } from "./Header";
+import type { Mp3Quality } from "./Header";
 
 export type ColorScheme = "neon" | "pastel" | "fire" | "ocean" | "custom";
 export type VizMode =
@@ -62,6 +64,10 @@ interface SettingsDrawerProps {
   onEditorOpacity: (v: number) => void;
   liveNoteHighlights: boolean;
   onLiveNoteHighlights: (enabled: boolean) => void;
+  recordingMode: RecordingMode;
+  onRecordingMode: (mode: RecordingMode) => void;
+  mp3Quality: Mp3Quality;
+  onMp3Quality: (quality: Mp3Quality) => void;
   editorColorPreset: EditorColorPreset;
   onEditorColorPreset: (preset: EditorColorPreset) => void;
   editorFontPreset: EditorFontPreset;
@@ -260,6 +266,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onEditorOpacity,
   liveNoteHighlights,
   onLiveNoteHighlights,
+  recordingMode,
+  onRecordingMode,
+  mp3Quality,
+  onMp3Quality,
   editorColorPreset,
   onEditorColorPreset,
   editorFontPreset,
@@ -989,6 +999,100 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 />
               </div>
             </button>
+          </section>
+
+          {/* Recording mode */}
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              Recording Mode
+            </p>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(["audio", "video", "midi"] as RecordingMode[]).map((mode) => {
+                const active = recordingMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => onRecordingMode(mode)}
+                    style={{
+                      flex: 1,
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      border: active
+                        ? "1px solid rgba(0,255,136,0.24)"
+                        : "1px solid rgba(255,255,255,0.05)",
+                      background: active
+                        ? "rgba(0,255,136,0.08)"
+                        : "rgba(255,255,255,0.02)",
+                      cursor: "pointer",
+                      color: active ? "#00ff88" : "#8da1af",
+                      fontFamily: '"JetBrains Mono",monospace',
+                      fontSize: 11,
+                      fontWeight: active ? 700 : 500,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {mode}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* MP3 quality */}
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              MP3 Quality
+            </p>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(["fast", "good", "best"] as Mp3Quality[]).map((quality) => {
+                const active = mp3Quality === quality;
+                return (
+                  <button
+                    key={quality}
+                    onClick={() => onMp3Quality(quality)}
+                    style={{
+                      flex: 1,
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      border: active
+                        ? "1px solid rgba(0,255,136,0.24)"
+                        : "1px solid rgba(255,255,255,0.05)",
+                      background: active
+                        ? "rgba(0,255,136,0.08)"
+                        : "rgba(255,255,255,0.02)",
+                      cursor: "pointer",
+                      color: active ? "#00ff88" : "#8da1af",
+                      fontFamily: '"JetBrains Mono",monospace',
+                      fontSize: 11,
+                      fontWeight: active ? 700 : 500,
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {quality}
+                  </button>
+                );
+              })}
+            </div>
           </section>
 
           {/* Editor colors */}

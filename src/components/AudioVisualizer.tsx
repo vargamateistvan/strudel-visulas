@@ -27,6 +27,7 @@ const COLOR_SCHEME_KEY = "strudel:color-scheme:v1";
 const VIZ_MODE_KEY = "strudel:viz-mode:v1";
 const EDITOR_OPACITY_KEY = "strudel:editor-opacity:v1";
 const LIVE_NOTE_HIGHLIGHTS_KEY = "strudel:live-note-highlights:v1";
+const RECORDING_MODE_KEY = "strudel:recording-mode:v1";
 const MP3_QUALITY_KEY = "strudel:mp3-quality:v1";
 const KICK_SENSITIVITY_KEY = "strudel:kick-sensitivity:v1";
 const FRACTAL_QUALITY_KEY = "strudel:fractal-quality:v1";
@@ -400,14 +401,16 @@ export const AudioVisualizer: React.FC = () => {
   });
   const [splashDone, setSplashDone] = useState(false);
   const [code, setCode] = useState(() => loadDraft() ?? DEFAULT_PATTERN);
-  const [isMobile, setIsMobile] = useState(() =>
+  const [isMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
   );
   const [mobileHeaderExpanded, setMobileHeaderExpanded] = useState(false);
 
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [recordingMode, setRecordingMode] = useState<RecordingMode>("audio");
+  const [recordingMode, setRecordingMode] = useState<RecordingMode>(() => {
+    const saved = localStorage.getItem(RECORDING_MODE_KEY);
+    return saved === "video" || saved === "midi" ? saved : "audio";
+  });
   const [mp3Quality, setMp3Quality] = useState<Mp3QualityPreset>(() => {
     const saved = localStorage.getItem(MP3_QUALITY_KEY);
     return saved && isMp3Quality(saved) ? saved : "good";
@@ -419,16 +422,9 @@ export const AudioVisualizer: React.FC = () => {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const displayStreamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<number | null>(null);
 
-  const clearRecordingTimer = useCallback(() => {
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
+  const clearRecordingTimer = useCallback(() => {}, []);
 
-  const recordingLabel = `${String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:${String(recordingSeconds % 60).padStart(2, "0")}`;
   const currentVisualSettings =
     visualSettings[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
   const kickSensitivity = currentVisualSettings.kickSensitivity;
@@ -668,7 +664,6 @@ export const AudioVisualizer: React.FC = () => {
         const blobType = recorder.mimeType || mimeType || "audio/webm";
         clearRecordingTimer();
         setIsRecording(false);
-        setRecordingSeconds(0);
 
         const blob = new Blob(chunksRef.current, { type: blobType });
         const ts = new Date().toISOString().replace(/[:.]/g, "-");
@@ -712,11 +707,7 @@ export const AudioVisualizer: React.FC = () => {
 
       recorderRef.current = recorder;
       recorder.start(250);
-      setRecordingSeconds(0);
       setIsRecording(true);
-      timerRef.current = window.setInterval(() => {
-        setRecordingSeconds((s) => s + 1);
-      }, 1000);
     } catch (e: unknown) {
       window.alert(errorMessage(e) || "Failed to start recording.");
     }
@@ -791,7 +782,6 @@ export const AudioVisualizer: React.FC = () => {
         displayStream.getTracks().forEach((t) => t.stop());
         displayStreamRef.current = null;
         setIsRecording(false);
-        setRecordingSeconds(0);
       };
       recorder.onerror = () => {
         clearRecordingTimer();
@@ -802,11 +792,7 @@ export const AudioVisualizer: React.FC = () => {
 
       recorderRef.current = recorder;
       recorder.start(250);
-      setRecordingSeconds(0);
       setIsRecording(true);
-      timerRef.current = window.setInterval(() => {
-        setRecordingSeconds((s) => s + 1);
-      }, 1000);
     } catch {
       clearRecordingTimer();
       setIsRecording(false);
@@ -901,6 +887,10 @@ export const AudioVisualizer: React.FC = () => {
   }, [liveNoteHighlights]);
 
   useEffect(() => {
+    localStorage.setItem(RECORDING_MODE_KEY, recordingMode);
+  }, [recordingMode]);
+
+  useEffect(() => {
     localStorage.setItem(VISUAL_SETTINGS_KEY, JSON.stringify(visualSettings));
   }, [visualSettings]);
 
@@ -925,12 +915,6 @@ export const AudioVisualizer: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(MP3_QUALITY_KEY, mp3Quality);
   }, [mp3Quality]);
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 900);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1158,11 +1142,6 @@ export const AudioVisualizer: React.FC = () => {
         onPlay={() => play(code)}
         onStop={stop}
         isRecording={isRecording}
-        recordingLabel={recordingLabel}
-        recordingMode={recordingMode}
-        onRecordingMode={setRecordingMode}
-        mp3Quality={mp3Quality}
-        onMp3Quality={setMp3Quality}
         isExportingMp3={isExportingMp3}
         onRecordStart={startRecording}
         onRecordStop={stopAudioRecording}
@@ -1333,6 +1312,10 @@ export const AudioVisualizer: React.FC = () => {
         onEditorOpacity={setEditorOpacity}
         liveNoteHighlights={liveNoteHighlights}
         onLiveNoteHighlights={setLiveNoteHighlights}
+        recordingMode={recordingMode}
+        onRecordingMode={setRecordingMode}
+        mp3Quality={mp3Quality}
+        onMp3Quality={setMp3Quality}
         editorColorPreset={editorColorPreset}
         onEditorColorPreset={setEditorColorPreset}
         editorFontPreset={editorFontPreset}

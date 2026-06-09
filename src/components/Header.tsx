@@ -14,11 +14,6 @@ interface HeaderProps {
   onPlay: () => void;
   onStop: () => void;
   isRecording: boolean;
-  recordingLabel: string;
-  recordingMode: RecordingMode;
-  onRecordingMode: (mode: RecordingMode) => void;
-  mp3Quality: Mp3Quality;
-  onMp3Quality: (quality: Mp3Quality) => void;
   isExportingMp3: boolean;
   onRecordStart: () => void;
   onRecordStop: () => void;
@@ -35,8 +30,6 @@ export const Header: React.FC<HeaderProps> = (props) => {
     onPlay,
     onStop,
     isRecording,
-    recordingMode,
-    onRecordingMode,
     isExportingMp3,
     onRecordStart,
     onRecordStop,
@@ -98,6 +91,19 @@ export const Header: React.FC<HeaderProps> = (props) => {
     transform: "translateY(-1px)",
   };
 
+  const iconButtonBase: React.CSSProperties = {
+    ...buttonBase,
+    width: isMobile ? 38 : 40,
+    height: isMobile ? 38 : 40,
+    padding: 0,
+  };
+
+  const iconStyle = {
+    width: 16,
+    height: 16,
+    display: "block",
+  } as const;
+
   return (
     <header
       style={{
@@ -106,18 +112,19 @@ export const Header: React.FC<HeaderProps> = (props) => {
         left: 0,
         right: 0,
         zIndex: 40,
-        minHeight: isMobile ? 56 : 50,
+        minHeight: isMobile ? 54 : 52,
         padding: isMobile ? "8px 10px" : "8px 14px",
-        background: "rgba(8,8,18,0.92)",
-        backdropFilter: "blur(24px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background:
+          "linear-gradient(180deg, rgba(10,10,14,0.96), rgba(10,10,14,0.9))",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
       }}
     >
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "space-between",
           gap: 8,
           width: "100%",
         }}
@@ -133,22 +140,10 @@ export const Header: React.FC<HeaderProps> = (props) => {
               flexShrink: 0,
             }}
           />
-          <span
-            style={{
-              fontFamily: '"JetBrains Mono",monospace',
-              fontSize: isMobile ? 10 : 11,
-              letterSpacing: 1.4,
-              color: "#00ff88",
-              fontWeight: 700,
-            }}
-          >
-            STRUDEL STUDIO
-          </span>
         </div>
 
         <div
           style={{
-            marginLeft: "auto",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -160,9 +155,13 @@ export const Header: React.FC<HeaderProps> = (props) => {
             <button
               onClick={onStop}
               {...hoverHandlers("stop")}
-              style={withHover("stop", buttonBase, unifiedHoverStyle, true)}
+              style={withHover("stop", iconButtonBase, unifiedHoverStyle, true)}
+              title="Stop"
+              aria-label="Stop"
             >
-              ■ Stop
+              <svg {...iconStyle} viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
             </button>
           ) : (
             <button
@@ -172,7 +171,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
               style={withHover(
                 "play",
                 {
-                  ...buttonBase,
+                  ...iconButtonBase,
                   color: isLoading ? "#6bd6ad" : "#00ff88",
                   border: "1px solid rgba(0,255,136,0.3)",
                   background: isLoading
@@ -184,8 +183,12 @@ export const Header: React.FC<HeaderProps> = (props) => {
                 unifiedHoverStyle,
                 !isLoading,
               )}
+              title={isLoading ? "Loading" : "Play"}
+              aria-label={isLoading ? "Loading" : "Play"}
             >
-              ▶ {isLoading ? "Loading" : "Play"}
+              <svg {...iconStyle} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5.5v13l11-6.5-11-6.5z" />
+              </svg>
             </button>
           )}
 
@@ -196,7 +199,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
               style={withHover(
                 "rec-stop",
                 {
-                  ...buttonBase,
+                  ...iconButtonBase,
                   border: "1px solid rgba(255,122,135,0.45)",
                   background: "rgba(255,122,135,0.14)",
                   color: "#ffb7c0",
@@ -204,8 +207,12 @@ export const Header: React.FC<HeaderProps> = (props) => {
                 unifiedHoverStyle,
                 true,
               )}
+              title="Stop recording"
+              aria-label="Stop recording"
             >
-              ● Stop Rec
+              <svg {...iconStyle} viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
             </button>
           ) : (
             <button
@@ -215,7 +222,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
               style={withHover(
                 "rec",
                 {
-                  ...buttonBase,
+                  ...iconButtonBase,
                   border: canRecord
                     ? "1px solid rgba(255,122,135,0.45)"
                     : "1px solid rgba(255,122,135,0.22)",
@@ -229,39 +236,39 @@ export const Header: React.FC<HeaderProps> = (props) => {
                 unifiedHoverStyle,
                 canRecord,
               )}
+              title={canRecord ? "Record" : "Start playback to record"}
+              aria-label={canRecord ? "Record" : "Start playback to record"}
             >
-              ● Rec
+              <svg {...iconStyle} viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="5" />
+              </svg>
             </button>
           )}
-
-          <select
-            value={recordingMode}
-            onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
-            disabled={isRecording || isExportingMp3}
-            {...hoverHandlers("mode", !(isRecording || isExportingMp3))}
-            style={withHover(
-              "mode",
-              {
-                ...buttonBase,
-                padding: isMobile ? "7px 8px" : "7px 9px",
-                minWidth: 84,
-              },
-              unifiedHoverStyle,
-              !(isRecording || isExportingMp3),
-            )}
-          >
-            <option value="audio">Audio</option>
-            <option value="video">Video</option>
-            <option value="midi">MIDI</option>
-          </select>
 
           <button
             onClick={onPresetsOpen}
             {...hoverHandlers("library")}
-            style={withHover("library", buttonBase, unifiedHoverStyle, true)}
+            style={withHover(
+              "library",
+              iconButtonBase,
+              unifiedHoverStyle,
+              true,
+            )}
             title="Library"
+            aria-label="Library"
           >
-            Library
+            <svg
+              {...iconStyle}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 5h16v14H4z" />
+              <path d="M8 5v14" />
+            </svg>
           </button>
 
           <button
@@ -269,12 +276,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
             {...hoverHandlers("settings")}
             style={withHover(
               "settings",
-              {
-                ...buttonBase,
-                width: 34,
-                paddingLeft: 0,
-                paddingRight: 0,
-              },
+              iconButtonBase,
               unifiedHoverStyle,
               true,
             )}
@@ -282,8 +284,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
             aria-label="Audio settings"
           >
             <svg
-              width="14"
-              height="14"
+              {...iconStyle}
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -306,21 +307,23 @@ export const Header: React.FC<HeaderProps> = (props) => {
           <button
             onClick={onHowItWorksOpen}
             {...hoverHandlers("how")}
-            style={withHover(
-              "how",
-              {
-                ...buttonBase,
-                width: 34,
-                paddingLeft: 0,
-                paddingRight: 0,
-              },
-              unifiedHoverStyle,
-              true,
-            )}
+            style={withHover("how", iconButtonBase, unifiedHoverStyle, true)}
             title="How it works"
             aria-label="How it works"
           >
-            ?
+            <svg
+              {...iconStyle}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4" />
+              <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+            </svg>
           </button>
         </div>
       </div>
