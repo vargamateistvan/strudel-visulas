@@ -201,6 +201,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   livePulseStrip,
   livePlayingNoteHighlights,
   activeNote,
+  activeNotes,
   onCodeChange,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -349,7 +350,18 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const model = editor.getModel();
     if (!model) return;
 
-    if (!livePlayingNoteHighlights || status !== "playing" || !activeNote) {
+    const activeTokens =
+      activeNotes && activeNotes.length > 0
+        ? activeNotes
+        : activeNote
+          ? [activeNote]
+          : [];
+
+    if (
+      !livePlayingNoteHighlights ||
+      status !== "playing" ||
+      activeTokens.length === 0
+    ) {
       noteDecorationsRef.current?.clear();
       return;
     }
@@ -357,7 +369,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const source = model.getValue();
     const decorations = createStrudelDecorations(
       source,
-      [activeNote],
+      activeTokens,
       monaco,
       true,
     );
@@ -369,7 +381,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     }
 
     noteDecorationsRef.current.set(decorations);
-  }, [activeNote, livePlayingNoteHighlights, status]);
+  }, [activeNote, activeNotes, livePlayingNoteHighlights, status]);
 
   useEffect(() => {
     updateActiveHighlights();
@@ -546,14 +558,17 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
 
     const pills: Array<{ label: string; value: string; accent: string }> = [];
     if (status === "playing") {
+      const nowPlaying =
+        (activeNotes && activeNotes.length > 0 ? activeNotes[0] : activeNote) ??
+        "live";
       pills.push({
         label: "Now playing",
-        value: activeNote ?? "live",
+        value: nowPlaying,
         accent: themeTokens.caret,
       });
     }
     return pills;
-  }, [activeNote, livePulseStrip, status, themeTokens.caret]);
+  }, [activeNote, activeNotes, livePulseStrip, status, themeTokens.caret]);
 
   return (
     <div
