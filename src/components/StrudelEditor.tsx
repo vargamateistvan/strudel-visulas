@@ -944,9 +944,12 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const editorTopInset = 44;
 
-  const updateCode = (c: string) => {
-    onCodeChange?.(c);
-  };
+  const updateCode = useCallback(
+    (c: string) => {
+      onCodeChange?.(c);
+    },
+    [onCodeChange],
+  );
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
 
@@ -956,7 +959,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        isPlaying ? stop() : handlePlay();
+        if (isPlaying) {
+          stop();
+        } else {
+          handlePlay();
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -1021,13 +1028,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       .slice(0, 8);
   }, [currentToken, showSuggestions]);
 
-  useEffect(() => {
-    if (activeDiagnosticIndex >= diagnostics.length) {
-      setActiveDiagnosticIndex(0);
-    }
-  }, [diagnostics.length, activeDiagnosticIndex]);
-
-  const currentDiagnostic = diagnostics[activeDiagnosticIndex] ?? null;
+  const clampedDiagnosticIndex =
+    diagnostics.length === 0
+      ? 0
+      : Math.min(activeDiagnosticIndex, diagnostics.length - 1);
+  const currentDiagnostic = diagnostics[clampedDiagnosticIndex] ?? null;
 
   const lineMarkers = useMemo(() => {
     const seen = new Set<number>();
@@ -1050,11 +1055,10 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     return SIGNATURES[signatureContext.fn] ?? null;
   }, [signatureContext]);
 
-  useEffect(() => {
-    if (selectedSuggestion >= filteredSuggestions.length) {
-      setSelectedSuggestion(0);
-    }
-  }, [filteredSuggestions.length, selectedSuggestion]);
+  const clampedSuggestionIndex =
+    filteredSuggestions.length === 0
+      ? 0
+      : Math.min(selectedSuggestion, filteredSuggestions.length - 1);
 
   const applySuggestion = useCallback(
     (suggestion: EditorSuggestion) => {
@@ -1075,7 +1079,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         setCaretPos(nextCaret);
       });
     },
-    [code, tokenStart, caretPos],
+    [code, tokenStart, caretPos, updateCode],
   );
 
   const insertSnippet = useCallback(
@@ -1095,7 +1099,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         setCaretPos(nextCaret);
       });
     },
-    [code],
+    [code, updateCode],
   );
 
   const formatCode = useCallback(() => {
@@ -1117,7 +1121,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       .join("\n");
 
     updateCode(formatted);
-  }, [code]);
+  }, [code, updateCode]);
 
   const jumpToDiagnostic = useCallback(
     (diagnostic: EditorDiagnostic) => {
@@ -1160,7 +1164,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       return next.length > 20 ? next.slice(next.length - 20) : next;
     });
     updateCode(currentQuickFix.nextCode);
-  }, [code, currentQuickFix]);
+  }, [code, currentQuickFix, updateCode]);
 
   const applyAllSafeFixes = useCallback(() => {
     let nextCode = code;
@@ -1183,7 +1187,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       });
       updateCode(nextCode);
     }
-  }, [code]);
+  }, [code, updateCode]);
 
   const revertLastQuickFix = useCallback(() => {
     let restored = "";
@@ -1202,7 +1206,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         setCaretPos(restored.length);
       });
     }
-  }, []);
+  }, [updateCode]);
 
   return (
     <div
@@ -1289,7 +1293,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             }
             if (e.key === "Enter") {
               e.preventDefault();
-              applySuggestion(filteredSuggestions[selectedSuggestion]);
+              applySuggestion(filteredSuggestions[clampedSuggestionIndex]);
               return;
             }
             if (e.key === "Escape") {
@@ -1410,7 +1414,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           }}
         >
           {filteredSuggestions.map((item, idx) => {
-            const active = idx === selectedSuggestion;
+            const active = idx === clampedSuggestionIndex;
             return (
               <button
                 key={`${item.label}-${idx}`}

@@ -144,7 +144,11 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
         for (let i = 0; i < waveform.length; i++) {
           const v = waveform[i] / 128 - 1;
           const y = v * h * 0.15 + h * 0.5;
-          i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * sliceW, y);
+          if (i === 0) {
+            ctx.moveTo(0, y);
+          } else {
+            ctx.lineTo(i * sliceW, y);
+          }
         }
         ctx.stroke();
       }

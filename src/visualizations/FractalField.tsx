@@ -78,7 +78,7 @@ function hexToHue(hex: string): number {
   const delta = max - min;
   if (delta === 0) return 0;
 
-  let hue = 0;
+  let hue: number;
   if (max === r) hue = ((g - b) / delta) % 6;
   else if (max === g) hue = (b - r) / delta + 2;
   else hue = (r - g) / delta + 4;
@@ -126,7 +126,11 @@ function drawLissajous(
       const yi = (i + phaseShift) % n;
       const x = (waveform[xi] / 128 - 1) * scale + cx;
       const y = (waveform[yi] / 128 - 1) * scale + cy;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
     }
 
     const color = `hsla(${hue},${sat}%,${lum}%,${alpha})`;

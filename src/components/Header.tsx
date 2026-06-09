@@ -45,8 +45,6 @@ export const Header: React.FC<HeaderProps> = (props) => {
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
   const canRecord = isPlaying && !isExportingMp3;
-  const selectedMode: RecordingMode =
-    recordingMode === "midi" ? "audio" : recordingMode;
   const [hoveredControl, setHoveredControl] = useState<string | null>(null);
 
   const withHover = (
@@ -237,7 +235,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
           )}
 
           <select
-            value={selectedMode}
+            value={recordingMode}
             onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
             disabled={isRecording || isExportingMp3}
             {...hoverHandlers("mode", !(isRecording || isExportingMp3))}
@@ -254,6 +252,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
           >
             <option value="audio">Audio</option>
             <option value="video">Video</option>
+            <option value="midi">MIDI</option>
           </select>
 
           <button

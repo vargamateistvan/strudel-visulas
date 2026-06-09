@@ -70,7 +70,7 @@ function extractNoteTokens(code: string): string[] {
   while ((m = noteCallRe.exec(code)) !== null) {
     const pattern = m[2];
     const raw = pattern
-      .replace(/[\[\]<>(),]/g, " ")
+      .replace(/[[\]<>(),]/g, " ")
       .split(/\s+/)
       .map((x) => x.trim())
       .filter(Boolean);

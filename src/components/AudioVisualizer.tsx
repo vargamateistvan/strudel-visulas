@@ -256,6 +256,11 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
   };
 }
 
+function errorMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  return String(err ?? "");
+}
+
 function loadVisualSettingsMap(): VisualSettingsMap {
   const visualModes: VizMode[] = [
     "particles",
@@ -381,7 +386,7 @@ export const AudioVisualizer: React.FC = () => {
     );
   });
   const [splashDone, setSplashDone] = useState(false);
-  const [code, setCode] = useState(DEFAULT_PATTERN);
+  const [code, setCode] = useState(() => loadDraft() ?? DEFAULT_PATTERN);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
   );
@@ -402,6 +407,13 @@ export const AudioVisualizer: React.FC = () => {
   const chunksRef = useRef<BlobPart[]>([]);
   const displayStreamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
+
+  const clearRecordingTimer = useCallback(() => {
+    if (timerRef.current) {
+      window.clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   const recordingLabel = `${String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:${String(recordingSeconds % 60).padStart(2, "0")}`;
   const currentVisualSettings =
@@ -603,10 +615,7 @@ export const AudioVisualizer: React.FC = () => {
   }, []);
 
   const stopAudioRecording = useCallback(() => {
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    clearRecordingTimer();
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       recorderRef.current.stop();
     } else {
@@ -616,7 +625,7 @@ export const AudioVisualizer: React.FC = () => {
       displayStreamRef.current.getTracks().forEach((t) => t.stop());
       displayStreamRef.current = null;
     }
-  }, []);
+  }, [clearRecordingTimer]);
 
   const startAudioRecording = useCallback(async () => {
     try {
@@ -640,13 +649,11 @@ export const AudioVisualizer: React.FC = () => {
       };
       recorder.onerror = () => {
         setIsRecording(false);
-        if (timerRef.current) {
-          window.clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
+        clearRecordingTimer();
       };
       recorder.onstop = async () => {
         const blobType = recorder.mimeType || mimeType || "audio/webm";
+        clearRecordingTimer();
         setIsRecording(false);
         setRecordingSeconds(0);
 
@@ -671,7 +678,7 @@ export const AudioVisualizer: React.FC = () => {
           a.download = `strudel-recording-${ts}.mp3`;
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
-        } catch (e: any) {
+        } catch (e: unknown) {
           const ext = blobType.includes("ogg") ? "ogg" : "webm";
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -680,7 +687,7 @@ export const AudioVisualizer: React.FC = () => {
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
           window.alert(
-            `MP3 conversion failed, downloaded original ${ext.toUpperCase()} instead. ${e?.message ?? ""}`,
+            `MP3 conversion failed, downloaded original ${ext.toUpperCase()} instead. ${errorMessage(e)}`,
           );
         } finally {
           setIsExportingMp3(false);
@@ -697,10 +704,11 @@ export const AudioVisualizer: React.FC = () => {
       timerRef.current = window.setInterval(() => {
         setRecordingSeconds((s) => s + 1);
       }, 1000);
-    } catch (e: any) {
-      window.alert(e?.message ?? "Failed to start recording.");
+    } catch (e: unknown) {
+      window.alert(errorMessage(e) || "Failed to start recording.");
     }
   }, [
+    clearRecordingTimer,
     getRecordingStream,
     isExportingMp3,
     isRecording,
@@ -743,11 +751,20 @@ export const AudioVisualizer: React.FC = () => {
         ? new MediaRecorder(combined, { mimeType })
         : new MediaRecorder(combined);
 
+      displayStream.getVideoTracks().forEach((track) => {
+        track.onended = () => {
+          if (recorder.state !== "inactive") {
+            recorder.stop();
+          }
+        };
+      });
+
       chunksRef.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
+        clearRecordingTimer();
         const blob = new Blob(chunksRef.current, {
           type: recorder.mimeType || "video/webm",
         });
@@ -764,6 +781,7 @@ export const AudioVisualizer: React.FC = () => {
         setRecordingSeconds(0);
       };
       recorder.onerror = () => {
+        clearRecordingTimer();
         setIsRecording(false);
         displayStream.getTracks().forEach((t) => t.stop());
         displayStreamRef.current = null;
@@ -777,12 +795,14 @@ export const AudioVisualizer: React.FC = () => {
         setRecordingSeconds((s) => s + 1);
       }, 1000);
     } catch {
+      clearRecordingTimer();
+      setIsRecording(false);
       if (displayStreamRef.current) {
         displayStreamRef.current.getTracks().forEach((t) => t.stop());
       }
       displayStreamRef.current = null;
     }
-  }, [getRecordingStream, isRecording, status]);
+  }, [clearRecordingTimer, getRecordingStream, isRecording, status]);
 
   const exportMidi = useCallback(() => {
     const blob = buildMidiFromCode(code);
@@ -823,11 +843,6 @@ export const AudioVisualizer: React.FC = () => {
     import("@strudel/transpiler");
     import("@strudel/webaudio");
   }, []);
-
-  useEffect(() => {
-    const savedDraft = loadDraft();
-    if (savedDraft) setCode(savedDraft);
-  }, [loadDraft]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -909,9 +924,7 @@ export const AudioVisualizer: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-      }
+      clearRecordingTimer();
       if (recorderRef.current && recorderRef.current.state !== "inactive") {
         recorderRef.current.stop();
       }
@@ -919,7 +932,7 @@ export const AudioVisualizer: React.FC = () => {
         displayStreamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-  }, []);
+  }, [clearRecordingTimer]);
 
   useEffect(() => {
     if (status !== "playing" && isRecording) {
@@ -1084,7 +1097,7 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             customColors={customColors}
-            mode="kaleidoscope"
+            mode="mandelbrot"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}
@@ -1097,7 +1110,7 @@ export const AudioVisualizer: React.FC = () => {
             audioData={audioData}
             colorScheme={colorScheme}
             customColors={customColors}
-            mode="kaleidoTunnel"
+            mode="burningShip"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}

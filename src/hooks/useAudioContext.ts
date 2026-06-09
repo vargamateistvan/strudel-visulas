@@ -26,7 +26,10 @@ export const useAudioContext = () => {
   const [audioData, setAudioData] = useState<AudioData>(EMPTY);
 
   useEffect(() => {
-    const AudioCtx = window.AudioContext ?? (window as any).webkitAudioContext;
+    const AudioCtx =
+      window.AudioContext ??
+      (window as Window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
     if (!AudioCtx) return;
 
     const ctx = new AudioCtx();
@@ -78,6 +81,8 @@ export const useAudioContext = () => {
     };
   }, []);
 
+  const getAudioContext = useCallback(() => ctxRef.current, []);
+
   /** Tap any AudioNode (e.g. Strudel's master gain) into our analyser. */
   const connectNode = useCallback((node: AudioNode) => {
     if (!analyserRef.current) return;
@@ -102,7 +107,7 @@ export const useAudioContext = () => {
 
   return {
     audioData,
-    audioContext: ctxRef.current,
+    getAudioContext,
     connectNode,
     connectStream,
     resume,

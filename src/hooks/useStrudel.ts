@@ -131,12 +131,15 @@ function unwrapScalars(input: unknown, depth = 0): Array<string | number> {
   return out;
 }
 
-function extractTriggeredActivity(hap: any): {
+function extractTriggeredActivity(hap: unknown): {
   notes: string[];
   literals: string[];
   controls: string[];
 } {
-  let value = hap?.value;
+  let value =
+    typeof hap === "object" && hap !== null && "value" in hap
+      ? (hap as Record<string, unknown>).value
+      : undefined;
   if (value == null) return { notes: [], literals: [], controls: [] };
   if (typeof value !== "object") {
     value = { value };
@@ -263,6 +266,15 @@ function isNonFiniteAudioParamError(err: unknown): boolean {
   );
 }
 
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err ?? "");
+}
+
+type ReplInstance = {
+  stop: () => void;
+  evaluate: (code: string) => Promise<void>;
+};
+
 const EMPTY: AudioData = {
   frequencies: new Uint8Array(512),
   waveform: new Uint8Array(512),
@@ -295,7 +307,6 @@ stack(
 let scopePromise: Promise<void> | null = null;
 let soundDepsPromise: Promise<void> | null = null;
 let audioInitPromise: Promise<void> | null = null;
-let logFilterInstalled = false;
 let loggerConfigured = false;
 
 const NOISY_RUNTIME_PATTERNS = [
@@ -310,25 +321,6 @@ function isNoisyRuntimeLog(args: unknown[]): boolean {
   const first = args[0];
   if (typeof first !== "string") return false;
   return NOISY_RUNTIME_PATTERNS.some((pattern) => first.includes(pattern));
-}
-
-function installRuntimeLogFilter(): void {
-  if (logFilterInstalled || import.meta.env.PROD) return;
-
-  const originalLog = console.log.bind(console);
-  const originalWarn = console.warn.bind(console);
-
-  console.log = (...args: unknown[]) => {
-    if (isNoisyRuntimeLog(args)) return;
-    originalLog(...args);
-  };
-
-  console.warn = (...args: unknown[]) => {
-    if (isNoisyRuntimeLog(args)) return;
-    originalWarn(...args);
-  };
-
-  logFilterInstalled = true;
 }
 
 async function configureSuperdoughLogger(): Promise<void> {
@@ -410,8 +402,9 @@ export const useStrudel = () => {
   const [activeControls, setActiveControls] = useState<string[]>([]);
   const [nPulse, setNPulse] = useState(0);
 
-  const replRef = useRef<any>(null);
+  const replRef = useRef<ReplInstance | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const tappedMasterRef = useRef<AudioNode | null>(null);
   const mediaDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const mediaDestConnectedRef = useRef(false);
   const rafRef = useRef<number>(0);
@@ -448,7 +441,7 @@ export const useStrudel = () => {
     setNPulse(0);
   };
 
-  const startReadingLoop = (analyser: AnalyserNode) => {
+  const startReadingLoop = useCallback((analyser: AnalyserNode) => {
     cancelAnimationFrame(rafRef.current);
     const freqBuf = new Uint8Array(analyser.frequencyBinCount);
     const waveBuf = new Uint8Array(analyser.frequencyBinCount);
@@ -481,9 +474,20 @@ export const useStrudel = () => {
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
-  };
+  }, []);
 
-  const tapMasterBus = async () => {
+  const untapMasterBus = useCallback(() => {
+    if (tappedMasterRef.current && analyserRef.current) {
+      try {
+        tappedMasterRef.current.disconnect(analyserRef.current);
+      } catch {
+        // Ignore disconnect errors from stale audio graphs.
+      }
+    }
+    tappedMasterRef.current = null;
+  }, []);
+
+  const tapMasterBus = useCallback(async () => {
     try {
       const { getAudioContext, getSuperdoughAudioController } =
         await import("superdough");
@@ -493,17 +497,25 @@ export const useStrudel = () => {
       if (!destGain) return;
 
       if (!analyserRef.current || analyserRef.current.context !== ctx) {
+        untapMasterBus();
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 1024;
         analyser.smoothingTimeConstant = 0.82;
         analyserRef.current = analyser;
         startReadingLoop(analyser);
       }
+
+      if (tappedMasterRef.current === destGain) {
+        return;
+      }
+
+      untapMasterBus();
       destGain.connect(analyserRef.current);
+      tappedMasterRef.current = destGain;
     } catch (e) {
       console.warn("tapMasterBus failed:", e);
     }
-  };
+  }, [startReadingLoop, untapMasterBus]);
 
   const getRecordingStream = useCallback(async (): Promise<MediaStream> => {
     const { initAudio, getAudioContext, getSuperdoughAudioController } =
@@ -568,16 +580,20 @@ export const useStrudel = () => {
       const r = webaudioRepl({
         transpiler,
         defaultOutput: (
-          hap: any,
-          deadline: any,
-          hapDuration: any,
-          cps: any,
-          t: any,
+          hap: unknown,
+          deadline: unknown,
+          hapDuration: unknown,
+          cps: unknown,
+          t: unknown,
         ) => {
           if (
+            typeof deadline !== "number" ||
             !Number.isFinite(deadline) ||
+            typeof hapDuration !== "number" ||
             !Number.isFinite(hapDuration) ||
+            typeof cps !== "number" ||
             !Number.isFinite(cps) ||
+            typeof t !== "number" ||
             !Number.isFinite(t) ||
             hasNonFiniteNumber(hap)
           ) {
@@ -711,12 +727,12 @@ export const useStrudel = () => {
       setStatus("playing");
       setLoadMsg("");
       setTimeout(tapMasterBus, 400);
-    } catch (err: any) {
-      setError(err?.message ?? String(err));
+    } catch (err: unknown) {
+      setError(errorMessage(err));
       setStatus("error");
       setLoadMsg("");
     }
-  }, []);
+  }, [tapMasterBus]);
 
   const stop = useCallback(() => {
     if (replRef.current) {
@@ -724,23 +740,21 @@ export const useStrudel = () => {
       replRef.current = null;
     }
     clearAllActiveNotes();
+    untapMasterBus();
     setStatus("idle");
     setError(null);
     setLoadMsg("");
-  }, []);
+  }, [untapMasterBus]);
 
   useEffect(
     () => () => {
       cancelAnimationFrame(rafRef.current);
       clearAllActiveNotes();
+      untapMasterBus();
       if (replRef.current?.stop) replRef.current.stop();
     },
-    [],
+    [untapMasterBus],
   );
-
-  useEffect(() => {
-    installRuntimeLogFilter();
-  }, []);
 
   return {
     play,

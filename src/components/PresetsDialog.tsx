@@ -33,7 +33,7 @@ function escapeHtml(value: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
 
@@ -457,7 +457,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
                     <button
                       onClick={() => {
                         if (
-                          window.confirm(`Delete preset \"${preset.name}\"?`)
+                          window.confirm(`Delete preset "${preset.name}"?`)
                         ) {
                           onDelete(preset.id);
                         }
