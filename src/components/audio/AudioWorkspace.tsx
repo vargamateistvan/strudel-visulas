@@ -1,6 +1,18 @@
 import { EditorViewport } from "./EditorViewport";
 import { Mp3ExportOverlay } from "./Mp3ExportOverlay";
 import type { StrudelStatus } from "../../hooks/useStrudel";
+import type { AiGenerationIntent } from "../../hooks/useAiMusicComposer";
+
+type AiComposerProps = {
+  enabled: boolean;
+  prompt: string;
+  onPromptChange: (value: string) => void;
+  isGenerating: boolean;
+  canGenerate: boolean;
+  error: string | null;
+  lastUpdatedAt: number | null;
+  onGenerate: (intent: AiGenerationIntent) => void;
+};
 
 type AudioWorkspaceProps = {
   code: string;
@@ -28,6 +40,7 @@ type AudioWorkspaceProps = {
   mp3Speed: string;
   isMobile: boolean;
   mobileHeaderExpanded: boolean;
+  aiComposerProps: AiComposerProps;
 };
 
 export function AudioWorkspace({
@@ -56,6 +69,7 @@ export function AudioWorkspace({
   mp3Speed,
   isMobile,
   mobileHeaderExpanded,
+  aiComposerProps,
 }: AudioWorkspaceProps) {
   return (
     <>
@@ -100,6 +114,7 @@ export function AudioWorkspace({
           activeControls={activeControls}
           nPulse={nPulse}
           onCodeChange={onCodeChange}
+          aiComposerProps={aiComposerProps}
         />
       </div>
     </>

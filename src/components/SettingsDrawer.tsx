@@ -5,6 +5,8 @@ import type { Mp3Quality } from "./Header";
 import { ColorSchemeSection } from "./settings/ColorSchemeSection";
 import { LiveFeedbackSection } from "./settings/LiveFeedbackSection";
 import { RecordingSection } from "./settings/RecordingSection";
+import { AiComposerSettingsSection } from "./settings/AiComposerSettingsSection";
+import type { AiApplyMode, AiProvider } from "../hooks/useAiMusicComposer";
 
 export type ColorScheme = "neon" | "pastel" | "fire" | "ocean" | "custom";
 export type VizMode =
@@ -79,6 +81,17 @@ interface SettingsDrawerProps {
   onEditorFontPreset: (preset: EditorFontPreset) => void;
   editorFontSize: number;
   onEditorFontSize: (size: number) => void;
+  aiComposerEnabled: boolean;
+  onAiComposerEnabled: (enabled: boolean) => void;
+  aiProvider: AiProvider;
+  onAiProvider: (provider: AiProvider) => void;
+  aiApplyMode: AiApplyMode;
+  onAiApplyMode: (mode: AiApplyMode) => void;
+  aiApiKey: string;
+  onAiApiKey: (value: string) => void;
+  onAiClearApiKey: () => void;
+  aiRememberApiKey: boolean;
+  onAiRememberApiKey: (remember: boolean) => void;
   audioData: AudioData;
 }
 
@@ -276,6 +289,17 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onEditorFontPreset,
   editorFontSize,
   onEditorFontSize,
+  aiComposerEnabled,
+  onAiComposerEnabled,
+  aiProvider,
+  onAiProvider,
+  aiApplyMode,
+  onAiApplyMode,
+  aiApiKey,
+  onAiApiKey,
+  onAiClearApiKey,
+  aiRememberApiKey,
+  onAiRememberApiKey,
   audioData,
 }) => {
   const show3DFractalQuality =
@@ -704,6 +728,20 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             onRecordingMode={onRecordingMode}
             mp3Quality={mp3Quality}
             onMp3Quality={onMp3Quality}
+          />
+
+          <AiComposerSettingsSection
+            enabled={aiComposerEnabled}
+            onEnabledChange={onAiComposerEnabled}
+            provider={aiProvider}
+            onProviderChange={onAiProvider}
+            applyMode={aiApplyMode}
+            onApplyModeChange={onAiApplyMode}
+            apiKey={aiApiKey}
+            onApiKeyChange={onAiApiKey}
+            onClearApiKey={onAiClearApiKey}
+            rememberApiKey={aiRememberApiKey}
+            onRememberApiKeyChange={onAiRememberApiKey}
           />
 
           {/* Editor colors */}

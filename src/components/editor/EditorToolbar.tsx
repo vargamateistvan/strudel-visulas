@@ -1,5 +1,7 @@
 type EditorToolbarProps = {
   fontFamily: string;
+  onUndo: () => void;
+  onRedo: () => void;
   onFormat: () => void;
   onWrapRev: () => void;
   onWrapGain: () => void;
@@ -22,6 +24,8 @@ const iconButtonStyle = {
 
 export function EditorToolbar({
   fontFamily,
+  onUndo,
+  onRedo,
   onFormat,
   onWrapRev,
   onWrapGain,
@@ -50,6 +54,12 @@ export function EditorToolbar({
         alignItems: "center",
       }}
     >
+      <button onClick={onUndo} style={buttonStyle}>
+        Undo
+      </button>
+      <button onClick={onRedo} style={buttonStyle}>
+        Redo
+      </button>
       <button onClick={onFormat} style={buttonStyle}>
         Format
       </button>
