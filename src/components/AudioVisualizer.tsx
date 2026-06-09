@@ -5,6 +5,7 @@ import { useRecordingExport } from "../hooks/useRecordingExport";
 import { useAudioVisualizerPersistence } from "../hooks/useAudioVisualizerPersistence";
 import { useCustomColorPresets } from "../hooks/useCustomColorPresets";
 import { useVisualSettings } from "../hooks/useVisualSettings";
+import { useAudioVisualizerUiState } from "../hooks/useAudioVisualizerUiState";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import {
@@ -62,9 +63,24 @@ export const AudioVisualizer: React.FC = () => {
     saveDraft,
   } = useLocalPresets();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [presetsOpen, setPresetsOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
+  const {
+    drawerOpen,
+    presetsOpen,
+    helpOpen,
+    splashDone,
+    isMobile,
+    mobileHeaderExpanded,
+    setPresetsOpen,
+    setMobileHeaderExpanded,
+    openDrawer,
+    closeDrawer,
+    openPresets,
+    closePresets,
+    openHelp,
+    closeHelp,
+    markSplashDone,
+  } = useAudioVisualizerUiState();
+
   const [colorScheme, setColorScheme] = useState<ColorScheme>(() => {
     const saved = localStorage.getItem(COLOR_SCHEME_KEY);
     return saved && isColorScheme(saved) ? saved : "neon";
@@ -107,12 +123,7 @@ export const AudioVisualizer: React.FC = () => {
       parseEditorFontSize(localStorage.getItem(EDITOR_FONT_SIZE_KEY)) ?? 13
     );
   });
-  const [splashDone, setSplashDone] = useState(false);
   const [code, setCode] = useState(() => loadDraft() ?? DEFAULT_PATTERN);
-  const [isMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 900 : false,
-  );
-  const [mobileHeaderExpanded, setMobileHeaderExpanded] = useState(false);
 
   const {
     customColorPresets,
@@ -167,13 +178,13 @@ export const AudioVisualizer: React.FC = () => {
         setPresetsOpen(false);
       }
     },
-    [getById],
+    [getById, setPresetsOpen],
   );
 
   const handleSplashClick = useCallback(() => {
-    setSplashDone(true);
+    markSplashDone();
     play(code);
-  }, [play, code]);
+  }, [markSplashDone, play, code]);
 
   useAudioVisualizerPersistence({
     code,
@@ -217,9 +228,9 @@ export const AudioVisualizer: React.FC = () => {
         status={status}
         isMobile={isMobile}
         onMobileAdvancedOpenChange={setMobileHeaderExpanded}
-        onSettingsOpen={() => setDrawerOpen(true)}
-        onPresetsOpen={() => setPresetsOpen(true)}
-        onHowItWorksOpen={() => setHelpOpen(true)}
+        onSettingsOpen={openDrawer}
+        onPresetsOpen={openPresets}
+        onHowItWorksOpen={openHelp}
         onPlay={() => play(code)}
         onStop={stop}
         isRecording={isRecording}
@@ -259,7 +270,7 @@ export const AudioVisualizer: React.FC = () => {
       {/* settings drawer */}
       <SettingsDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={closeDrawer}
         colorScheme={colorScheme}
         onColorScheme={setColorScheme}
         customColorPresets={customColorPresets}
@@ -308,8 +319,8 @@ export const AudioVisualizer: React.FC = () => {
         splashDone={splashDone}
         currentCode={code}
         presets={presets}
-        onClosePresets={() => setPresetsOpen(false)}
-        onCloseHelp={() => setHelpOpen(false)}
+        onClosePresets={closePresets}
+        onCloseHelp={closeHelp}
         onSaveAsNew={saveAsNew}
         onOverwrite={overwrite}
         onRename={rename}
