@@ -26,6 +26,7 @@ interface StrudelEditorProps {
   colorPreset: EditorColorPreset;
   fontPreset: EditorFontPreset;
   fontSize: number;
+  liveNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
   activeLiterals?: string[];
@@ -188,6 +189,12 @@ const SNIPPETS: Record<string, string> = {
     'stack(\n  sound("bd ~ bd ~"),\n  sound("~ sn ~ sn"),\n  sound("hh*8").gain(0.5)\n).cpm(120)',
   "Ambient Chords":
     'stack(\n  note("c3 eb3 g3 bb3").sound("triangle").slow(2).gain(0.35),\n  note("c4 g4 eb4").sound("sawtooth").delay(0.4).gain(0.2)\n).cpm(72)',
+  "Bass Pulse":
+    'stack(\n  note("c2 ~ c2 ~ g1 ~ c2 ~").sound("square").lpf(180).gain(0.42),\n  sound("bd ~ ~ bd").gain(0.7)\n).cpm(96)',
+  "Drum Grid":
+    'stack(\n  sound("bd ~ bd ~ bd ~ bd ~"),\n  sound("~ sn ~ sn ~ sn ~ sn").gain(0.85),\n  sound("hh*16").gain(0.45)\n).cpm(132)',
+  "Chord Bloom":
+    'stack(\n  note("c3 eb3 g3 bb3").sound("triangle").slow(2).room(0.2).size(0.6),\n  note("f3 a3 c4 eb4").sound("sine").slow(4).gain(0.25)\n).cpm(68)',
 };
 
 const STRUDEL_GLOBALS = [
@@ -284,6 +291,13 @@ const FUNCTION_EXAMPLES: Record<string, string> = {
   sometimesBy: "sometimesBy(0.25, rev)",
   gain: "gain(0.8)",
   delay: "delay(0.25)",
+  rev: "rev",
+  slow: "slow(2)",
+  fast: "fast(2)",
+  lpf: "lpf(400)",
+  hpf: "hpf(300)",
+  room: "room(0.2)",
+  size: "size(0.6)",
 };
 
 function buildCompletionDocumentation(name: string): Monaco.IMarkdownString {
@@ -722,6 +736,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   colorPreset,
   fontPreset,
   fontSize,
+  liveNoteHighlights,
   activeNote,
   activeNotes,
   activeLiterals,
@@ -761,6 +776,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     themeTokens.background,
     Math.max(0.38, opacity),
   );
+  const activeNoteCount = activeNotes?.length ?? 0;
+  const activeLiteralCount = activeLiterals?.length ?? 0;
+  const activeControlCount = activeControls?.length ?? 0;
   const activePlayingTokens = useMemo(() => {
     const values = new Set<string>();
     if (activeNote) values.add(activeNote);
@@ -887,7 +905,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const model = editor.getModel();
     if (!model) return;
 
-    if (status !== "playing" || activePlayingTokens.length === 0) {
+    if (
+      !liveNoteHighlights ||
+      status !== "playing" ||
+      activePlayingTokens.length === 0
+    ) {
       noteDecorationsRef.current?.clear();
       return;
     }
@@ -910,7 +932,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     }
 
     noteDecorationsRef.current.set(decorations);
-  }, [activeNote, activePlayingTokens, status]);
+  }, [activeNote, activePlayingTokens, liveNoteHighlights, status]);
 
   useEffect(() => {
     updateActiveHighlights();
@@ -1080,6 +1102,70 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       void action.run();
     }
   }, []);
+
+  const statusPills = useMemo(() => {
+    if (!liveNoteHighlights) {
+      return [];
+    }
+
+    const pills: Array<{ label: string; value: string; accent: string }> = [];
+    if (status === "playing") {
+      pills.push({
+        label: "Now playing",
+        value: activeNote ?? "live",
+        accent: themeTokens.caret,
+      });
+    }
+    if (activeNote) {
+      pills.push({
+        label: "Primary",
+        value: activeNote,
+        accent: themeTokens.caret,
+      });
+    }
+    if (activeNoteCount > 0) {
+      pills.push({
+        label: "Notes",
+        value: String(activeNoteCount),
+        accent: themeTokens.keyword,
+      });
+    }
+    if (activeLiteralCount > 0) {
+      pills.push({
+        label: "Literals",
+        value: String(activeLiteralCount),
+        accent: themeTokens.number,
+      });
+    }
+    if (activeControlCount > 0) {
+      pills.push({
+        label: "Controls",
+        value: String(activeControlCount),
+        accent: themeTokens.comment,
+      });
+    }
+    if (typeof nPulse === "number") {
+      pills.push({
+        label: "Pulse",
+        value: String(nPulse),
+        accent: themeTokens.string,
+      });
+    }
+    return pills;
+  }, [
+    activeControlCount,
+    activeLiteralCount,
+    activeNote,
+    activeNoteCount,
+    nPulse,
+    status,
+    themeTokens.caret,
+    themeTokens.comment,
+    themeTokens.keyword,
+    themeTokens.number,
+    themeTokens.string,
+    liveNoteHighlights,
+  ]);
 
   return (
     <div
@@ -1300,6 +1386,48 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       >
         Cmd/Ctrl+Enter Play • Ctrl/Cmd+Space IntelliSense • Tab Indent
       </div>
+
+      {statusPills.length > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            left: 14,
+            bottom: 12,
+            zIndex: 4,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+            maxWidth: "calc(100% - 28px)",
+            pointerEvents: "none",
+          }}
+        >
+          {statusPills.map((pill) => (
+            <div
+              key={`${pill.label}:${pill.value}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                borderRadius: 999,
+                padding: "5px 10px",
+                background: hexToRgba(pill.accent, 0.14),
+                border: `1px solid ${hexToRgba(pill.accent, 0.28)}`,
+                color: themeTokens.text,
+                fontFamily: editorFontFamily,
+                fontSize: 10,
+                letterSpacing: 0.35,
+                boxShadow: `0 0 0 1px ${hexToRgba(pill.accent, 0.08)} inset`,
+                backdropFilter: "blur(6px)",
+              }}
+            >
+              <span style={{ opacity: 0.72, textTransform: "uppercase" }}>
+                {pill.label}
+              </span>
+              <span style={{ color: pill.accent }}>{pill.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {liveEditError && (
         <div

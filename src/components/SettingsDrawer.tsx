@@ -60,6 +60,8 @@ interface SettingsDrawerProps {
   onMandelbulbSize: (v: number) => void;
   editorOpacity: number;
   onEditorOpacity: (v: number) => void;
+  liveNoteHighlights: boolean;
+  onLiveNoteHighlights: (enabled: boolean) => void;
   editorColorPreset: EditorColorPreset;
   onEditorColorPreset: (preset: EditorColorPreset) => void;
   editorFontPreset: EditorFontPreset;
@@ -256,6 +258,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onMandelbulbSize,
   editorOpacity,
   onEditorOpacity,
+  liveNoteHighlights,
+  onLiveNoteHighlights,
   editorColorPreset,
   onEditorColorPreset,
   editorFontPreset,
@@ -902,6 +906,89 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 {Math.round(editorOpacity * 100)}%
               </span>
             </div>
+          </section>
+
+          {/* Live note highlights */}
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              Live Note Highlights
+            </p>
+            <button
+              onClick={() => onLiveNoteHighlights(!liveNoteHighlights)}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "10px 12px",
+                borderRadius: 6,
+                border: liveNoteHighlights
+                  ? "1px solid rgba(0,255,136,0.3)"
+                  : "1px solid rgba(255,255,255,0.05)",
+                background: liveNoteHighlights
+                  ? "rgba(0,255,136,0.08)"
+                  : "rgba(255,255,255,0.02)",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: liveNoteHighlights ? "#00ff88" : "#555",
+                    fontWeight: liveNoteHighlights ? 700 : 400,
+                  }}
+                >
+                  {liveNoteHighlights ? "Enabled" : "Disabled"}
+                </span>
+                <span style={{ fontSize: 10, color: "#333" }}>
+                  Highlight currently playing notes and show the live pulse
+                  strip in the editor.
+                </span>
+              </div>
+              <div
+                style={{
+                  width: 38,
+                  height: 22,
+                  borderRadius: 999,
+                  background: liveNoteHighlights
+                    ? "rgba(0,255,136,0.22)"
+                    : "rgba(255,255,255,0.08)",
+                  border: liveNoteHighlights
+                    ? "1px solid rgba(0,255,136,0.3)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                  position: "relative",
+                  flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 2,
+                    left: liveNoteHighlights ? 17 : 2,
+                    width: 16,
+                    height: 16,
+                    borderRadius: "50%",
+                    background: liveNoteHighlights ? "#00ff88" : "#888",
+                    boxShadow: liveNoteHighlights ? "0 0 8px #00ff88" : "none",
+                    transition: "left 0.2s ease, background 0.2s ease",
+                  }}
+                />
+              </div>
+            </button>
           </section>
 
           {/* Editor colors */}
