@@ -14,6 +14,7 @@ import { useAudioVisualizerHeaderActions } from "../hooks/useAudioVisualizerHead
 import { useAudioVisualizerSettingsDrawerProps } from "../hooks/useAudioVisualizerSettingsDrawerProps";
 import { useAudioWorkspaceProps } from "../hooks/useAudioWorkspaceProps";
 import { useOverlayDialogsProps } from "../hooks/useOverlayDialogsProps";
+import { useHeaderProps } from "../hooks/useHeaderProps";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import { SettingsDrawer } from "./SettingsDrawer";
@@ -269,23 +270,25 @@ export const AudioVisualizer: React.FC = () => {
     onSplashClick: handleSplashClick,
   });
 
+  const headerProps = useHeaderProps({
+    status,
+    isMobile,
+    onMobileAdvancedOpenChange: setMobileHeaderExpanded,
+    onSettingsOpen: openDrawer,
+    onPresetsOpen: openPresets,
+    onHowItWorksOpen: openHelp,
+    onPlay,
+    onStop: stop,
+    isRecording,
+    isExportingMp3,
+    onRecordStart,
+    onRecordStop,
+  });
+
   return (
     <Layout backgroundVisualizer={background}>
       {/* header */}
-      <Header
-        status={status}
-        isMobile={isMobile}
-        onMobileAdvancedOpenChange={setMobileHeaderExpanded}
-        onSettingsOpen={openDrawer}
-        onPresetsOpen={openPresets}
-        onHowItWorksOpen={openHelp}
-        onPlay={onPlay}
-        onStop={stop}
-        isRecording={isRecording}
-        isExportingMp3={isExportingMp3}
-        onRecordStart={onRecordStart}
-        onRecordStop={onRecordStop}
-      />
+      <Header {...headerProps} />
 
       <AudioWorkspace {...audioWorkspaceProps} />
 
