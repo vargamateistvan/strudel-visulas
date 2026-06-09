@@ -317,6 +317,19 @@ const NOISY_RUNTIME_PATTERNS = [
   "[eval] code updated",
 ];
 
+const MASTER_VOLUME_KEY = "strudel:master-volume:v1";
+
+function clampMasterVolume(value: number): number {
+  if (!Number.isFinite(value)) return 1;
+  return Math.max(0, Math.min(1, value));
+}
+
+function parseMasterVolume(value: string | null): number {
+  if (!value) return 1;
+  const parsed = Number(value);
+  return clampMasterVolume(parsed);
+}
+
 function isNoisyRuntimeLog(args: unknown[]): boolean {
   const first = args[0];
   if (typeof first !== "string") return false;
@@ -401,6 +414,9 @@ export const useStrudel = () => {
   const [activeLiterals, setActiveLiterals] = useState<string[]>([]);
   const [activeControls, setActiveControls] = useState<string[]>([]);
   const [nPulse, setNPulse] = useState(0);
+  const [masterVolume, setMasterVolume] = useState<number>(() =>
+    parseMasterVolume(localStorage.getItem(MASTER_VOLUME_KEY)),
+  );
 
   const replRef = useRef<ReplInstance | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -547,6 +563,21 @@ export const useStrudel = () => {
     return mediaDestRef.current.stream;
   }, []);
 
+  const applyMasterVolume = useCallback(async (volume: number) => {
+    try {
+      const { getAudioContext, getSuperdoughAudioController } =
+        await import("superdough");
+      const ctx = getAudioContext();
+      const controller = getSuperdoughAudioController();
+      const destGain = controller?.output?.destinationGain;
+      if (!destGain) return;
+      const next = clampMasterVolume(volume);
+      destGain.gain.setValueAtTime(next, ctx.currentTime);
+    } catch {
+      // Audio graph may not be initialised yet; volume is applied on next start.
+    }
+  }, []);
+
   const play = useCallback(
     async (code: string) => {
       setError(null);
@@ -565,6 +596,8 @@ export const useStrudel = () => {
 
         setLoadMsg("Loading sounds…");
         await loadSoundDependencies();
+
+        await applyMasterVolume(masterVolume);
 
         if (replRef.current) {
           replRef.current.stop();
@@ -734,7 +767,7 @@ export const useStrudel = () => {
         setLoadMsg("");
       }
     },
-    [tapMasterBus],
+    [applyMasterVolume, masterVolume, tapMasterBus],
   );
 
   const stop = useCallback(() => {
@@ -773,6 +806,12 @@ export const useStrudel = () => {
     [untapMasterBus],
   );
 
+  useEffect(() => {
+    const next = clampMasterVolume(masterVolume);
+    localStorage.setItem(MASTER_VOLUME_KEY, String(next));
+    void applyMasterVolume(next);
+  }, [applyMasterVolume, masterVolume]);
+
   return {
     play,
     updatePattern,
@@ -786,6 +825,8 @@ export const useStrudel = () => {
     activeLiterals,
     activeControls,
     nPulse,
+    masterVolume,
+    setMasterVolume,
     getRecordingStream,
   };
 };

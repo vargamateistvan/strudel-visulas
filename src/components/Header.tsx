@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import type { StrudelStatus } from "../hooks/useStrudel";
 import { HeaderIconButton } from "./header/HeaderIconButton";
 
@@ -18,7 +18,210 @@ interface HeaderProps {
   isExportingMp3: boolean;
   onRecordStart: () => void;
   onRecordStop: () => void;
+  masterVolume: number;
+  onMasterVolumeChange: (volume: number) => void;
 }
+
+const clamp01 = (value: number): number => Math.max(0, Math.min(1, value));
+
+interface VolumePotmeterProps {
+  value: number;
+  isMobile: boolean;
+  onChange: (volume: number) => void;
+}
+
+const VolumePotmeter: React.FC<VolumePotmeterProps> = ({
+  value,
+  isMobile,
+  onChange,
+}) => {
+  const knobRef = useRef<HTMLDivElement | null>(null);
+  const suppressClickRef = useRef(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pct = Math.round(value * 100);
+  const sweep = 270;
+  const angle = -135 + clamp01(value) * sweep;
+
+  const updateFromPoint = useCallback(
+    (clientX: number, clientY: number) => {
+      const el = knobRef.current;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      let nextAngle =
+        (Math.atan2(clientY - cy, clientX - cx) * 180) / Math.PI + 90;
+      if (nextAngle > 180) nextAngle -= 360;
+      const clampedAngle = Math.max(-135, Math.min(135, nextAngle));
+      onChange((clampedAngle + 135) / sweep);
+    },
+    [onChange],
+  );
+
+  const startMouseDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    suppressClickRef.current = false;
+    updateFromPoint(event.clientX, event.clientY);
+
+    const onMove = (moveEvent: MouseEvent) => {
+      const start = pointerStartRef.current;
+      if (start) {
+        const dx = moveEvent.clientX - start.x;
+        const dy = moveEvent.clientY - start.y;
+        if (Math.hypot(dx, dy) > 4) {
+          suppressClickRef.current = true;
+        }
+      }
+      updateFromPoint(moveEvent.clientX, moveEvent.clientY);
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  const startTouchDrag = (event: React.TouchEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    if (!touch) return;
+    pointerStartRef.current = { x: touch.clientX, y: touch.clientY };
+    suppressClickRef.current = false;
+    updateFromPoint(touch.clientX, touch.clientY);
+
+    const onMove = (moveEvent: TouchEvent) => {
+      const next = moveEvent.touches[0];
+      if (!next) return;
+      const start = pointerStartRef.current;
+      if (start) {
+        const dx = next.clientX - start.x;
+        const dy = next.clientY - start.y;
+        if (Math.hypot(dx, dy) > 6) {
+          suppressClickRef.current = true;
+        }
+      }
+      updateFromPoint(next.clientX, next.clientY);
+    };
+    const onEnd = () => {
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchcancel", onEnd);
+    };
+
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd);
+    window.addEventListener("touchcancel", onEnd);
+  };
+
+  const knobSize = isMobile ? 30 : 34;
+  const markerDistance = isMobile ? -9 : -11;
+
+  const ringGradient = useMemo(() => {
+    const activeDeg = clamp01(value) * sweep;
+    return `conic-gradient(from 225deg, #00ff88 0deg, #66e0ff ${activeDeg}deg, rgba(255,255,255,0.15) ${activeDeg}deg, rgba(255,255,255,0.15) ${sweep}deg, transparent ${sweep}deg)`;
+  }, [value]);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        minWidth: isMobile ? 42 : 46,
+        padding: "0 4px",
+        color: "#b8c2d6",
+      }}
+      title={`Master volume: ${pct}%`}
+    >
+      <div
+        role="slider"
+        aria-label="Master volume"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+            event.preventDefault();
+            onChange(clamp01(value + 0.02));
+          } else if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+            event.preventDefault();
+            onChange(clamp01(value - 0.02));
+          } else if (event.key === "Home") {
+            event.preventDefault();
+            onChange(0);
+          } else if (event.key === "End") {
+            event.preventDefault();
+            onChange(1);
+          }
+        }}
+        style={{
+          width: knobSize,
+          height: knobSize,
+          borderRadius: "50%",
+          position: "relative",
+          cursor: "grab",
+          outline: "none",
+        }}
+      >
+        <div
+          ref={knobRef}
+          onClick={() => {
+            if (suppressClickRef.current) {
+              suppressClickRef.current = false;
+            }
+          }}
+          onMouseDown={startMouseDrag}
+          onTouchStart={startTouchDrag}
+          onWheel={(event) => {
+            event.preventDefault();
+            const delta = event.deltaY > 0 ? -0.02 : 0.02;
+            onChange(clamp01(value + delta));
+          }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            background: ringGradient,
+            boxShadow:
+              "inset 0 0 0 1px rgba(255,255,255,0.2), 0 2px 10px rgba(0,0,0,0.45)",
+            touchAction: "none",
+            cursor: "pointer",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 4,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle at 35% 30%, #2e3949 0%, #151b24 62%, #0c1118 100%)",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              width: 4,
+              height: isMobile ? 8 : 9,
+              borderRadius: 999,
+              background: "#d8e2f4",
+              boxShadow: "0 0 6px rgba(102,224,255,0.5)",
+              transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(${markerDistance}px)`,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const Header: React.FC<HeaderProps> = (props) => {
   const {
@@ -34,6 +237,8 @@ export const Header: React.FC<HeaderProps> = (props) => {
     isExportingMp3,
     onRecordStart,
     onRecordStop,
+    masterVolume,
+    onMasterVolumeChange,
   } = props;
 
   const isPlaying = status === "playing";
@@ -171,6 +376,12 @@ export const Header: React.FC<HeaderProps> = (props) => {
               </svg>
             </HeaderIconButton>
           )}
+
+          <VolumePotmeter
+            value={masterVolume}
+            isMobile={isMobile}
+            onChange={onMasterVolumeChange}
+          />
 
           <HeaderIconButton
             onClick={onPresetsOpen}

@@ -29,6 +29,8 @@ export function useAudioVisualizerController(): ComponentProps<
     activeLiterals,
     activeControls,
     nPulse,
+    masterVolume,
+    setMasterVolume,
     getRecordingStream,
   } = useStrudel();
 
@@ -278,6 +280,8 @@ export function useAudioVisualizerController(): ComponentProps<
     isExportingMp3,
     onRecordStart,
     onRecordStop,
+    masterVolume,
+    onMasterVolumeChange: setMasterVolume,
   };
 
   return {
