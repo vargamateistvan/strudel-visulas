@@ -468,7 +468,10 @@ export const useStrudel = () => {
       analyser.getByteFrequencyData(freqBuf);
       analyser.getByteTimeDomainData(waveBuf);
 
-      if (timestamp - lastAudioDataCommitRef.current < MIN_AUDIO_DATA_FRAME_MS) {
+      if (
+        timestamp - lastAudioDataCommitRef.current <
+        MIN_AUDIO_DATA_FRAME_MS
+      ) {
         rafRef.current = requestAnimationFrame(tick);
         return;
       }

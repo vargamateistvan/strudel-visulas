@@ -17,9 +17,6 @@ type AudioWorkspaceProps = {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
-  activeLiterals?: string[];
-  activeControls?: string[];
-  nPulse?: number;
   onCodeChange?: (code: string) => void;
   isExportingMp3: boolean;
   mp3Quality: "fast" | "good" | "best";
@@ -45,9 +42,6 @@ export function AudioWorkspace({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
-  activeLiterals,
-  activeControls,
-  nPulse,
   onCodeChange,
   isExportingMp3,
   mp3Quality,
@@ -96,9 +90,6 @@ export function AudioWorkspace({
           livePlayingNoteHighlights={livePlayingNoteHighlights}
           activeNote={activeNote}
           activeNotes={activeNotes}
-          activeLiterals={activeLiterals}
-          activeControls={activeControls}
-          nPulse={nPulse}
           onCodeChange={onCodeChange}
         />
       </div>

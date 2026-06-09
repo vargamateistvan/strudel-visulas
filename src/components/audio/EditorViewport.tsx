@@ -16,9 +16,6 @@ type EditorViewportProps = {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
-  activeLiterals?: string[];
-  activeControls?: string[];
-  nPulse?: number;
   onCodeChange?: (code: string) => void;
 };
 
@@ -37,9 +34,6 @@ export function EditorViewport({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
-  activeLiterals,
-  activeControls,
-  nPulse,
   onCodeChange,
 }: EditorViewportProps) {
   return (
@@ -65,9 +59,6 @@ export function EditorViewport({
         livePlayingNoteHighlights={livePlayingNoteHighlights}
         activeNote={activeNote}
         activeNotes={activeNotes}
-        activeLiterals={activeLiterals}
-        activeControls={activeControls}
-        nPulse={nPulse}
         onCodeChange={onCodeChange}
       />
     </div>

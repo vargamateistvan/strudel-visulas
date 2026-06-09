@@ -37,9 +37,6 @@ interface StrudelEditorProps {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
-  activeLiterals?: string[];
-  activeControls?: string[];
-  nPulse?: number;
   onCodeChange?: (code: string) => void;
 }
 
