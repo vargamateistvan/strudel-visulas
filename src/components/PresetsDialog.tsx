@@ -456,9 +456,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
                     )}
                     <button
                       onClick={() => {
-                        if (
-                          window.confirm(`Delete preset "${preset.name}"?`)
-                        ) {
+                        if (window.confirm(`Delete preset "${preset.name}"?`)) {
                           onDelete(preset.id);
                         }
                       }}

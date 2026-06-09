@@ -547,192 +547,195 @@ export const useStrudel = () => {
     return mediaDestRef.current.stream;
   }, []);
 
-  const play = useCallback(async (code: string) => {
-    setError(null);
-    setStatus("loading");
+  const play = useCallback(
+    async (code: string) => {
+      setError(null);
+      setStatus("loading");
 
-    try {
-      setLoadMsg("Loading modules…");
-      await loadScope();
+      try {
+        setLoadMsg("Loading modules…");
+        await loadScope();
 
-      const { webaudioRepl, webaudioOutput } =
-        await import("@strudel/webaudio");
-      const { transpiler } = await import("@strudel/transpiler");
+        const { webaudioRepl, webaudioOutput } =
+          await import("@strudel/webaudio");
+        const { transpiler } = await import("@strudel/transpiler");
 
-      setLoadMsg("Initialising audio…");
-      await initAudioOnce();
+        setLoadMsg("Initialising audio…");
+        await initAudioOnce();
 
-      setLoadMsg("Loading sounds…");
-      await loadSoundDependencies();
+        setLoadMsg("Loading sounds…");
+        await loadSoundDependencies();
 
-      if (replRef.current) {
-        replRef.current.stop();
-        replRef.current = null;
-      }
+        if (replRef.current) {
+          replRef.current.stop();
+          replRef.current = null;
+        }
 
-      if (activeNoteTimeoutRef.current) {
-        window.clearTimeout(activeNoteTimeoutRef.current);
-        activeNoteTimeoutRef.current = null;
-      }
-      clearAllActiveNotes();
+        if (activeNoteTimeoutRef.current) {
+          window.clearTimeout(activeNoteTimeoutRef.current);
+          activeNoteTimeoutRef.current = null;
+        }
+        clearAllActiveNotes();
 
-      setLoadMsg("Starting pattern…");
-      const r = webaudioRepl({
-        transpiler,
-        defaultOutput: (
-          hap: unknown,
-          deadline: unknown,
-          hapDuration: unknown,
-          cps: unknown,
-          t: unknown,
-        ) => {
-          if (
-            typeof deadline !== "number" ||
-            !Number.isFinite(deadline) ||
-            typeof hapDuration !== "number" ||
-            !Number.isFinite(hapDuration) ||
-            typeof cps !== "number" ||
-            !Number.isFinite(cps) ||
-            typeof t !== "number" ||
-            !Number.isFinite(t) ||
-            hasNonFiniteNumber(hap)
-          ) {
-            const now = Date.now();
-            if (now - lastBadTriggerWarnRef.current > 2000) {
-              console.warn(
-                "[useStrudel] skipped invalid trigger with non-finite values",
-              );
-              lastBadTriggerWarnRef.current = now;
-            }
-            return;
-          }
-
-          const {
-            notes: nextNotes,
-            literals: nextLiterals,
-            controls: nextControls,
-          } = extractTriggeredActivity(hap);
-          if (
-            nextNotes.length > 0 ||
-            nextLiterals.length > 0 ||
-            nextControls.length > 0
-          ) {
-            if (nextControls.includes("n")) {
-              setNPulse((prev) => prev + 1);
-            }
-            setActiveNote(nextNotes[0]);
-
-            const expiresInMs = 340;
-            setActiveNotes((prev) => {
-              const next = new Set(prev);
-              for (const note of nextNotes) {
-                next.add(note);
-                const key = normalizePitchClass(note);
-                const prevTimeout = activeNoteTimeoutsRef.current.get(key);
-                if (prevTimeout) {
-                  window.clearTimeout(prevTimeout);
-                }
-                const timeoutId = window.setTimeout(() => {
-                  activeNoteTimeoutsRef.current.delete(key);
-                  setActiveNotes((curr) =>
-                    curr.filter((n) => normalizePitchClass(n) !== key),
-                  );
-                }, expiresInMs);
-                activeNoteTimeoutsRef.current.set(key, timeoutId);
-              }
-              return Array.from(next);
-            });
-
-            setActiveLiterals((prev) => {
-              const next = new Set(prev);
-              for (const literal of nextLiterals) {
-                next.add(literal);
-                const prevTimeout =
-                  activeLiteralTimeoutsRef.current.get(literal);
-                if (prevTimeout) {
-                  window.clearTimeout(prevTimeout);
-                }
-                const timeoutId = window.setTimeout(() => {
-                  activeLiteralTimeoutsRef.current.delete(literal);
-                  setActiveLiterals((curr) =>
-                    curr.filter((v) => v !== literal),
-                  );
-                }, expiresInMs);
-                activeLiteralTimeoutsRef.current.set(literal, timeoutId);
-              }
-              return Array.from(next);
-            });
-
-            setActiveControls((prev) => {
-              const next = new Set(prev);
-              for (const control of nextControls) {
-                next.add(control);
-                const prevTimeout =
-                  activeControlTimeoutsRef.current.get(control);
-                if (prevTimeout) {
-                  window.clearTimeout(prevTimeout);
-                }
-                const timeoutId = window.setTimeout(() => {
-                  activeControlTimeoutsRef.current.delete(control);
-                  setActiveControls((curr) =>
-                    curr.filter((v) => v !== control),
-                  );
-                }, expiresInMs);
-                activeControlTimeoutsRef.current.set(control, timeoutId);
-              }
-              return Array.from(next);
-            });
-
-            if (activeNoteTimeoutRef.current) {
-              window.clearTimeout(activeNoteTimeoutRef.current);
-            }
-            activeNoteTimeoutRef.current = window.setTimeout(() => {
-              setActiveNote(null);
-              activeNoteTimeoutRef.current = null;
-            }, 380);
-          }
-          const handleOutputError = (err: unknown) => {
-            if (isNonFiniteAudioParamError(err)) {
+        setLoadMsg("Starting pattern…");
+        const r = webaudioRepl({
+          transpiler,
+          defaultOutput: (
+            hap: unknown,
+            deadline: unknown,
+            hapDuration: unknown,
+            cps: unknown,
+            t: unknown,
+          ) => {
+            if (
+              typeof deadline !== "number" ||
+              !Number.isFinite(deadline) ||
+              typeof hapDuration !== "number" ||
+              !Number.isFinite(hapDuration) ||
+              typeof cps !== "number" ||
+              !Number.isFinite(cps) ||
+              typeof t !== "number" ||
+              !Number.isFinite(t) ||
+              hasNonFiniteNumber(hap)
+            ) {
               const now = Date.now();
               if (now - lastBadTriggerWarnRef.current > 2000) {
                 console.warn(
-                  "[useStrudel] skipped trigger due to invalid AudioParam value",
+                  "[useStrudel] skipped invalid trigger with non-finite values",
                 );
                 lastBadTriggerWarnRef.current = now;
               }
               return;
             }
-            throw err;
-          };
 
-          try {
-            const output = webaudioOutput(hap, deadline, hapDuration, cps, t);
+            const {
+              notes: nextNotes,
+              literals: nextLiterals,
+              controls: nextControls,
+            } = extractTriggeredActivity(hap);
             if (
-              output &&
-              typeof output === "object" &&
-              "then" in output &&
-              typeof (output as Promise<unknown>).then === "function"
+              nextNotes.length > 0 ||
+              nextLiterals.length > 0 ||
+              nextControls.length > 0
             ) {
-              return (output as Promise<unknown>).catch(handleOutputError);
-            }
-            return output;
-          } catch (err) {
-            return handleOutputError(err);
-          }
-        },
-      });
-      await r.evaluate(code);
-      replRef.current = r;
+              if (nextControls.includes("n")) {
+                setNPulse((prev) => prev + 1);
+              }
+              setActiveNote(nextNotes[0]);
 
-      setStatus("playing");
-      setLoadMsg("");
-      setTimeout(tapMasterBus, 400);
-    } catch (err: unknown) {
-      setError(errorMessage(err));
-      setStatus("error");
-      setLoadMsg("");
-    }
-  }, [tapMasterBus]);
+              const expiresInMs = 340;
+              setActiveNotes((prev) => {
+                const next = new Set(prev);
+                for (const note of nextNotes) {
+                  next.add(note);
+                  const key = normalizePitchClass(note);
+                  const prevTimeout = activeNoteTimeoutsRef.current.get(key);
+                  if (prevTimeout) {
+                    window.clearTimeout(prevTimeout);
+                  }
+                  const timeoutId = window.setTimeout(() => {
+                    activeNoteTimeoutsRef.current.delete(key);
+                    setActiveNotes((curr) =>
+                      curr.filter((n) => normalizePitchClass(n) !== key),
+                    );
+                  }, expiresInMs);
+                  activeNoteTimeoutsRef.current.set(key, timeoutId);
+                }
+                return Array.from(next);
+              });
+
+              setActiveLiterals((prev) => {
+                const next = new Set(prev);
+                for (const literal of nextLiterals) {
+                  next.add(literal);
+                  const prevTimeout =
+                    activeLiteralTimeoutsRef.current.get(literal);
+                  if (prevTimeout) {
+                    window.clearTimeout(prevTimeout);
+                  }
+                  const timeoutId = window.setTimeout(() => {
+                    activeLiteralTimeoutsRef.current.delete(literal);
+                    setActiveLiterals((curr) =>
+                      curr.filter((v) => v !== literal),
+                    );
+                  }, expiresInMs);
+                  activeLiteralTimeoutsRef.current.set(literal, timeoutId);
+                }
+                return Array.from(next);
+              });
+
+              setActiveControls((prev) => {
+                const next = new Set(prev);
+                for (const control of nextControls) {
+                  next.add(control);
+                  const prevTimeout =
+                    activeControlTimeoutsRef.current.get(control);
+                  if (prevTimeout) {
+                    window.clearTimeout(prevTimeout);
+                  }
+                  const timeoutId = window.setTimeout(() => {
+                    activeControlTimeoutsRef.current.delete(control);
+                    setActiveControls((curr) =>
+                      curr.filter((v) => v !== control),
+                    );
+                  }, expiresInMs);
+                  activeControlTimeoutsRef.current.set(control, timeoutId);
+                }
+                return Array.from(next);
+              });
+
+              if (activeNoteTimeoutRef.current) {
+                window.clearTimeout(activeNoteTimeoutRef.current);
+              }
+              activeNoteTimeoutRef.current = window.setTimeout(() => {
+                setActiveNote(null);
+                activeNoteTimeoutRef.current = null;
+              }, 380);
+            }
+            const handleOutputError = (err: unknown) => {
+              if (isNonFiniteAudioParamError(err)) {
+                const now = Date.now();
+                if (now - lastBadTriggerWarnRef.current > 2000) {
+                  console.warn(
+                    "[useStrudel] skipped trigger due to invalid AudioParam value",
+                  );
+                  lastBadTriggerWarnRef.current = now;
+                }
+                return;
+              }
+              throw err;
+            };
+
+            try {
+              const output = webaudioOutput(hap, deadline, hapDuration, cps, t);
+              if (
+                output &&
+                typeof output === "object" &&
+                "then" in output &&
+                typeof (output as Promise<unknown>).then === "function"
+              ) {
+                return (output as Promise<unknown>).catch(handleOutputError);
+              }
+              return output;
+            } catch (err) {
+              return handleOutputError(err);
+            }
+          },
+        });
+        await r.evaluate(code);
+        replRef.current = r;
+
+        setStatus("playing");
+        setLoadMsg("");
+        setTimeout(tapMasterBus, 400);
+      } catch (err: unknown) {
+        setError(errorMessage(err));
+        setStatus("error");
+        setLoadMsg("");
+      }
+    },
+    [tapMasterBus],
+  );
 
   const stop = useCallback(() => {
     if (replRef.current) {
