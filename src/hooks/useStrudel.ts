@@ -413,7 +413,6 @@ export const useStrudel = () => {
   const [activeNotes, setActiveNotes] = useState<string[]>([]);
   const [activeLiterals, setActiveLiterals] = useState<string[]>([]);
   const [activeControls, setActiveControls] = useState<string[]>([]);
-  const [nPulse, setNPulse] = useState(0);
   const [masterVolume, setMasterVolume] = useState<number>(() =>
     parseMasterVolume(localStorage.getItem(MASTER_VOLUME_KEY)),
   );
@@ -455,7 +454,6 @@ export const useStrudel = () => {
     setActiveNotes([]);
     setActiveLiterals([]);
     setActiveControls([]);
-    setNPulse(0);
   };
 
   const startReadingLoop = useCallback((analyser: AnalyserNode) => {
@@ -662,16 +660,22 @@ export const useStrudel = () => {
               nextLiterals.length > 0 ||
               nextControls.length > 0
             ) {
-              if (nextControls.includes("n")) {
-                setNPulse((prev) => prev + 1);
+              if (nextNotes.length > 0) {
+                const primaryNote = nextNotes[0] ?? null;
+                setActiveNote((prev) =>
+                  prev === primaryNote ? prev : primaryNote,
+                );
               }
-              setActiveNote(nextNotes[0]);
 
               const expiresInMs = 340;
               setActiveNotes((prev) => {
                 const next = new Set(prev);
+                let hasNewNotes = false;
                 for (const note of nextNotes) {
-                  next.add(note);
+                  if (!next.has(note)) {
+                    next.add(note);
+                    hasNewNotes = true;
+                  }
                   const key = normalizePitchClass(note);
                   const prevTimeout = activeNoteTimeoutsRef.current.get(key);
                   if (prevTimeout) {
@@ -679,19 +683,26 @@ export const useStrudel = () => {
                   }
                   const timeoutId = window.setTimeout(() => {
                     activeNoteTimeoutsRef.current.delete(key);
-                    setActiveNotes((curr) =>
-                      curr.filter((n) => normalizePitchClass(n) !== key),
-                    );
+                    setActiveNotes((curr) => {
+                      const filtered = curr.filter(
+                        (n) => normalizePitchClass(n) !== key,
+                      );
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
                   }, expiresInMs);
                   activeNoteTimeoutsRef.current.set(key, timeoutId);
                 }
-                return Array.from(next);
+                return hasNewNotes ? Array.from(next) : prev;
               });
 
               setActiveLiterals((prev) => {
                 const next = new Set(prev);
+                let hasNewLiterals = false;
                 for (const literal of nextLiterals) {
-                  next.add(literal);
+                  if (!next.has(literal)) {
+                    next.add(literal);
+                    hasNewLiterals = true;
+                  }
                   const prevTimeout =
                     activeLiteralTimeoutsRef.current.get(literal);
                   if (prevTimeout) {
@@ -699,19 +710,24 @@ export const useStrudel = () => {
                   }
                   const timeoutId = window.setTimeout(() => {
                     activeLiteralTimeoutsRef.current.delete(literal);
-                    setActiveLiterals((curr) =>
-                      curr.filter((v) => v !== literal),
-                    );
+                    setActiveLiterals((curr) => {
+                      const filtered = curr.filter((v) => v !== literal);
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
                   }, expiresInMs);
                   activeLiteralTimeoutsRef.current.set(literal, timeoutId);
                 }
-                return Array.from(next);
+                return hasNewLiterals ? Array.from(next) : prev;
               });
 
               setActiveControls((prev) => {
                 const next = new Set(prev);
+                let hasNewControls = false;
                 for (const control of nextControls) {
-                  next.add(control);
+                  if (!next.has(control)) {
+                    next.add(control);
+                    hasNewControls = true;
+                  }
                   const prevTimeout =
                     activeControlTimeoutsRef.current.get(control);
                   if (prevTimeout) {
@@ -719,13 +735,14 @@ export const useStrudel = () => {
                   }
                   const timeoutId = window.setTimeout(() => {
                     activeControlTimeoutsRef.current.delete(control);
-                    setActiveControls((curr) =>
-                      curr.filter((v) => v !== control),
-                    );
+                    setActiveControls((curr) => {
+                      const filtered = curr.filter((v) => v !== control);
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
                   }, expiresInMs);
                   activeControlTimeoutsRef.current.set(control, timeoutId);
                 }
-                return Array.from(next);
+                return hasNewControls ? Array.from(next) : prev;
               });
 
               if (activeNoteTimeoutRef.current) {
@@ -835,7 +852,6 @@ export const useStrudel = () => {
     activeNotes,
     activeLiterals,
     activeControls,
-    nPulse,
     masterVolume,
     setMasterVolume,
     getRecordingStream,
