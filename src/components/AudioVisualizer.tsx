@@ -9,10 +9,10 @@ import { useAudioVisualizerUiState } from "../hooks/useAudioVisualizerUiState";
 import { useAudioVisualizerActions } from "../hooks/useAudioVisualizerActions";
 import { useAudioVisualizerPreferences } from "../hooks/useAudioVisualizerPreferences";
 import { useAudioVisualizerCode } from "../hooks/useAudioVisualizerCode";
+import { useBackgroundVisualizerNode } from "../hooks/useBackgroundVisualizerNode";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import { SettingsDrawer } from "./SettingsDrawer";
-import { BackgroundVisualizer } from "./audio/BackgroundVisualizer";
 import { AudioWorkspace } from "./audio/AudioWorkspace";
 import { OverlayDialogs } from "./audio/OverlayDialogs";
 
@@ -154,21 +154,19 @@ export const AudioVisualizer: React.FC = () => {
     setPresetsOpen,
   });
 
-  const background = (
-    <BackgroundVisualizer
-      audioData={audioData}
-      colorScheme={colorScheme}
-      customColors={customColors}
-      vizMode={vizMode}
-      status={status}
-      kickSensitivity={kickSensitivity}
-      fractalQuality={fractalQuality}
-      mandelbulbSize={mandelbulbSize}
-      particleDensity={particleDensity}
-      spectrumBarCount={spectrumBarCount}
-      spectrumWaveform={spectrumWaveform}
-    />
-  );
+  const background = useBackgroundVisualizerNode({
+    audioData,
+    colorScheme,
+    customColors,
+    vizMode,
+    status,
+    kickSensitivity,
+    fractalQuality,
+    mandelbulbSize,
+    particleDensity,
+    spectrumBarCount,
+    spectrumWaveform,
+  });
 
   return (
     <Layout backgroundVisualizer={background}>
