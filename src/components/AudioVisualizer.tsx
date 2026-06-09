@@ -10,6 +10,7 @@ import { useAudioVisualizerActions } from "../hooks/useAudioVisualizerActions";
 import { useAudioVisualizerPreferences } from "../hooks/useAudioVisualizerPreferences";
 import { useAudioVisualizerCode } from "../hooks/useAudioVisualizerCode";
 import { useBackgroundVisualizerNode } from "../hooks/useBackgroundVisualizerNode";
+import { useAudioVisualizerHeaderActions } from "../hooks/useAudioVisualizerHeaderActions";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import { SettingsDrawer } from "./SettingsDrawer";
@@ -135,6 +136,14 @@ export const AudioVisualizer: React.FC = () => {
     markSplashDone,
   });
 
+  const { onPlay, onRecordStart, onRecordStop } =
+    useAudioVisualizerHeaderActions({
+      code,
+      play,
+      startRecording,
+      stopAudioRecording,
+    });
+
   useAudioVisualizerPersistence({
     code,
     saveDraft,
@@ -178,12 +187,12 @@ export const AudioVisualizer: React.FC = () => {
         onSettingsOpen={openDrawer}
         onPresetsOpen={openPresets}
         onHowItWorksOpen={openHelp}
-        onPlay={() => play(code)}
+        onPlay={onPlay}
         onStop={stop}
         isRecording={isRecording}
         isExportingMp3={isExportingMp3}
-        onRecordStart={startRecording}
-        onRecordStop={stopAudioRecording}
+        onRecordStart={onRecordStart}
+        onRecordStop={onRecordStop}
       />
 
       <AudioWorkspace
