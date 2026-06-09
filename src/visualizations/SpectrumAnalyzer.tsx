@@ -34,6 +34,8 @@ const GRADIENTS: Record<string, [string, string][]> = {
   ],
 };
 
+const MIN_FRAME_MS = 33;
+
 export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
   audioData,
   colorScheme = "neon",
@@ -48,6 +50,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
   const audioRef = useRef(audioData);
   const sizeRef = useRef({ width: 0, height: 0 });
   const prevBassRef = useRef(0);
+  const lastFrameRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -81,7 +84,13 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
           ]
         : (GRADIENTS[colorScheme] ?? GRADIENTS.neon);
 
-    const draw = () => {
+    const draw = (timestamp: number) => {
+      if (timestamp - lastFrameRef.current < MIN_FRAME_MS) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrameRef.current = timestamp;
+
       const { frequencies, waveform, bass } = audioRef.current;
       const { width: w, height: h } = sizeRef.current;
 
@@ -160,6 +169,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
     if (!isPlaying) {
       const { width: w, height: h } = sizeRef.current;
       prevBassRef.current = 0;
+      lastFrameRef.current = 0;
       ctx.clearRect(0, 0, w, h);
       return () => {
         ro.disconnect();
@@ -169,6 +179,7 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
     rafRef.current = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(rafRef.current);
+      lastFrameRef.current = 0;
       ro.disconnect();
     };
   }, [

@@ -430,6 +430,14 @@ export const useStrudel = () => {
   const lastBadTriggerWarnRef = useRef(0);
   const lastAudioDataCommitRef = useRef(0);
 
+  const stopReadingLoop = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+    lastAudioDataCommitRef.current = 0;
+  }, []);
+
   const clearAllActiveNotes = () => {
     if (activeNoteTimeoutRef.current) {
       window.clearTimeout(activeNoteTimeoutRef.current);
@@ -456,50 +464,53 @@ export const useStrudel = () => {
     setActiveControls([]);
   };
 
-  const startReadingLoop = useCallback((analyser: AnalyserNode) => {
-    cancelAnimationFrame(rafRef.current);
-    const freqBuf = new Uint8Array(analyser.frequencyBinCount);
-    const waveBuf = new Uint8Array(analyser.frequencyBinCount);
-    const MIN_AUDIO_DATA_FRAME_MS = 33;
+  const startReadingLoop = useCallback(
+    (analyser: AnalyserNode) => {
+      stopReadingLoop();
+      const freqBuf = new Uint8Array(analyser.frequencyBinCount);
+      const waveBuf = new Uint8Array(analyser.frequencyBinCount);
+      const MIN_AUDIO_DATA_FRAME_MS = 33;
 
-    const tick = (timestamp: number) => {
-      analyser.getByteFrequencyData(freqBuf);
-      analyser.getByteTimeDomainData(waveBuf);
+      const tick = (timestamp: number) => {
+        analyser.getByteFrequencyData(freqBuf);
+        analyser.getByteTimeDomainData(waveBuf);
 
-      if (
-        timestamp - lastAudioDataCommitRef.current <
-        MIN_AUDIO_DATA_FRAME_MS
-      ) {
+        if (
+          timestamp - lastAudioDataCommitRef.current <
+          MIN_AUDIO_DATA_FRAME_MS
+        ) {
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+        lastAudioDataCommitRef.current = timestamp;
+
+        const len = freqBuf.length;
+        const bassEnd = Math.floor(len * 0.08);
+        const midEnd = Math.floor(len * 0.45);
+
+        let vol = 0,
+          bass = 0,
+          mid = 0,
+          treble = 0;
+        for (let i = 0; i < len; i++) vol += freqBuf[i];
+        for (let i = 0; i < bassEnd; i++) bass += freqBuf[i];
+        for (let i = bassEnd; i < midEnd; i++) mid += freqBuf[i];
+        for (let i = midEnd; i < len; i++) treble += freqBuf[i];
+
+        setAudioData({
+          frequencies: new Uint8Array(freqBuf),
+          waveform: new Uint8Array(waveBuf),
+          volume: vol / len / 255,
+          bass: bass / bassEnd / 255,
+          mid: mid / (midEnd - bassEnd) / 255,
+          treble: treble / (len - midEnd) / 255,
+        });
         rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-      lastAudioDataCommitRef.current = timestamp;
-
-      const len = freqBuf.length;
-      const bassEnd = Math.floor(len * 0.08);
-      const midEnd = Math.floor(len * 0.45);
-
-      let vol = 0,
-        bass = 0,
-        mid = 0,
-        treble = 0;
-      for (let i = 0; i < len; i++) vol += freqBuf[i];
-      for (let i = 0; i < bassEnd; i++) bass += freqBuf[i];
-      for (let i = bassEnd; i < midEnd; i++) mid += freqBuf[i];
-      for (let i = midEnd; i < len; i++) treble += freqBuf[i];
-
-      setAudioData({
-        frequencies: new Uint8Array(freqBuf),
-        waveform: new Uint8Array(waveBuf),
-        volume: vol / len / 255,
-        bass: bass / bassEnd / 255,
-        mid: mid / (midEnd - bassEnd) / 255,
-        treble: treble / (len - midEnd) / 255,
-      });
+      };
       rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, []);
+    },
+    [stopReadingLoop],
+  );
 
   const untapMasterBus = useCallback(() => {
     if (tappedMasterRef.current && analyserRef.current) {
@@ -527,7 +538,10 @@ export const useStrudel = () => {
         analyser.fftSize = 1024;
         analyser.smoothingTimeConstant = 0.82;
         analyserRef.current = analyser;
-        startReadingLoop(analyser);
+      }
+
+      if (analyserRef.current && !rafRef.current) {
+        startReadingLoop(analyserRef.current);
       }
 
       if (tappedMasterRef.current === destGain) {
@@ -803,12 +817,14 @@ export const useStrudel = () => {
       replRef.current.stop();
       replRef.current = null;
     }
+    stopReadingLoop();
     clearAllActiveNotes();
     untapMasterBus();
+    setAudioData(EMPTY);
     setStatus("idle");
     setError(null);
     setLoadMsg("");
-  }, [untapMasterBus]);
+  }, [stopReadingLoop, untapMasterBus]);
 
   const updatePattern = useCallback(
     async (code: string) => {
@@ -826,12 +842,12 @@ export const useStrudel = () => {
 
   useEffect(
     () => () => {
-      cancelAnimationFrame(rafRef.current);
+      stopReadingLoop();
       clearAllActiveNotes();
       untapMasterBus();
       if (replRef.current?.stop) replRef.current.stop();
     },
-    [untapMasterBus],
+    [stopReadingLoop, untapMasterBus],
   );
 
   useEffect(() => {

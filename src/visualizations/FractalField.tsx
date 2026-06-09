@@ -153,6 +153,7 @@ const RAY_STEPS_LOW = 26;
 const RAY_STEPS_BALANCED = 34;
 const RAY_STEPS_HIGH = 44;
 const RAY_MAX_DIST = 8.5;
+const MIN_FRAME_MS = 33;
 
 let rasterUpscaleCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
 let rasterUpscaleCtx:
@@ -968,6 +969,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
   const imgBufRef = useRef<ImageData | null>(null);
   const sizeRef = useRef({ width: 0, height: 0 });
   const prevBassRef = useRef(0);
+  const lastFrameRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -1026,7 +1028,13 @@ export const FractalField: React.FC<FractalFieldProps> = ({
       imgBufRef.current = new ImageData(juliaW, juliaH);
     }
 
-    const draw = () => {
+    const draw = (timestamp: number) => {
+      if (timestamp - lastFrameRef.current < MIN_FRAME_MS) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrameRef.current = timestamp;
+
       const { waveform, frequencies, bass, mid, treble, volume } =
         audioRef.current;
       const bassAttack =
@@ -1197,6 +1205,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
       const { width: w, height: h } = sizeRef.current;
       frameRef.current = 0;
       prevBassRef.current = 0;
+      lastFrameRef.current = 0;
       ctx.clearRect(0, 0, w, h);
       return () => {
         ro.disconnect();
@@ -1206,6 +1215,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     rafRef.current = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(rafRef.current);
+      lastFrameRef.current = 0;
       ro.disconnect();
       runtimeCustomColors = null;
     };
