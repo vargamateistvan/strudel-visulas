@@ -20,7 +20,9 @@ export function HeaderIconButton({
         height: 40,
         padding: 0,
         borderRadius: 6,
-        border: active ? "1px solid rgba(0,255,136,0.3)" : "1px solid rgba(255,255,255,0.05)",
+        border: active
+          ? "1px solid rgba(0,255,136,0.3)"
+          : "1px solid rgba(255,255,255,0.05)",
         background: active ? "rgba(0,255,136,0.12)" : "rgba(255,255,255,0.02)",
         color: active ? "#00ff88" : "#a9b2be",
         display: "inline-flex",

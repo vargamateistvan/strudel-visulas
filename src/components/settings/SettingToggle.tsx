@@ -25,9 +25,7 @@ export function SettingToggle({
         border: enabled
           ? "1px solid rgba(0,255,136,0.3)"
           : "1px solid rgba(255,255,255,0.05)",
-        background: enabled
-          ? "rgba(0,255,136,0.08)"
-          : "rgba(255,255,255,0.02)",
+        background: enabled ? "rgba(0,255,136,0.08)" : "rgba(255,255,255,0.02)",
         cursor: "pointer",
         textAlign: "left",
         transition: "all 0.2s",

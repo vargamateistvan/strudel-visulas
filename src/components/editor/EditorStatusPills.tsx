@@ -9,7 +9,10 @@ type EditorStatusPillsProps = {
   fontFamily: string;
 };
 
-export function EditorStatusPills({ pills, fontFamily }: EditorStatusPillsProps) {
+export function EditorStatusPills({
+  pills,
+  fontFamily,
+}: EditorStatusPillsProps) {
   if (pills.length === 0) return null;
 
   return (
