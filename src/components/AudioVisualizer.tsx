@@ -3,8 +3,6 @@ import { useStrudel, DEFAULT_PATTERN } from "../hooks/useStrudel";
 import { useLocalPresets } from "../hooks/useLocalPresets";
 import { Layout } from "./Layout";
 import { Header, type RecordingMode } from "./Header";
-import { PresetsDialog } from "./PresetsDialog";
-import { HowItWorksDialog } from "./HowItWorksDialog";
 import {
   SettingsDrawer,
   type CustomColorPreset,
@@ -14,10 +12,10 @@ import {
   type VizMode,
 } from "./SettingsDrawer";
 import { BackgroundVisualizer } from "./audio/BackgroundVisualizer";
-import { SplashOverlay } from "./audio/SplashOverlay";
 import { buildMidiFromCode } from "../utils/midiExport";
 import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
 import { AudioWorkspace } from "./audio/AudioWorkspace";
+import { OverlayDialogs } from "./audio/OverlayDialogs";
 
 const EDITOR_COLOR_PRESET_KEY = "strudel:editor-color-preset:v1";
 const EDITOR_FONT_PRESET_KEY = "strudel:editor-font-preset:v1";
@@ -616,6 +614,17 @@ export const AudioVisualizer: React.FC = () => {
     setCode(c);
   }, []);
 
+  const handleLoadPreset = useCallback(
+    (id: string) => {
+      const preset = getById(id);
+      if (preset) {
+        setCode(preset.code);
+        setPresetsOpen(false);
+      }
+    },
+    [getById],
+  );
+
   const handleSplashClick = useCallback(() => {
     setSplashDone(true);
     play(code);
@@ -1073,26 +1082,21 @@ export const AudioVisualizer: React.FC = () => {
         audioData={audioData}
       />
 
-      <PresetsDialog
-        open={presetsOpen}
-        onClose={() => setPresetsOpen(false)}
+      <OverlayDialogs
+        presetsOpen={presetsOpen}
+        helpOpen={helpOpen}
+        splashDone={splashDone}
         currentCode={code}
         presets={presets}
-        onSaveAsNew={(name, value) => saveAsNew(name, value)}
-        onOverwrite={(id, value, name) => overwrite(id, value, name)}
+        onClosePresets={() => setPresetsOpen(false)}
+        onCloseHelp={() => setHelpOpen(false)}
+        onSaveAsNew={saveAsNew}
+        onOverwrite={overwrite}
         onRename={rename}
         onDelete={remove}
-        onLoad={(id) => {
-          const preset = getById(id);
-          if (preset) {
-            setCode(preset.code);
-            setPresetsOpen(false);
-          }
-        }}
+        onLoadPreset={handleLoadPreset}
+        onSplashClick={handleSplashClick}
       />
-
-      <HowItWorksDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
-      {!splashDone && <SplashOverlay onClick={handleSplashClick} />}
     </Layout>
   );
 };
