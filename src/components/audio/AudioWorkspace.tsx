@@ -2,6 +2,7 @@ import { EditorViewport } from "./EditorViewport";
 import { Mp3ExportOverlay } from "./Mp3ExportOverlay";
 import type { StrudelStatus } from "../../hooks/useStrudel";
 import type { AiGenerationIntent } from "../../hooks/useAiMusicComposer";
+import type { SourceLocationRange } from "../editor/StrudelEditorLanguage";
 
 type AiComposerProps = {
   enabled: boolean;
@@ -29,9 +30,7 @@ type AudioWorkspaceProps = {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
-  activeLiterals?: string[];
-  activeControls?: string[];
-  nPulse?: number;
+  activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
   isExportingMp3: boolean;
   mp3Quality: "fast" | "good" | "best";
@@ -58,9 +57,7 @@ export function AudioWorkspace({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
-  activeLiterals,
-  activeControls,
-  nPulse,
+  activeMiniLocations,
   onCodeChange,
   isExportingMp3,
   mp3Quality,
@@ -110,9 +107,7 @@ export function AudioWorkspace({
           livePlayingNoteHighlights={livePlayingNoteHighlights}
           activeNote={activeNote}
           activeNotes={activeNotes}
-          activeLiterals={activeLiterals}
-          activeControls={activeControls}
-          nPulse={nPulse}
+          activeMiniLocations={activeMiniLocations}
           onCodeChange={onCodeChange}
           aiComposerProps={aiComposerProps}
         />

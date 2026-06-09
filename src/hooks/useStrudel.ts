@@ -11,6 +11,11 @@ export interface AudioData {
   treble: number;
 }
 
+export interface ActiveMiniLocation {
+  start: number;
+  end: number;
+}
+
 const NOTE_NAMES = [
   "C",
   "C#",
@@ -219,6 +224,46 @@ function extractTriggeredActivity(hap: unknown): {
   };
 }
 
+function extractMiniLocations(hap: unknown): ActiveMiniLocation[] {
+  if (typeof hap !== "object" || hap == null) return [];
+  const context = (hap as Record<string, unknown>).context;
+  if (typeof context !== "object" || context == null) return [];
+  const rawLocations = (context as Record<string, unknown>).locations;
+  if (!Array.isArray(rawLocations)) return [];
+
+  const out: ActiveMiniLocation[] = [];
+  const seen = new Set<string>();
+
+  for (const location of rawLocations) {
+    let start: number | null = null;
+    let end: number | null = null;
+
+    if (Array.isArray(location) && location.length >= 2) {
+      const rawStart = Number(location[0]);
+      const rawEnd = Number(location[1]);
+      if (Number.isFinite(rawStart) && Number.isFinite(rawEnd)) {
+        start = Math.floor(rawStart);
+        end = Math.floor(rawEnd);
+      }
+    } else if (typeof location === "object" && location != null) {
+      const rawStart = Number((location as Record<string, unknown>).start);
+      const rawEnd = Number((location as Record<string, unknown>).end);
+      if (Number.isFinite(rawStart) && Number.isFinite(rawEnd)) {
+        start = Math.floor(rawStart);
+        end = Math.floor(rawEnd);
+      }
+    }
+
+    if (start == null || end == null || end <= start) continue;
+    const key = `${start}:${end}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ start, end });
+  }
+
+  return out;
+}
+
 function hasNonFiniteNumber(
   value: unknown,
   depth = 0,
@@ -330,6 +375,16 @@ function parseMasterVolume(value: string | null): number {
   return clampMasterVolume(parsed);
 }
 
+function getHighlightDurationMs(hapDuration: number): number {
+  if (!Number.isFinite(hapDuration) || hapDuration <= 0) {
+    return 340;
+  }
+
+  // webaudioRepl defaultOutput provides hapDuration in seconds.
+  const durationMs = Math.round(hapDuration * 1000);
+  return Math.max(120, Math.min(1200, durationMs));
+}
+
 function isNoisyRuntimeLog(args: unknown[]): boolean {
   const first = args[0];
   if (typeof first !== "string") return false;
@@ -411,9 +466,11 @@ export const useStrudel = () => {
   const [audioData, setAudioData] = useState<AudioData>(EMPTY);
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [activeNotes, setActiveNotes] = useState<string[]>([]);
+  const [activeMiniLocations, setActiveMiniLocations] = useState<
+    ActiveMiniLocation[]
+  >([]);
   const [activeLiterals, setActiveLiterals] = useState<string[]>([]);
   const [activeControls, setActiveControls] = useState<string[]>([]);
-  const [nPulse, setNPulse] = useState(0);
   const [masterVolume, setMasterVolume] = useState<number>(() =>
     parseMasterVolume(localStorage.getItem(MASTER_VOLUME_KEY)),
   );
@@ -426,9 +483,19 @@ export const useStrudel = () => {
   const rafRef = useRef<number>(0);
   const activeNoteTimeoutRef = useRef<number | null>(null);
   const activeNoteTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const activeMiniLocationTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeLiteralTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeControlTimeoutsRef = useRef<Map<string, number>>(new Map());
   const lastBadTriggerWarnRef = useRef(0);
+  const lastAudioDataCommitRef = useRef(0);
+
+  const stopReadingLoop = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+    lastAudioDataCommitRef.current = 0;
+  }, []);
 
   const clearAllActiveNotes = () => {
     if (activeNoteTimeoutRef.current) {
@@ -439,6 +506,11 @@ export const useStrudel = () => {
       window.clearTimeout(timeoutId);
     }
     activeNoteTimeoutsRef.current.clear();
+
+    for (const timeoutId of activeMiniLocationTimeoutsRef.current.values()) {
+      window.clearTimeout(timeoutId);
+    }
+    activeMiniLocationTimeoutsRef.current.clear();
 
     for (const timeoutId of activeLiteralTimeoutsRef.current.values()) {
       window.clearTimeout(timeoutId);
@@ -452,45 +524,58 @@ export const useStrudel = () => {
 
     setActiveNote(null);
     setActiveNotes([]);
+    setActiveMiniLocations([]);
     setActiveLiterals([]);
     setActiveControls([]);
-    setNPulse(0);
   };
 
-  const startReadingLoop = useCallback((analyser: AnalyserNode) => {
-    cancelAnimationFrame(rafRef.current);
-    const freqBuf = new Uint8Array(analyser.frequencyBinCount);
-    const waveBuf = new Uint8Array(analyser.frequencyBinCount);
+  const startReadingLoop = useCallback(
+    (analyser: AnalyserNode) => {
+      stopReadingLoop();
+      const freqBuf = new Uint8Array(analyser.frequencyBinCount);
+      const waveBuf = new Uint8Array(analyser.frequencyBinCount);
+      const MIN_AUDIO_DATA_FRAME_MS = 33;
 
-    const tick = () => {
-      analyser.getByteFrequencyData(freqBuf);
-      analyser.getByteTimeDomainData(waveBuf);
+      const tick = (timestamp: number) => {
+        analyser.getByteFrequencyData(freqBuf);
+        analyser.getByteTimeDomainData(waveBuf);
 
-      const len = freqBuf.length;
-      const bassEnd = Math.floor(len * 0.08);
-      const midEnd = Math.floor(len * 0.45);
+        if (
+          timestamp - lastAudioDataCommitRef.current <
+          MIN_AUDIO_DATA_FRAME_MS
+        ) {
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+        lastAudioDataCommitRef.current = timestamp;
 
-      let vol = 0,
-        bass = 0,
-        mid = 0,
-        treble = 0;
-      for (let i = 0; i < len; i++) vol += freqBuf[i];
-      for (let i = 0; i < bassEnd; i++) bass += freqBuf[i];
-      for (let i = bassEnd; i < midEnd; i++) mid += freqBuf[i];
-      for (let i = midEnd; i < len; i++) treble += freqBuf[i];
+        const len = freqBuf.length;
+        const bassEnd = Math.floor(len * 0.08);
+        const midEnd = Math.floor(len * 0.45);
 
-      setAudioData({
-        frequencies: new Uint8Array(freqBuf),
-        waveform: new Uint8Array(waveBuf),
-        volume: vol / len / 255,
-        bass: bass / bassEnd / 255,
-        mid: mid / (midEnd - bassEnd) / 255,
-        treble: treble / (len - midEnd) / 255,
-      });
+        let vol = 0,
+          bass = 0,
+          mid = 0,
+          treble = 0;
+        for (let i = 0; i < len; i++) vol += freqBuf[i];
+        for (let i = 0; i < bassEnd; i++) bass += freqBuf[i];
+        for (let i = bassEnd; i < midEnd; i++) mid += freqBuf[i];
+        for (let i = midEnd; i < len; i++) treble += freqBuf[i];
+
+        setAudioData({
+          frequencies: new Uint8Array(freqBuf),
+          waveform: new Uint8Array(waveBuf),
+          volume: vol / len / 255,
+          bass: bass / bassEnd / 255,
+          mid: mid / (midEnd - bassEnd) / 255,
+          treble: treble / (len - midEnd) / 255,
+        });
+        rafRef.current = requestAnimationFrame(tick);
+      };
       rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, []);
+    },
+    [stopReadingLoop],
+  );
 
   const untapMasterBus = useCallback(() => {
     if (tappedMasterRef.current && analyserRef.current) {
@@ -518,7 +603,10 @@ export const useStrudel = () => {
         analyser.fftSize = 1024;
         analyser.smoothingTimeConstant = 0.82;
         analyserRef.current = analyser;
-        startReadingLoop(analyser);
+      }
+
+      if (analyserRef.current && !rafRef.current) {
+        startReadingLoop(analyserRef.current);
       }
 
       if (tappedMasterRef.current === destGain) {
@@ -646,21 +734,64 @@ export const useStrudel = () => {
               literals: nextLiterals,
               controls: nextControls,
             } = extractTriggeredActivity(hap);
+            const nextMiniLocations = extractMiniLocations(hap);
             if (
               nextNotes.length > 0 ||
+              nextMiniLocations.length > 0 ||
               nextLiterals.length > 0 ||
               nextControls.length > 0
             ) {
-              if (nextControls.includes("n")) {
-                setNPulse((prev) => prev + 1);
+              if (nextNotes.length > 0) {
+                const primaryNote = nextNotes[0] ?? null;
+                setActiveNote((prev) =>
+                  prev === primaryNote ? prev : primaryNote,
+                );
               }
-              setActiveNote(nextNotes[0]);
 
-              const expiresInMs = 340;
+              const expiresInMs = getHighlightDurationMs(hapDuration);
+
+              setActiveMiniLocations((prev) => {
+                const next = new Map(
+                  prev.map((range) => [`${range.start}:${range.end}`, range]),
+                );
+                let hasNewLocations = false;
+
+                for (const range of nextMiniLocations) {
+                  const key = `${range.start}:${range.end}`;
+                  if (!next.has(key)) {
+                    next.set(key, range);
+                    hasNewLocations = true;
+                  }
+
+                  const prevTimeout =
+                    activeMiniLocationTimeoutsRef.current.get(key);
+                  if (prevTimeout) {
+                    window.clearTimeout(prevTimeout);
+                  }
+
+                  const timeoutId = window.setTimeout(() => {
+                    activeMiniLocationTimeoutsRef.current.delete(key);
+                    setActiveMiniLocations((curr) => {
+                      const filtered = curr.filter(
+                        (r) => `${r.start}:${r.end}` !== key,
+                      );
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
+                  }, expiresInMs);
+                  activeMiniLocationTimeoutsRef.current.set(key, timeoutId);
+                }
+
+                return hasNewLocations ? Array.from(next.values()) : prev;
+              });
+
               setActiveNotes((prev) => {
                 const next = new Set(prev);
+                let hasNewNotes = false;
                 for (const note of nextNotes) {
-                  next.add(note);
+                  if (!next.has(note)) {
+                    next.add(note);
+                    hasNewNotes = true;
+                  }
                   const key = normalizePitchClass(note);
                   const prevTimeout = activeNoteTimeoutsRef.current.get(key);
                   if (prevTimeout) {
@@ -668,19 +799,26 @@ export const useStrudel = () => {
                   }
                   const timeoutId = window.setTimeout(() => {
                     activeNoteTimeoutsRef.current.delete(key);
-                    setActiveNotes((curr) =>
-                      curr.filter((n) => normalizePitchClass(n) !== key),
-                    );
+                    setActiveNotes((curr) => {
+                      const filtered = curr.filter(
+                        (n) => normalizePitchClass(n) !== key,
+                      );
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
                   }, expiresInMs);
                   activeNoteTimeoutsRef.current.set(key, timeoutId);
                 }
-                return Array.from(next);
+                return hasNewNotes ? Array.from(next) : prev;
               });
 
               setActiveLiterals((prev) => {
                 const next = new Set(prev);
+                let hasNewLiterals = false;
                 for (const literal of nextLiterals) {
-                  next.add(literal);
+                  if (!next.has(literal)) {
+                    next.add(literal);
+                    hasNewLiterals = true;
+                  }
                   const prevTimeout =
                     activeLiteralTimeoutsRef.current.get(literal);
                   if (prevTimeout) {
@@ -688,19 +826,24 @@ export const useStrudel = () => {
                   }
                   const timeoutId = window.setTimeout(() => {
                     activeLiteralTimeoutsRef.current.delete(literal);
-                    setActiveLiterals((curr) =>
-                      curr.filter((v) => v !== literal),
-                    );
+                    setActiveLiterals((curr) => {
+                      const filtered = curr.filter((v) => v !== literal);
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
                   }, expiresInMs);
                   activeLiteralTimeoutsRef.current.set(literal, timeoutId);
                 }
-                return Array.from(next);
+                return hasNewLiterals ? Array.from(next) : prev;
               });
 
               setActiveControls((prev) => {
                 const next = new Set(prev);
+                let hasNewControls = false;
                 for (const control of nextControls) {
-                  next.add(control);
+                  if (!next.has(control)) {
+                    next.add(control);
+                    hasNewControls = true;
+                  }
                   const prevTimeout =
                     activeControlTimeoutsRef.current.get(control);
                   if (prevTimeout) {
@@ -708,13 +851,14 @@ export const useStrudel = () => {
                   }
                   const timeoutId = window.setTimeout(() => {
                     activeControlTimeoutsRef.current.delete(control);
-                    setActiveControls((curr) =>
-                      curr.filter((v) => v !== control),
-                    );
+                    setActiveControls((curr) => {
+                      const filtered = curr.filter((v) => v !== control);
+                      return filtered.length === curr.length ? curr : filtered;
+                    });
                   }, expiresInMs);
                   activeControlTimeoutsRef.current.set(control, timeoutId);
                 }
-                return Array.from(next);
+                return hasNewControls ? Array.from(next) : prev;
               });
 
               if (activeNoteTimeoutRef.current) {
@@ -723,7 +867,7 @@ export const useStrudel = () => {
               activeNoteTimeoutRef.current = window.setTimeout(() => {
                 setActiveNote(null);
                 activeNoteTimeoutRef.current = null;
-              }, 380);
+              }, expiresInMs + 40);
             }
             const handleOutputError = (err: unknown) => {
               if (isNonFiniteAudioParamError(err)) {
@@ -775,12 +919,14 @@ export const useStrudel = () => {
       replRef.current.stop();
       replRef.current = null;
     }
+    stopReadingLoop();
     clearAllActiveNotes();
     untapMasterBus();
+    setAudioData(EMPTY);
     setStatus("idle");
     setError(null);
     setLoadMsg("");
-  }, [untapMasterBus]);
+  }, [stopReadingLoop, untapMasterBus]);
 
   const updatePattern = useCallback(
     async (code: string) => {
@@ -798,12 +944,12 @@ export const useStrudel = () => {
 
   useEffect(
     () => () => {
-      cancelAnimationFrame(rafRef.current);
+      stopReadingLoop();
       clearAllActiveNotes();
       untapMasterBus();
       if (replRef.current?.stop) replRef.current.stop();
     },
-    [untapMasterBus],
+    [stopReadingLoop, untapMasterBus],
   );
 
   useEffect(() => {
@@ -822,9 +968,9 @@ export const useStrudel = () => {
     audioData,
     activeNote,
     activeNotes,
+    activeMiniLocations,
     activeLiterals,
     activeControls,
-    nPulse,
     masterVolume,
     setMasterVolume,
     getRecordingStream,

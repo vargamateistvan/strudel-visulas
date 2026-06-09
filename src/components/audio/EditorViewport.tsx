@@ -2,6 +2,7 @@ import { StrudelEditor } from "../StrudelEditor";
 import type { StrudelStatus } from "../../hooks/useStrudel";
 import { AiComposerPanel } from "./AiComposerPanel";
 import type { AiGenerationIntent } from "../../hooks/useAiMusicComposer";
+import type { SourceLocationRange } from "../editor/StrudelEditorLanguage";
 
 type AiComposerProps = {
   enabled: boolean;
@@ -29,9 +30,7 @@ type EditorViewportProps = {
   livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
-  activeLiterals?: string[];
-  activeControls?: string[];
-  nPulse?: number;
+  activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
   aiComposerProps: AiComposerProps;
 };
@@ -51,9 +50,7 @@ export function EditorViewport({
   livePlayingNoteHighlights,
   activeNote,
   activeNotes,
-  activeLiterals,
-  activeControls,
-  nPulse,
+  activeMiniLocations,
   onCodeChange,
   aiComposerProps,
 }: EditorViewportProps) {
@@ -83,9 +80,7 @@ export function EditorViewport({
           livePlayingNoteHighlights={livePlayingNoteHighlights}
           activeNote={activeNote}
           activeNotes={activeNotes}
-          activeLiterals={activeLiterals}
-          activeControls={activeControls}
-          nPulse={nPulse}
+          activeMiniLocations={activeMiniLocations}
           onCodeChange={onCodeChange}
         />
       </div>

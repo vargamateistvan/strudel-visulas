@@ -30,6 +30,8 @@ const SCHEME_HUES: Record<string, [number, number]> = {
   ocean: [180, 240],
 };
 
+const MIN_FRAME_MS = 33;
+
 function hexToHue(hex: string): number {
   const normalized = hex.replace("#", "");
   const r = parseInt(normalized.slice(0, 2), 16) / 255;
@@ -84,6 +86,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
   const sizeRef = useRef({ width: 0, height: 0 });
   const prevBassRef = useRef(0);
   const phaseRef = useRef(0);
+  const lastFrameRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = audioData;
@@ -125,7 +128,13 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       particlesRef.current.push(p);
     }
 
-    const draw = () => {
+    const draw = (timestamp: number) => {
+      if (timestamp - lastFrameRef.current < MIN_FRAME_MS) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrameRef.current = timestamp;
+
       const { bass, mid, treble, volume, frequencies, waveform } =
         audioRef.current;
       const { width: w, height: h } = sizeRef.current;
@@ -225,6 +234,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       const { width: w, height: h } = sizeRef.current;
       particlesRef.current = [];
       prevBassRef.current = 0;
+      lastFrameRef.current = 0;
       ctx.clearRect(0, 0, w, h);
       return () => {
         ro.disconnect();
@@ -235,6 +245,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
 
     return () => {
       cancelAnimationFrame(rafRef.current);
+      lastFrameRef.current = 0;
       ro.disconnect();
     };
   }, [colorScheme, customColors, isPlaying, kickSensitivity, particleDensity]);
