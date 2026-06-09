@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { StrudelStatus } from "../hooks/useStrudel";
 
 export type RecordingMode = "audio" | "video" | "midi";
@@ -47,6 +47,28 @@ export const Header: React.FC<HeaderProps> = (props) => {
   const canRecord = isPlaying && !isExportingMp3;
   const selectedMode: RecordingMode =
     recordingMode === "midi" ? "audio" : recordingMode;
+  const [hoveredControl, setHoveredControl] = useState<string | null>(null);
+
+  const withHover = (
+    id: string,
+    baseStyle: React.CSSProperties,
+    hoverStyle: React.CSSProperties,
+    enabled = true,
+  ): React.CSSProperties => ({
+    ...baseStyle,
+    transition:
+      "border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 120ms ease",
+    ...(enabled && hoveredControl === id ? hoverStyle : null),
+  });
+
+  const hoverHandlers = (id: string, enabled = true) =>
+    enabled
+      ? {
+          onMouseEnter: () => setHoveredControl(id),
+          onMouseLeave: () =>
+            setHoveredControl((prev) => (prev === id ? null : prev)),
+        }
+      : {};
 
   useEffect(() => {
     onMobileAdvancedOpenChange?.(false);
@@ -68,6 +90,14 @@ export const Header: React.FC<HeaderProps> = (props) => {
     justifyContent: "center",
     gap: 6,
     whiteSpace: "nowrap",
+  };
+
+  const unifiedHoverStyle: React.CSSProperties = {
+    border: "1px solid rgba(255,255,255,0.18)",
+    background: "rgba(255,255,255,0.08)",
+    color: "#d2dae4",
+    boxShadow: "0 6px 20px rgba(0,0,0,0.24)",
+    transform: "translateY(-1px)",
   };
 
   return (
@@ -129,23 +159,33 @@ export const Header: React.FC<HeaderProps> = (props) => {
           }}
         >
           {isPlaying ? (
-            <button onClick={onStop} style={buttonBase}>
+            <button
+              onClick={onStop}
+              {...hoverHandlers("stop")}
+              style={withHover("stop", buttonBase, unifiedHoverStyle, true)}
+            >
               ■ Stop
             </button>
           ) : (
             <button
               onClick={onPlay}
               disabled={isLoading}
-              style={{
-                ...buttonBase,
-                color: isLoading ? "#6bd6ad" : "#00ff88",
-                border: "1px solid rgba(0,255,136,0.3)",
-                background: isLoading
-                  ? "rgba(0,255,136,0.08)"
-                  : "rgba(0,255,136,0.12)",
-                opacity: isLoading ? 0.6 : 1,
-                cursor: isLoading ? "default" : "pointer",
-              }}
+              {...hoverHandlers("play", !isLoading)}
+              style={withHover(
+                "play",
+                {
+                  ...buttonBase,
+                  color: isLoading ? "#6bd6ad" : "#00ff88",
+                  border: "1px solid rgba(0,255,136,0.3)",
+                  background: isLoading
+                    ? "rgba(0,255,136,0.08)"
+                    : "rgba(0,255,136,0.12)",
+                  opacity: isLoading ? 0.6 : 1,
+                  cursor: isLoading ? "default" : "pointer",
+                },
+                unifiedHoverStyle,
+                !isLoading,
+              )}
             >
               ▶ {isLoading ? "Loading" : "Play"}
             </button>
@@ -154,12 +194,18 @@ export const Header: React.FC<HeaderProps> = (props) => {
           {isRecording ? (
             <button
               onClick={onRecordStop}
-              style={{
-                ...buttonBase,
-                border: "1px solid rgba(255,122,135,0.45)",
-                background: "rgba(255,122,135,0.14)",
-                color: "#ffb7c0",
-              }}
+              {...hoverHandlers("rec-stop")}
+              style={withHover(
+                "rec-stop",
+                {
+                  ...buttonBase,
+                  border: "1px solid rgba(255,122,135,0.45)",
+                  background: "rgba(255,122,135,0.14)",
+                  color: "#ffb7c0",
+                },
+                unifiedHoverStyle,
+                true,
+              )}
             >
               ● Stop Rec
             </button>
@@ -167,18 +213,24 @@ export const Header: React.FC<HeaderProps> = (props) => {
             <button
               onClick={onRecordStart}
               disabled={!canRecord}
-              style={{
-                ...buttonBase,
-                border: canRecord
-                  ? "1px solid rgba(255,122,135,0.45)"
-                  : "1px solid rgba(255,122,135,0.22)",
-                background: canRecord
-                  ? "rgba(255,122,135,0.14)"
-                  : "rgba(255,122,135,0.08)",
-                color: canRecord ? "#ffb7c0" : "#b98c92",
-                opacity: canRecord ? 1 : 0.65,
-                cursor: canRecord ? "pointer" : "default",
-              }}
+              {...hoverHandlers("rec", canRecord)}
+              style={withHover(
+                "rec",
+                {
+                  ...buttonBase,
+                  border: canRecord
+                    ? "1px solid rgba(255,122,135,0.45)"
+                    : "1px solid rgba(255,122,135,0.22)",
+                  background: canRecord
+                    ? "rgba(255,122,135,0.14)"
+                    : "rgba(255,122,135,0.08)",
+                  color: canRecord ? "#ffb7c0" : "#b98c92",
+                  opacity: canRecord ? 1 : 0.65,
+                  cursor: canRecord ? "pointer" : "default",
+                },
+                unifiedHoverStyle,
+                canRecord,
+              )}
             >
               ● Rec
             </button>
@@ -188,28 +240,45 @@ export const Header: React.FC<HeaderProps> = (props) => {
             value={selectedMode}
             onChange={(e) => onRecordingMode(e.target.value as RecordingMode)}
             disabled={isRecording || isExportingMp3}
-            style={{
-              ...buttonBase,
-              padding: isMobile ? "7px 8px" : "7px 9px",
-              minWidth: 84,
-            }}
+            {...hoverHandlers("mode", !(isRecording || isExportingMp3))}
+            style={withHover(
+              "mode",
+              {
+                ...buttonBase,
+                padding: isMobile ? "7px 8px" : "7px 9px",
+                minWidth: 84,
+              },
+              unifiedHoverStyle,
+              !(isRecording || isExportingMp3),
+            )}
           >
             <option value="audio">Audio</option>
             <option value="video">Video</option>
           </select>
 
-          <button onClick={onPresetsOpen} style={buttonBase} title="Library">
+          <button
+            onClick={onPresetsOpen}
+            {...hoverHandlers("library")}
+            style={withHover("library", buttonBase, unifiedHoverStyle, true)}
+            title="Library"
+          >
             Library
           </button>
 
           <button
             onClick={onSettingsOpen}
-            style={{
-              ...buttonBase,
-              width: 34,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }}
+            {...hoverHandlers("settings")}
+            style={withHover(
+              "settings",
+              {
+                ...buttonBase,
+                width: 34,
+                paddingLeft: 0,
+                paddingRight: 0,
+              },
+              unifiedHoverStyle,
+              true,
+            )}
             title="Audio settings"
             aria-label="Audio settings"
           >
@@ -237,12 +306,18 @@ export const Header: React.FC<HeaderProps> = (props) => {
 
           <button
             onClick={onHowItWorksOpen}
-            style={{
-              ...buttonBase,
-              width: 34,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }}
+            {...hoverHandlers("how")}
+            style={withHover(
+              "how",
+              {
+                ...buttonBase,
+                width: 34,
+                paddingLeft: 0,
+                paddingRight: 0,
+              },
+              unifiedHoverStyle,
+              true,
+            )}
             title="How it works"
             aria-label="How it works"
           >
