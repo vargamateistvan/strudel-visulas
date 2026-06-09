@@ -84,7 +84,21 @@ const FUNCTION_SIGNATURES: Record<string, string[]> = {
     "Layer multiple patterns together.",
   ],
   sound: ["sound(pattern)", 'Choose sample pattern, ex: sound("bd ~ sn ~").'],
-  note: ["note(pattern)", "Create melodic pattern from note names."],
+  note: [
+    "note(pattern)",
+    [
+      "Play note names or MIDI numbers.",
+      "",
+      "A note name consists of:",
+      "- letter: a-g (or A-G)",
+      "- optional accidental: b or #",
+      "- optional octave number (defaults to 3)",
+      "",
+      "Examples: c, bb, Bb, f#, c3, A4, Eb2, c#5",
+      "",
+      "MIDI numbers are supported too (69 => A4 in 12EDO).",
+    ].join("\n"),
+  ],
   cpm: ["cpm(value)", "Set cycles per minute for playback."],
   every: ["every(n, fn)", "Apply a transform every n cycles."],
   sometimesBy: [
@@ -165,6 +179,11 @@ function buildCompletionDocumentation(name: string): Monaco.IMarkdownString {
       .filter(Boolean)
       .join("\n\n"),
   };
+}
+
+function isMethodChainContext(linePrefix: string): boolean {
+  // Detect completions right after "." or while typing a chain method name.
+  return /\.[A-Za-z_$0-9]*$/.test(linePrefix);
 }
 
 function buildTokenDecorations(
@@ -466,6 +485,14 @@ export function registerStrudelLanguage(
     monaco.languages.registerCompletionItemProvider(STRUDEL_LANGUAGE_ID, {
       triggerCharacters: [".", "(", '"'],
       provideCompletionItems(model, position) {
+        const linePrefix = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+        const methodContext = isMethodChainContext(linePrefix);
+
         const word = model.getWordUntilPosition(position);
         const range = {
           startLineNumber: position.lineNumber,
@@ -485,6 +512,7 @@ export function registerStrudelLanguage(
             monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           detail: "Strudel function",
           documentation: buildCompletionDocumentation(name),
+          sortText: `1_${name}`,
           range,
         }));
 
@@ -496,6 +524,7 @@ export function registerStrudelLanguage(
             monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           detail: "Pattern method",
           documentation: buildCompletionDocumentation(name),
+          sortText: `0_${name}`,
           range,
         }));
 
@@ -513,11 +542,16 @@ export function registerStrudelLanguage(
               "```",
             ].join("\n"),
           },
+            sortText: `2_${label}`,
           range,
         }));
 
+          const suggestions = methodContext
+            ? [...methods]
+            : [...globals, ...methods, ...snippets];
+
         return {
-          suggestions: [...globals, ...methods, ...snippets],
+            suggestions,
         };
       },
     }),

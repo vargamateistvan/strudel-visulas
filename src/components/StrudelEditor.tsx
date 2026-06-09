@@ -735,10 +735,16 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           overviewRulerBorder: false,
           padding: { top: 42, bottom: 18 },
           suggestOnTriggerCharacters: true,
+          wordBasedSuggestions: "off",
           quickSuggestions: {
             comments: false,
             strings: true,
             other: true,
+          },
+          suggest: {
+            showWords: false,
+            localityBonus: true,
+            snippetsPreventQuickSuggestions: false,
           },
         }}
       />
