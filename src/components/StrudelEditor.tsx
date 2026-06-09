@@ -210,9 +210,74 @@ function buildStrudelMarkers(
   const stack: Array<{ char: string; index: number }> = [];
   const openers: Record<string, string> = { "(": ")", "[": "]", "{": "}" };
   const closers: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inBlockComment = false;
+  let inLineComment = false;
+  let escaped = false;
 
   for (let i = 0; i < source.length; i += 1) {
     const char = source[i];
+
+    if (inLineComment) {
+      if (char === "\n") {
+        inLineComment = false;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === "*" && source[i + 1] === "/") {
+        inBlockComment = false;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (inSingleQuote || inDoubleQuote) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+
+      if (inSingleQuote && char === "'") {
+        inSingleQuote = false;
+      }
+
+      if (inDoubleQuote && char === '"') {
+        inDoubleQuote = false;
+      }
+
+      continue;
+    }
+
+    if (char === "/" && source[i + 1] === "/") {
+      inLineComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (char === "/" && source[i + 1] === "*") {
+      inBlockComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (char === "'") {
+      inSingleQuote = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inDoubleQuote = true;
+      continue;
+    }
+
     if (openers[char]) {
       stack.push({ char, index: i });
       continue;
@@ -250,17 +315,20 @@ function buildStrudelMarkers(
     });
   }
 
-  if (source.includes("..")) {
-    const idx = source.indexOf("..");
-    const { line, column } = getLineAndColumnFromOffset(source, idx);
-    markers.push({
-      severity: monaco.MarkerSeverity.Warning,
-      message: "Suspicious '..' chain. Use single '.' for method chaining.",
-      startLineNumber: line,
-      startColumn: column,
-      endLineNumber: line,
-      endColumn: column + 2,
-    });
+  if (!inSingleQuote && !inDoubleQuote && !inBlockComment) {
+    const doubleDotMatch = /(^|[^./])\.\.(?![./])/m.exec(source);
+    if (doubleDotMatch?.index !== undefined) {
+      const idx = doubleDotMatch.index + doubleDotMatch[1].length;
+      const { line, column } = getLineAndColumnFromOffset(source, idx);
+      markers.push({
+        severity: monaco.MarkerSeverity.Warning,
+        message: "Suspicious '..' chain. Use single '.' for method chaining.",
+        startLineNumber: line,
+        startColumn: column,
+        endLineNumber: line,
+        endColumn: column + 2,
+      });
+    }
   }
 
   return markers;
