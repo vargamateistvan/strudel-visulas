@@ -56,6 +56,7 @@ type ThemeTokens = {
 const EDITOR_HIGHLIGHT_STYLE_ID = "strudel-editor-highlight-styles";
 const EDITOR_NOTE_HIT_CLASS = "strudel-note-hit";
 const EDITOR_NOTE_HIT_ACTIVE_CLASS = "strudel-note-hit-active";
+const EDITOR_HIGHLIGHT_MIN_INTERVAL_MS = 50;
 
 function hexToRgba(hex: string, alpha: number): string {
   const normalized = hex.replace("#", "");
@@ -208,6 +209,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const noteDecorationsRef =
     useRef<Monaco.editor.IEditorDecorationsCollection | null>(null);
   const noteHighlightStyleRef = useRef<HTMLStyleElement | null>(null);
+  const highlightTimerRef = useRef<number | null>(null);
+  const lastHighlightUpdateRef = useRef(0);
 
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
@@ -310,6 +313,10 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       contentListenerRef.current = null;
       noteDecorationsRef.current?.clear();
       noteDecorationsRef.current = null;
+      if (highlightTimerRef.current !== null) {
+        window.clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = null;
+      }
       languageDisposablesRef.current.forEach((d) => d.dispose());
       languageDisposablesRef.current = [];
       const model = editorRef.current?.getModel();
@@ -380,9 +387,61 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     noteDecorationsRef.current.set(decorations);
   }, [activeNote, activeNotes, livePlayingNoteHighlights, status]);
 
+  const scheduleActiveHighlights = useCallback(
+    (immediate = false) => {
+      if (immediate) {
+        if (highlightTimerRef.current !== null) {
+          window.clearTimeout(highlightTimerRef.current);
+          highlightTimerRef.current = null;
+        }
+        lastHighlightUpdateRef.current = performance.now();
+        updateActiveHighlights();
+        return;
+      }
+
+      const now = performance.now();
+      const elapsed = now - lastHighlightUpdateRef.current;
+      const wait = Math.max(0, EDITOR_HIGHLIGHT_MIN_INTERVAL_MS - elapsed);
+
+      if (wait === 0 && highlightTimerRef.current === null) {
+        lastHighlightUpdateRef.current = now;
+        updateActiveHighlights();
+        return;
+      }
+
+      if (highlightTimerRef.current !== null) {
+        return;
+      }
+
+      highlightTimerRef.current = window.setTimeout(() => {
+        highlightTimerRef.current = null;
+        lastHighlightUpdateRef.current = performance.now();
+        updateActiveHighlights();
+      }, wait);
+    },
+    [updateActiveHighlights],
+  );
+
   useEffect(() => {
-    updateActiveHighlights();
-  }, [code, status, updateActiveHighlights]);
+    const isLiveActive =
+      livePlayingNoteHighlights &&
+      status === "playing" &&
+      ((activeNotes && activeNotes.length > 0) || Boolean(activeNote));
+
+    if (!isLiveActive) {
+      scheduleActiveHighlights(true);
+      return;
+    }
+
+    scheduleActiveHighlights();
+  }, [
+    activeNote,
+    activeNotes,
+    code,
+    livePlayingNoteHighlights,
+    scheduleActiveHighlights,
+    status,
+  ]);
 
   const insertSnippet = useCallback((name: keyof typeof SNIPPETS) => {
     const editor = editorRef.current;
@@ -467,11 +526,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       if (model) {
         monaco.editor.setModelLanguage(model, STRUDEL_LANGUAGE_ID);
         updateDiagnostics(model.getValue(), model, monaco);
-        updateActiveHighlights();
+        scheduleActiveHighlights(true);
         contentListenerRef.current?.dispose();
         contentListenerRef.current = model.onDidChangeContent(() => {
           updateDiagnostics(model.getValue(), model, monaco);
-          updateActiveHighlights();
+          scheduleActiveHighlights();
         });
       }
 
@@ -533,7 +592,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       stop,
       themeTokens,
       updateDiagnostics,
-      updateActiveHighlights,
+      scheduleActiveHighlights,
       wrapInGain,
       wrapInRev,
     ],
