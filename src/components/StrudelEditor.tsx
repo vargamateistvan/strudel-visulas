@@ -47,6 +47,84 @@ type ThemeTokens = {
   background: string;
 };
 
+const EDITOR_HIGHLIGHT_STYLE_ID = "strudel-editor-highlight-styles";
+const EDITOR_NOTE_HIT_CLASS = "strudel-note-hit";
+const EDITOR_NOTE_HIT_ACTIVE_CLASS = "strudel-note-hit-active";
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace("#", "");
+  const parsed = Number.parseInt(normalized, 16);
+  const red = (parsed >> 16) & 255;
+  const green = (parsed >> 8) & 255;
+  const blue = parsed & 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function hexToAlphaHex(hex: string, alpha: number): string {
+  const normalized = hex.replace("#", "");
+  const clampedAlpha = Math.max(0, Math.min(1, alpha));
+  const alphaByte = Math.round(clampedAlpha * 255)
+    .toString(16)
+    .padStart(2, "0");
+  return `#${normalized}${alphaByte}`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isTokenBoundary(source: string, start: number, end: number): boolean {
+  const boundary = /[A-Za-z0-9_#-]/;
+  const left = start > 0 ? source[start - 1] : "";
+  const right = end < source.length ? source[end] : "";
+  return !boundary.test(left) && !boundary.test(right);
+}
+
+function buildTokenDecorations(
+  source: string,
+  tokens: string[],
+  monaco: typeof Monaco,
+  isPrimary = false,
+): Monaco.editor.IModelDeltaDecoration[] {
+  const decorations: Monaco.editor.IModelDeltaDecoration[] = [];
+  const seen = new Set<string>();
+  const normalizedTokens = tokens
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+
+  for (const token of normalizedTokens) {
+    const dedupeKey = token.toLowerCase();
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    const regex = new RegExp(escapeRegExp(token), "gi");
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(source)) !== null) {
+      const start = match.index;
+      const end = start + match[0].length;
+      if (!isTokenBoundary(source, start, end)) continue;
+
+      const startPosition = getLineAndColumnFromOffset(source, start);
+      const endPosition = getLineAndColumnFromOffset(source, end);
+      decorations.push({
+        range: new monaco.Range(
+          startPosition.line,
+          startPosition.column,
+          endPosition.line,
+          endPosition.column,
+        ),
+        options: {
+          inlineClassName: isPrimary
+            ? EDITOR_NOTE_HIT_ACTIVE_CLASS
+            : EDITOR_NOTE_HIT_CLASS,
+        },
+      });
+    }
+  }
+
+  return decorations;
+}
+
 const EDITOR_THEME: Record<EditorColorPreset, ThemeTokens> = {
   neon: {
     border: "rgba(0,255,136,0.22)",
@@ -597,6 +675,7 @@ function registerStrudelLanguage(monaco: typeof Monaco): Monaco.IDisposable[] {
 
 function buildMonacoTheme(
   theme: ThemeTokens,
+  editorBackground: string,
 ): Monaco.editor.IStandaloneThemeData {
   return {
     base: "vs-dark",
@@ -609,7 +688,7 @@ function buildMonacoTheme(
       { token: "identifier", foreground: theme.ident.replace("#", "") },
     ],
     colors: {
-      "editor.background": theme.background,
+      "editor.background": editorBackground,
       "editor.foreground": theme.text,
       "editorCursor.foreground": theme.caret,
       "editor.lineHighlightBackground": "#ffffff08",
@@ -643,12 +722,20 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   colorPreset,
   fontPreset,
   fontSize,
+  activeNote,
+  activeNotes,
+  activeLiterals,
+  activeControls,
+  nPulse,
   onCodeChange,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
   const languageDisposablesRef = useRef<Monaco.IDisposable[]>([]);
   const contentListenerRef = useRef<Monaco.IDisposable | null>(null);
+  const noteDecorationsRef =
+    useRef<Monaco.editor.IEditorDecorationsCollection | null>(null);
+  const noteHighlightStyleRef = useRef<HTMLStyleElement | null>(null);
 
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
@@ -666,6 +753,26 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const editorFontFamily =
     EDITOR_FONT_FAMILY[fontPreset] ?? EDITOR_FONT_FAMILY.jetbrainsMono;
   const editorFontSize = Math.max(11, Math.min(22, Math.round(fontSize)));
+  const editorBackground = hexToRgba(
+    themeTokens.background,
+    Math.max(0.38, opacity),
+  );
+  const monacoBackground = hexToAlphaHex(
+    themeTokens.background,
+    Math.max(0.38, opacity),
+  );
+  const activePlayingTokens = useMemo(() => {
+    const values = new Set<string>();
+    if (activeNote) values.add(activeNote);
+    for (const token of activeNotes ?? []) values.add(token);
+    for (const token of activeLiterals ?? []) values.add(token);
+    for (const token of activeControls ?? []) {
+      if (token === "n" || token === "note" || token === "freq") {
+        values.add(token);
+      }
+    }
+    return Array.from(values);
+  }, [activeControls, activeLiterals, activeNote, activeNotes]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -685,9 +792,48 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   useEffect(() => {
     const monaco = monacoRef.current;
     if (!monaco) return;
-    monaco.editor.defineTheme(monacoThemeName, buildMonacoTheme(themeTokens));
+    monaco.editor.defineTheme(
+      monacoThemeName,
+      buildMonacoTheme(themeTokens, monacoBackground),
+    );
     monaco.editor.setTheme(monacoThemeName);
-  }, [monacoThemeName, themeTokens]);
+  }, [monacoBackground, monacoThemeName, themeTokens]);
+
+  useEffect(() => {
+    const styleId = EDITOR_HIGHLIGHT_STYLE_ID;
+    let style = noteHighlightStyleRef.current;
+    if (!style) {
+      style = document.getElementById(styleId) as HTMLStyleElement | null;
+      if (!style) {
+        style = document.createElement("style");
+        style.id = styleId;
+        document.head.appendChild(style);
+      }
+      noteHighlightStyleRef.current = style;
+    }
+
+    style.textContent = `
+      .${EDITOR_NOTE_HIT_CLASS} {
+        background: ${hexToRgba(themeTokens.caret, 0.22)};
+        border-radius: 3px;
+        box-shadow: inset 0 -1px 0 ${hexToRgba(themeTokens.caret, 0.42)};
+      }
+
+      .${EDITOR_NOTE_HIT_ACTIVE_CLASS} {
+        background: ${hexToRgba(themeTokens.caret, 0.34)};
+        border-radius: 3px;
+        box-shadow: inset 0 -1px 0 ${hexToRgba(themeTokens.caret, 0.75)};
+      }
+    `;
+
+    return () => {
+      const currentStyle = noteHighlightStyleRef.current;
+      if (currentStyle?.parentNode) {
+        currentStyle.parentNode.removeChild(currentStyle);
+      }
+      noteHighlightStyleRef.current = null;
+    };
+  }, [themeTokens.caret]);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -702,6 +848,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     () => () => {
       contentListenerRef.current?.dispose();
       contentListenerRef.current = null;
+      noteDecorationsRef.current?.clear();
+      noteDecorationsRef.current = null;
       languageDisposablesRef.current.forEach((d) => d.dispose());
       languageDisposablesRef.current = [];
       const model = editorRef.current?.getModel();
@@ -730,6 +878,43 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     },
     [],
   );
+
+  const updateActiveHighlights = useCallback(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    if (status !== "playing" || activePlayingTokens.length === 0) {
+      noteDecorationsRef.current?.clear();
+      return;
+    }
+
+    const source = model.getValue();
+    const primaryTokens = activeNote ? [activeNote] : [];
+    const secondaryTokens = activePlayingTokens.filter(
+      (token) => !primaryTokens.includes(token),
+    );
+
+    const decorations = [
+      ...buildTokenDecorations(source, secondaryTokens, monaco, false),
+      ...buildTokenDecorations(source, primaryTokens, monaco, true),
+    ];
+
+    if (!noteDecorationsRef.current) {
+      noteDecorationsRef.current =
+        editor.createDecorationsCollection(decorations);
+      return;
+    }
+
+    noteDecorationsRef.current.set(decorations);
+  }, [activeNote, activePlayingTokens, status]);
+
+  useEffect(() => {
+    updateActiveHighlights();
+  }, [code, nPulse, status, updateActiveHighlights]);
 
   const insertSnippet = useCallback((name: keyof typeof SNIPPETS) => {
     const editor = editorRef.current;
@@ -805,16 +990,21 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         languageDisposablesRef.current = registerStrudelLanguage(monaco);
       }
 
-      monaco.editor.defineTheme(monacoThemeName, buildMonacoTheme(themeTokens));
+      monaco.editor.defineTheme(
+        monacoThemeName,
+        buildMonacoTheme(themeTokens, monacoBackground),
+      );
       monaco.editor.setTheme(monacoThemeName);
 
       const model = editor.getModel();
       if (model) {
         monaco.editor.setModelLanguage(model, STRUDEL_LANGUAGE_ID);
         updateDiagnostics(model.getValue(), model, monaco);
+        updateActiveHighlights();
         contentListenerRef.current?.dispose();
         contentListenerRef.current = model.onDidChangeContent(() => {
           updateDiagnostics(model.getValue(), model, monaco);
+          updateActiveHighlights();
         });
       }
 
@@ -870,6 +1060,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       duplicateInStack,
       insertSnippet,
       isPlaying,
+      monacoBackground,
       monacoThemeName,
       play,
       wrapInGain,
@@ -877,6 +1068,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       stop,
       themeTokens,
       updateDiagnostics,
+      updateActiveHighlights,
     ],
   );
 
@@ -898,7 +1090,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         height: "100%",
         borderRadius: 10,
         overflow: "hidden",
-        background: themeTokens.background,
+        background: editorBackground,
         border: `1px solid ${themeTokens.border}`,
         boxShadow: `0 0 40px ${themeTokens.glow}, inset 0 0 30px rgba(0,0,0,0.2)`,
         backdropFilter: `blur(${Math.round(opacity * 16)}px)`,
