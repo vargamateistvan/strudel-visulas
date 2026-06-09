@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { useMemo, type ComponentProps } from "react";
 import { useStrudel, DEFAULT_PATTERN } from "./useStrudel";
 import { useLocalPresets } from "./useLocalPresets";
 import { useRecordingExport } from "./useRecordingExport";
@@ -12,6 +12,15 @@ import { useAudioVisualizerCode } from "./useAudioVisualizerCode";
 import { useBackgroundVisualizerNode } from "./useBackgroundVisualizerNode";
 import { useAudioVisualizerHeaderActions } from "./useAudioVisualizerHeaderActions";
 import { AudioVisualizerShell } from "../components/audio/AudioVisualizerShell";
+
+const IDLE_AUDIO_DATA = {
+  frequencies: new Uint8Array(512),
+  waveform: new Uint8Array(512),
+  volume: 0,
+  bass: 0,
+  mid: 0,
+  treble: 0,
+};
 
 export function useAudioVisualizerController(): ComponentProps<
   typeof AudioVisualizerShell
@@ -178,7 +187,9 @@ export function useAudioVisualizerController(): ComponentProps<
     spectrumWaveform,
   });
 
-  const settingsDrawerProps = {
+  const drawerAudioData = drawerOpen ? audioData : IDLE_AUDIO_DATA;
+
+  const settingsDrawerProps = useMemo(() => ({
     open: drawerOpen,
     onClose: closeDrawer,
     colorScheme,
@@ -220,10 +231,53 @@ export function useAudioVisualizerController(): ComponentProps<
     onEditorFontPreset: setEditorFontPreset,
     editorFontSize,
     onEditorFontSize: setEditorFontSize,
-    audioData,
-  };
+    audioData: drawerAudioData,
+  }), [
+    drawerOpen,
+    closeDrawer,
+    colorScheme,
+    setColorScheme,
+    customColorPresets,
+    activeCustomColorPresetId,
+    selectCustomColorPreset,
+    createCustomColorPreset,
+    updateCustomColorPresetColor,
+    renameCustomColorPreset,
+    deleteCustomColorPreset,
+    vizMode,
+    setVizMode,
+    kickSensitivity,
+    setKickSensitivityForViz,
+    particleDensity,
+    setParticleDensityForViz,
+    spectrumBarCount,
+    setSpectrumBarCountForViz,
+    spectrumWaveform,
+    setSpectrumWaveformForViz,
+    fractalQuality,
+    setFractalQualityForViz,
+    mandelbulbSize,
+    setMandelbulbSizeForViz,
+    editorOpacity,
+    setEditorOpacity,
+    livePulseStrip,
+    setLivePulseStrip,
+    livePlayingNoteHighlights,
+    setLivePlayingNoteHighlights,
+    recordingMode,
+    setRecordingMode,
+    mp3Quality,
+    setMp3Quality,
+    editorColorPreset,
+    setEditorColorPreset,
+    editorFontPreset,
+    setEditorFontPreset,
+    editorFontSize,
+    setEditorFontSize,
+    drawerAudioData,
+  ]);
 
-  const audioWorkspaceProps = {
+  const audioWorkspaceProps = useMemo(() => ({
     code,
     play,
     stop,
@@ -249,9 +303,35 @@ export function useAudioVisualizerController(): ComponentProps<
     mp3Speed,
     isMobile,
     mobileHeaderExpanded,
-  };
+  }), [
+    code,
+    play,
+    stop,
+    status,
+    error,
+    loadMsg,
+    editorOpacity,
+    editorColorPreset,
+    editorFontPreset,
+    editorFontSize,
+    livePulseStrip,
+    livePlayingNoteHighlights,
+    activeNote,
+    activeNotes,
+    activeLiterals,
+    activeControls,
+    nPulse,
+    onCodeChange,
+    isExportingMp3,
+    mp3Quality,
+    mp3Status,
+    mp3Progress,
+    mp3Speed,
+    isMobile,
+    mobileHeaderExpanded,
+  ]);
 
-  const overlayDialogsProps = {
+  const overlayDialogsProps = useMemo(() => ({
     presetsOpen,
     helpOpen,
     splashDone,
@@ -265,9 +345,23 @@ export function useAudioVisualizerController(): ComponentProps<
     onDelete: remove,
     onLoadPreset: handleLoadPreset,
     onSplashClick: handleSplashClick,
-  };
+  }), [
+    presetsOpen,
+    helpOpen,
+    splashDone,
+    code,
+    presets,
+    closePresets,
+    closeHelp,
+    saveAsNew,
+    overwrite,
+    rename,
+    remove,
+    handleLoadPreset,
+    handleSplashClick,
+  ]);
 
-  const headerProps = {
+  const headerProps = useMemo(() => ({
     status,
     isMobile,
     onMobileAdvancedOpenChange: setMobileHeaderExpanded,
@@ -282,7 +376,22 @@ export function useAudioVisualizerController(): ComponentProps<
     onRecordStop,
     masterVolume,
     onMasterVolumeChange: setMasterVolume,
-  };
+  }), [
+    status,
+    isMobile,
+    setMobileHeaderExpanded,
+    openDrawer,
+    openPresets,
+    openHelp,
+    onPlay,
+    stop,
+    isRecording,
+    isExportingMp3,
+    onRecordStart,
+    onRecordStop,
+    masterVolume,
+    setMasterVolume,
+  ]);
 
   return {
     background,

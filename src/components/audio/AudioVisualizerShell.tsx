@@ -1,9 +1,14 @@
-import type { ComponentProps, ReactNode } from "react";
+import { memo, type ComponentProps, type ReactNode } from "react";
 import { Layout } from "../Layout";
 import { Header } from "../Header";
 import { SettingsDrawer } from "../SettingsDrawer";
 import { AudioWorkspace } from "./AudioWorkspace";
 import { OverlayDialogs } from "./OverlayDialogs";
+
+const MemoHeader = memo(Header);
+const MemoAudioWorkspace = memo(AudioWorkspace);
+const MemoSettingsDrawer = memo(SettingsDrawer);
+const MemoOverlayDialogs = memo(OverlayDialogs);
 
 type AudioVisualizerShellProps = {
   background: ReactNode;
@@ -22,10 +27,10 @@ export function AudioVisualizerShell({
 }: AudioVisualizerShellProps) {
   return (
     <Layout backgroundVisualizer={background}>
-      <Header {...headerProps} />
-      <AudioWorkspace {...audioWorkspaceProps} />
-      <SettingsDrawer {...settingsDrawerProps} />
-      <OverlayDialogs {...overlayDialogsProps} />
+      <MemoHeader {...headerProps} />
+      <MemoAudioWorkspace {...audioWorkspaceProps} />
+      <MemoSettingsDrawer {...settingsDrawerProps} />
+      <MemoOverlayDialogs {...overlayDialogsProps} />
     </Layout>
   );
 }

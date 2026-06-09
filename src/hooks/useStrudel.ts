@@ -429,6 +429,7 @@ export const useStrudel = () => {
   const activeLiteralTimeoutsRef = useRef<Map<string, number>>(new Map());
   const activeControlTimeoutsRef = useRef<Map<string, number>>(new Map());
   const lastBadTriggerWarnRef = useRef(0);
+  const lastAudioDataCommitRef = useRef(0);
 
   const clearAllActiveNotes = () => {
     if (activeNoteTimeoutRef.current) {
@@ -461,10 +462,17 @@ export const useStrudel = () => {
     cancelAnimationFrame(rafRef.current);
     const freqBuf = new Uint8Array(analyser.frequencyBinCount);
     const waveBuf = new Uint8Array(analyser.frequencyBinCount);
+    const MIN_AUDIO_DATA_FRAME_MS = 33;
 
-    const tick = () => {
+    const tick = (timestamp: number) => {
       analyser.getByteFrequencyData(freqBuf);
       analyser.getByteTimeDomainData(waveBuf);
+
+      if (timestamp - lastAudioDataCommitRef.current < MIN_AUDIO_DATA_FRAME_MS) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      lastAudioDataCommitRef.current = timestamp;
 
       const len = freqBuf.length;
       const bassEnd = Math.floor(len * 0.08);
