@@ -10,6 +10,7 @@ const AI_COMPOSER_PROMPT_KEY = "strudel:ai-composer:prompt:v1";
 const AI_COMPOSER_APPLY_MODE_KEY = "strudel:ai-composer:apply-mode:v1";
 const AI_COMPOSER_REMEMBER_KEY_KEY = "strudel:ai-composer:remember-key:v1";
 const AI_COMPOSER_API_KEY_KEY = "strudel:ai-composer:api-key:v1";
+const AI_COMPOSER_HISTORY_KEY = "strudel:ai-composer:history:v1";
 const GEMINI_MODEL_CANDIDATES = [
   "gemini-2.5-flash",
   "gemini-2.0-flash",
@@ -19,6 +20,16 @@ const GEMINI_MODEL_CANDIDATES = [
 export type AiProvider = "chatgpt" | "gemini";
 export type AiApplyMode = "replace" | "append";
 export type AiGenerationIntent = "new" | "refine" | "variation";
+
+export type AiComposerHistoryEntry = {
+  id: string;
+  createdAt: number;
+  provider: AiProvider;
+  intent: AiGenerationIntent;
+  prompt: string;
+  output: string;
+  error: string | null;
+};
 
 type GenerateOptions = {
   currentCode: string;
@@ -116,6 +127,55 @@ function parseProviderErrorBody(raw: string): {
       type: null,
     };
   }
+}
+
+function readHistory(value: string | null): AiComposerHistoryEntry[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    const entries = parsed
+      .filter((item): item is AiComposerHistoryEntry => {
+        if (typeof item !== "object" || item == null) return false;
+        const entry = item as Partial<AiComposerHistoryEntry>;
+        return (
+          typeof entry.id === "string" &&
+          typeof entry.createdAt === "number" &&
+          (entry.provider === "chatgpt" || entry.provider === "gemini") &&
+          (entry.intent === "new" ||
+            entry.intent === "refine" ||
+            entry.intent === "variation") &&
+          typeof entry.prompt === "string" &&
+          typeof entry.output === "string" &&
+          (typeof entry.error === "string" || entry.error === null)
+        );
+      })
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 40);
+
+    return entries;
+  } catch {
+    return [];
+  }
+}
+
+function createHistoryEntry(
+  provider: AiProvider,
+  intent: AiGenerationIntent,
+  prompt: string,
+  output: string,
+  error: string | null,
+): AiComposerHistoryEntry {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    createdAt: Date.now(),
+    provider,
+    intent,
+    prompt,
+    output,
+    error,
+  };
 }
 
 function toFriendlyProviderError(
@@ -313,6 +373,9 @@ export function useAiMusicComposer() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [history, setHistory] = useState<AiComposerHistoryEntry[]>(() =>
+    readHistory(localStorage.getItem(AI_COMPOSER_HISTORY_KEY)),
+  );
 
   useEffect(() => {
     localStorage.setItem(AI_COMPOSER_ENABLED_KEY, String(enabled));
@@ -338,6 +401,10 @@ export function useAiMusicComposer() {
     }
     localStorage.removeItem(AI_COMPOSER_API_KEY_KEY);
   }, [apiKey, rememberApiKey]);
+
+  useEffect(() => {
+    localStorage.setItem(AI_COMPOSER_HISTORY_KEY, JSON.stringify(history));
+  }, [history]);
 
   const canGenerate = useMemo(() => {
     return enabled && apiKey.trim().length > 0 && prompt.trim().length > 0;
@@ -383,12 +450,30 @@ export function useAiMusicComposer() {
                 instruction,
               );
         const normalizedCode = normalizeAiGeneratedCode(nextCode);
+        setHistory((prev) =>
+          [
+            createHistoryEntry(
+              provider,
+              intent,
+              activePrompt,
+              normalizedCode,
+              null,
+            ),
+            ...prev,
+          ].slice(0, 40),
+        );
         setLastUpdatedAt(Date.now());
         return normalizedCode;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : String(err ?? "Unknown error");
         setError(message);
+        setHistory((prev) =>
+          [
+            createHistoryEntry(provider, intent, activePrompt, "", message),
+            ...prev,
+          ].slice(0, 40),
+        );
         throw err;
       } finally {
         setIsGenerating(false);
@@ -400,6 +485,11 @@ export function useAiMusicComposer() {
   const clearApiKey = useCallback(() => {
     setApiKey("");
     localStorage.removeItem(AI_COMPOSER_API_KEY_KEY);
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    localStorage.removeItem(AI_COMPOSER_HISTORY_KEY);
   }, []);
 
   return {
@@ -420,6 +510,8 @@ export function useAiMusicComposer() {
     error,
     setError,
     lastUpdatedAt,
+    history,
+    clearHistory,
     canGenerate,
     generate,
   };

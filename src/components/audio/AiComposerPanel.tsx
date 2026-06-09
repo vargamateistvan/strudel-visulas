@@ -1,5 +1,14 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
-import type { AiGenerationIntent } from "../../hooks/useAiMusicComposer";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import type {
+  AiComposerHistoryEntry,
+  AiGenerationIntent,
+} from "../../hooks/useAiMusicComposer";
 import { MUSIC_CHAT_PROMPT_PRESETS } from "../../ai/musicCreationSkill";
 
 type AiComposerPanelProps = {
@@ -10,7 +19,21 @@ type AiComposerPanelProps = {
   canGenerate: boolean;
   error: string | null;
   lastUpdatedAt: number | null;
+  history: AiComposerHistoryEntry[];
+  onClearHistory: () => void;
   onGenerate: (intent: AiGenerationIntent) => void;
+};
+
+const historyOverlayStyle: CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 140,
+  background: "rgba(0,0,0,0.55)",
+  backdropFilter: "blur(5px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 16,
 };
 
 const composerShellStyle: CSSProperties = {
@@ -52,9 +75,12 @@ export function AiComposerPanel({
   canGenerate,
   error,
   lastUpdatedAt,
+  history,
+  onClearHistory,
   onGenerate,
 }: AiComposerPanelProps) {
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     const element = promptRef.current;
@@ -184,6 +210,22 @@ export function AiComposerPanel({
             {preset.label}
           </button>
         ))}
+
+        <button
+          type="button"
+          onClick={() => setHistoryOpen(true)}
+          style={{
+            border: "1px solid rgba(122,230,255,0.3)",
+            borderRadius: 999,
+            background: "rgba(122,230,255,0.1)",
+            color: "#b7f3ff",
+            fontSize: 11,
+            padding: "4px 10px",
+            cursor: "pointer",
+          }}
+        >
+          History ({history.length})
+        </button>
       </div>
 
       <div
@@ -196,6 +238,210 @@ export function AiComposerPanel({
       >
         {error ?? freshnessLabel}
       </div>
+
+      {historyOpen && (
+        <div style={historyOverlayStyle} onClick={() => setHistoryOpen(false)}>
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: "min(900px, 96vw)",
+              maxHeight: "84vh",
+              overflow: "hidden",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(10,12,18,0.98)",
+              boxShadow: "0 30px 80px rgba(0,0,0,0.6)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "12px 14px",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  letterSpacing: 1.2,
+                  color: "#7ae6ff",
+                  fontWeight: 700,
+                }}
+              >
+                AI CHAT HISTORY
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>
+                {history.length} entries
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClearHistory();
+                }}
+                style={{
+                  marginLeft: "auto",
+                  border: "1px solid rgba(255,122,135,0.4)",
+                  borderRadius: 8,
+                  background: "rgba(255,122,135,0.12)",
+                  color: "#ffb7c0",
+                  fontSize: 11,
+                  padding: "5px 10px",
+                  cursor: "pointer",
+                }}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setHistoryOpen(false)}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 8,
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.82)",
+                  fontSize: 11,
+                  padding: "5px 10px",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            <div
+              style={{
+                overflowY: "auto",
+                padding: 12,
+                display: "grid",
+                gap: 10,
+              }}
+            >
+              {history.length === 0 && (
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: 12,
+                    padding: 8,
+                  }}
+                >
+                  No history yet. Generate code with AI and entries will appear
+                  here.
+                </div>
+              )}
+
+              {history.map((entry) => (
+                <div
+                  key={entry.id}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 10,
+                    padding: 10,
+                    background: "rgba(255,255,255,0.03)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 8,
+                      fontSize: 11,
+                      color: "rgba(255,255,255,0.65)",
+                    }}
+                  >
+                    <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                    <span
+                      style={{
+                        border: "1px solid rgba(122,230,255,0.35)",
+                        borderRadius: 999,
+                        padding: "2px 8px",
+                        color: "#b7f3ff",
+                      }}
+                    >
+                      {entry.provider}
+                    </span>
+                    <span
+                      style={{
+                        border: "1px solid rgba(0,255,136,0.3)",
+                        borderRadius: 999,
+                        padding: "2px 8px",
+                        color: "#adffd4",
+                      }}
+                    >
+                      {entry.intent}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPromptChange(entry.prompt);
+                        setHistoryOpen(false);
+                      }}
+                      style={{
+                        marginLeft: "auto",
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        borderRadius: 8,
+                        background: "transparent",
+                        color: "rgba(255,255,255,0.82)",
+                        fontSize: 11,
+                        padding: "4px 8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Reuse Prompt
+                    </button>
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "#dce5f0" }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.55)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      Prompt
+                    </div>
+                    <div
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        marginBottom: 8,
+                      }}
+                    >
+                      {entry.prompt}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.55)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {entry.error ? "Error" : "Output"}
+                    </div>
+                    <div
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        color: entry.error ? "#ff9fb0" : "#c7f7db",
+                        fontFamily: entry.error
+                          ? '"Inter", "Segoe UI", sans-serif'
+                          : '"JetBrains Mono", monospace',
+                        fontSize: 11,
+                      }}
+                    >
+                      {entry.error || entry.output || "(empty output)"}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

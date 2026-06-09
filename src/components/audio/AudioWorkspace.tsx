@@ -1,7 +1,10 @@
 import { EditorViewport } from "./EditorViewport";
 import { Mp3ExportOverlay } from "./Mp3ExportOverlay";
 import type { StrudelStatus } from "../../hooks/useStrudel";
-import type { AiGenerationIntent } from "../../hooks/useAiMusicComposer";
+import type {
+  AiComposerHistoryEntry,
+  AiGenerationIntent,
+} from "../../hooks/useAiMusicComposer";
 import type { SourceLocationRange } from "../editor/StrudelEditorLanguage";
 
 type AiComposerProps = {
@@ -12,6 +15,8 @@ type AiComposerProps = {
   canGenerate: boolean;
   error: string | null;
   lastUpdatedAt: number | null;
+  history: AiComposerHistoryEntry[];
+  onClearHistory: () => void;
   onGenerate: (intent: AiGenerationIntent) => void;
 };
 

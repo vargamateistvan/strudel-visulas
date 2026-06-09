@@ -133,6 +133,8 @@ export function useAudioVisualizerController(): ComponentProps<
     error: aiError,
     setError: setAiError,
     lastUpdatedAt: aiLastUpdatedAt,
+    history: aiHistory,
+    clearHistory: clearAiHistory,
     canGenerate: canGenerateAi,
     generate,
   } = useAiMusicComposer();
@@ -376,6 +378,8 @@ export function useAudioVisualizerController(): ComponentProps<
         canGenerate: canGenerateAi,
         error: aiError,
         lastUpdatedAt: aiLastUpdatedAt,
+        history: aiHistory,
+        onClearHistory: clearAiHistory,
         onGenerate: (intent: "new" | "refine" | "variation") => {
           void (async () => {
             try {
@@ -434,6 +438,8 @@ export function useAudioVisualizerController(): ComponentProps<
       canGenerateAi,
       aiError,
       aiLastUpdatedAt,
+      aiHistory,
+      clearAiHistory,
       setAiError,
       generate,
       aiApplyMode,
