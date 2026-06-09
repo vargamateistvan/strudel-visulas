@@ -128,6 +128,62 @@ stack
 ).cpm(136/4)`,
   },
   {
+    id: "builtin-enjoy-the-silence-coda",
+    name: "Enjoy The Silence (Coda)",
+    code: `// Imported/adapted from eefano/strudel-songs-collection
+// "Enjoy The Silence (coda)" — song @by Depeche Mode, script @by eefano
+stack(
+  note("c4 g4 bb4 g4 f4 g4 eb4 g4")
+    .s("gm_ocarina")
+    .gain(0.52)
+    .release(0.12)
+    .clip(1),
+  note("c3 ~ eb3 ~ bb2 ~ c3 ~")
+    .s("gm_synth_strings_1")
+    .room(0.45)
+    .gain(0.3)
+    .clip(1),
+  note("c2 ~ c2 ~ g1 ~ c2 ~")
+    .s("triangle")
+    .gain(0.68)
+    .sustain(0.8)
+    .clip(1),
+  s("bd ~ sd ~ bd ~ sd ~")
+    .bank("RolandTR909")
+    .gain(0.22)
+    .clip(1),
+  s("hh*8")
+    .bank("RolandTR909")
+    .gain(0.06)
+).cpm(113/4)`,
+  },
+  {
+    id: "builtin-stranger-things-theme",
+    name: "Stranger Things Theme",
+    code: `// Imported/adapted from eefano/strudel-songs-collection
+// "strangerthings" script @by eefano
+stack(
+  n("0 2 4 6 7 6 4 2")
+    .scale("c3:major")
+    .s("supersaw")
+    .distort(0.7)
+    .lpenv(perlin.slow(3).range(1, 4))
+    .lpf(perlin.slow(2).range(100, 2000))
+    .gain(0.32),
+  note("a1 e2")
+    .struct("x*8")
+    .s("supersaw")
+    .clip(0.82)
+    .gain(0.3),
+  s("bd ~ ~ bd ~ ~ bd ~")
+    .bank("RolandTR909")
+    .gain(0.18),
+  s("~ sd ~ ~ ~ sd ~ ~")
+    .bank("RolandTR909")
+    .gain(0.11)
+).cpm(84/4)`,
+  },
+  {
     id: "builtin-ode-to-joy",
     name: "Ode To Joy (Public Domain)",
     code: `stack(
