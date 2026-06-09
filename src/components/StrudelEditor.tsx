@@ -952,6 +952,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   );
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
+  const liveEditErrorPrefix = "Live edit error:";
+  const isLiveEditError = Boolean(error?.startsWith(liveEditErrorPrefix));
+  const liveEditError = isLiveEditError
+    ? (error?.slice(liveEditErrorPrefix.length).trim() ?? "")
+    : null;
 
   const handlePlay = useCallback(() => play(code), [play, code]);
 
@@ -1227,7 +1232,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       {isLoading && <LoadingOverlay message={loadMsg} />}
 
       {/* error bar */}
-      {error && (
+      {error && !isLiveEditError && (
         <div
           style={{
             padding: "6px 14px",
@@ -1835,6 +1840,31 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       >
         Cmd/Ctrl+Enter Play • Ctrl/Cmd+Space IntelliSense • Tab Indent
       </div>
+
+      {liveEditError && (
+        <div
+          style={{
+            position: "absolute",
+            right: 14,
+            bottom: diagnostics.length > 0 ? 58 : 12,
+            zIndex: 4,
+            maxWidth: 460,
+            padding: "4px 8px",
+            borderRadius: 6,
+            border: "1px solid rgba(255,182,118,0.4)",
+            background: "rgba(68,42,19,0.82)",
+            color: "#ffd9a8",
+            fontFamily: editorFontFamily,
+            fontSize: 10,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          title={liveEditError}
+        >
+          Live edit error: {liveEditError}
+        </div>
+      )}
     </div>
   );
 };

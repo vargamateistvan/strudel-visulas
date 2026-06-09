@@ -323,6 +323,7 @@ export const AudioVisualizer: React.FC = () => {
   const {
     audioData,
     play,
+    updatePattern,
     stop,
     status,
     error,
@@ -850,6 +851,14 @@ export const AudioVisualizer: React.FC = () => {
     }, 900);
     return () => window.clearTimeout(t);
   }, [code, saveDraft]);
+
+  useEffect(() => {
+    if (status !== "playing") return;
+    const t = window.setTimeout(() => {
+      updatePattern(code);
+    }, 520);
+    return () => window.clearTimeout(t);
+  }, [code, status, updatePattern]);
 
   useEffect(() => {
     localStorage.setItem(EDITOR_COLOR_PRESET_KEY, editorColorPreset);

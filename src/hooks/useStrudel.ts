@@ -749,6 +749,20 @@ export const useStrudel = () => {
     setLoadMsg("");
   }, [untapMasterBus]);
 
+  const updatePattern = useCallback(
+    async (code: string) => {
+      if (!replRef.current || status !== "playing") return;
+      try {
+        await replRef.current.evaluate(code);
+        setError(null);
+      } catch (err: unknown) {
+        // Keep currently running audio alive when a live edit is temporarily invalid.
+        setError(`Live edit error: ${errorMessage(err)}`);
+      }
+    },
+    [status],
+  );
+
   useEffect(
     () => () => {
       cancelAnimationFrame(rafRef.current);
@@ -761,6 +775,7 @@ export const useStrudel = () => {
 
   return {
     play,
+    updatePattern,
     stop,
     status,
     error,
