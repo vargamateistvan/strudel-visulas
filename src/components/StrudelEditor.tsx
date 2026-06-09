@@ -6,6 +6,8 @@ import {
   type EditorColorPreset,
   type EditorFontPreset,
 } from "./SettingsDrawer";
+import { EditorToolbar } from "./editor/EditorToolbar";
+import { EditorStatusPills } from "./editor/EditorStatusPills";
 import { LoadingOverlay } from "./LoadingOverlay";
 import "@fontsource/jetbrains-mono";
 import "@fontsource/bitcount-single";
@@ -1128,139 +1130,18 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         </div>
       )}
 
-      <div
-        style={{
-          position: "absolute",
-          left: 12,
-          top: 8,
-          zIndex: 3,
-          display: "flex",
-          gap: 6,
-          alignItems: "center",
-        }}
-      >
-        <button
-          onClick={formatCode}
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          Format
-        </button>
-        <button
-          onClick={wrapInRev}
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          rev
-        </button>
-        <button
-          onClick={wrapInGain}
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          gain
-        </button>
-        <button
-          onClick={duplicateInStack}
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          stack
-        </button>
-        <button
-          onClick={() =>
-            editorRef.current?.getAction("editor.action.quickCommand")?.run()
-          }
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          Actions
-        </button>
-        <button
-          onClick={() => insertSnippet("Basic Beat")}
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          + Beat
-        </button>
-        <button
-          onClick={() => insertSnippet("Ambient Chords")}
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.22)",
-            color: themeTokens.text,
-            fontFamily: editorFontFamily,
-            fontSize: 10,
-            letterSpacing: 0.5,
-            borderRadius: 5,
-            padding: "3px 7px 6px",
-            cursor: "pointer",
-            zIndex: 3,
-          }}
-        >
-          + Ambient
-        </button>
-      </div>
+      <EditorToolbar
+        fontFamily={editorFontFamily}
+        onFormat={formatCode}
+        onWrapRev={wrapInRev}
+        onWrapGain={wrapInGain}
+        onDuplicateStack={duplicateInStack}
+        onQuickActions={() =>
+          editorRef.current?.getAction("editor.action.quickCommand")?.run()
+        }
+        onInsertBeat={() => insertSnippet("Basic Beat")}
+        onInsertAmbient={() => insertSnippet("Ambient Chords")}
+      />
 
       <Editor
         height="100%"
@@ -1314,47 +1195,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         Cmd/Ctrl+Enter Play • Ctrl/Cmd+Space IntelliSense • Tab Indent
       </div>
 
-      {statusPills.length > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            left: 14,
-            bottom: 12,
-            zIndex: 4,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 6,
-            maxWidth: "calc(100% - 28px)",
-            pointerEvents: "none",
-          }}
-        >
-          {statusPills.map((pill) => (
-            <div
-              key={`${pill.label}:${pill.value}`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                borderRadius: 999,
-                padding: "5px 10px",
-                background: hexToRgba(pill.accent, 0.14),
-                border: `1px solid ${hexToRgba(pill.accent, 0.28)}`,
-                color: themeTokens.text,
-                fontFamily: editorFontFamily,
-                fontSize: 10,
-                letterSpacing: 0.35,
-                boxShadow: `0 0 0 1px ${hexToRgba(pill.accent, 0.08)} inset`,
-                backdropFilter: "blur(6px)",
-              }}
-            >
-              <span style={{ opacity: 0.72, textTransform: "uppercase" }}>
-                {pill.label}
-              </span>
-              <span style={{ color: pill.accent }}>{pill.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <EditorStatusPills pills={statusPills} fontFamily={editorFontFamily} />
 
       {liveEditError && (
         <div

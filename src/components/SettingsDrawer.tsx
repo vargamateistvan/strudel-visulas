@@ -2,6 +2,7 @@ import React from "react";
 import type { AudioData } from "../hooks/useStrudel";
 import type { RecordingMode } from "./Header";
 import type { Mp3Quality } from "./Header";
+import { SettingToggle } from "./settings/SettingToggle";
 
 export type ColorScheme = "neon" | "pastel" | "fire" | "ocean" | "custom";
 export type VizMode =
@@ -936,72 +937,12 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             >
               Pulse Strip
             </p>
-            <button
-              onClick={() => onLivePulseStrip(!livePulseStrip)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                padding: "10px 12px",
-                borderRadius: 6,
-                border: livePulseStrip
-                  ? "1px solid rgba(0,255,136,0.3)"
-                  : "1px solid rgba(255,255,255,0.05)",
-                background: livePulseStrip
-                  ? "rgba(0,255,136,0.08)"
-                  : "rgba(255,255,255,0.02)",
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "all 0.2s",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontFamily: '"JetBrains Mono",monospace',
-                    color: livePulseStrip ? "#00ff88" : "#555",
-                    fontWeight: livePulseStrip ? 700 : 400,
-                  }}
-                >
-                  {livePulseStrip ? "Enabled" : "Disabled"}
-                </span>
-                <span style={{ fontSize: 10, color: "#333" }}>
-                  Show the live pulse strip in the editor.
-                </span>
-              </div>
-              <div
-                style={{
-                  width: 38,
-                  height: 22,
-                  borderRadius: 999,
-                  background: livePulseStrip
-                    ? "rgba(0,255,136,0.22)"
-                    : "rgba(255,255,255,0.08)",
-                  border: livePulseStrip
-                    ? "1px solid rgba(0,255,136,0.3)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                  position: "relative",
-                  flexShrink: 0,
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 2,
-                    left: livePulseStrip ? 17 : 2,
-                    width: 16,
-                    height: 16,
-                    borderRadius: "50%",
-                    background: livePulseStrip ? "#00ff88" : "#888",
-                    boxShadow: livePulseStrip ? "0 0 8px #00ff88" : "none",
-                    transition: "left 0.2s ease, background 0.2s ease",
-                  }}
-                />
-              </div>
-            </button>
+            <SettingToggle
+              label="Pulse Strip"
+              description="Show the live pulse strip in the editor."
+              enabled={livePulseStrip}
+              onToggle={() => onLivePulseStrip(!livePulseStrip)}
+            />
           </section>
 
           {/* Playing note highlight */}
@@ -1018,76 +959,14 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             >
               Playing Note Highlight
             </p>
-            <button
-              onClick={() =>
+            <SettingToggle
+              label="Playing Note Highlight"
+              description="Highlight the note currently playing in the editor."
+              enabled={livePlayingNoteHighlights}
+              onToggle={() =>
                 onLivePlayingNoteHighlights(!livePlayingNoteHighlights)
               }
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                padding: "10px 12px",
-                borderRadius: 6,
-                border: livePlayingNoteHighlights
-                  ? "1px solid rgba(0,255,136,0.3)"
-                  : "1px solid rgba(255,255,255,0.05)",
-                background: livePlayingNoteHighlights
-                  ? "rgba(0,255,136,0.08)"
-                  : "rgba(255,255,255,0.02)",
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "all 0.2s",
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontFamily: '"JetBrains Mono",monospace',
-                    color: livePlayingNoteHighlights ? "#00ff88" : "#555",
-                    fontWeight: livePlayingNoteHighlights ? 700 : 400,
-                  }}
-                >
-                  {livePlayingNoteHighlights ? "Enabled" : "Disabled"}
-                </span>
-                <span style={{ fontSize: 10, color: "#333" }}>
-                  Highlight the note currently playing in the editor.
-                </span>
-              </div>
-              <div
-                style={{
-                  width: 38,
-                  height: 22,
-                  borderRadius: 999,
-                  background: livePlayingNoteHighlights
-                    ? "rgba(0,255,136,0.22)"
-                    : "rgba(255,255,255,0.08)",
-                  border: livePlayingNoteHighlights
-                    ? "1px solid rgba(0,255,136,0.3)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                  position: "relative",
-                  flexShrink: 0,
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 2,
-                    left: livePlayingNoteHighlights ? 17 : 2,
-                    width: 16,
-                    height: 16,
-                    borderRadius: "50%",
-                    background: livePlayingNoteHighlights ? "#00ff88" : "#888",
-                    boxShadow: livePlayingNoteHighlights
-                      ? "0 0 8px #00ff88"
-                      : "none",
-                    transition: "left 0.2s ease, background 0.2s ease",
-                  }}
-                />
-              </div>
-            </button>
+            />
           </section>
 
           {/* Recording mode */}

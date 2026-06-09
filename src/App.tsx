@@ -1,7 +1,7 @@
-import { AudioVisualizer } from "./components/AudioVisualizer";
+import { AppPage } from "./pages/AppPage";
 
 function App() {
-  return <AudioVisualizer />;
+  return <AppPage />;
 }
 
 export default App;
