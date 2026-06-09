@@ -6,6 +6,7 @@ import { useAudioVisualizerPersistence } from "../hooks/useAudioVisualizerPersis
 import { useCustomColorPresets } from "../hooks/useCustomColorPresets";
 import { useVisualSettings } from "../hooks/useVisualSettings";
 import { useAudioVisualizerUiState } from "../hooks/useAudioVisualizerUiState";
+import { useAudioVisualizerActions } from "../hooks/useAudioVisualizerActions";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import {
@@ -170,21 +171,14 @@ export const AudioVisualizer: React.FC = () => {
     setCode(c);
   }, []);
 
-  const handleLoadPreset = useCallback(
-    (id: string) => {
-      const preset = getById(id);
-      if (preset) {
-        setCode(preset.code);
-        setPresetsOpen(false);
-      }
-    },
-    [getById, setPresetsOpen],
-  );
-
-  const handleSplashClick = useCallback(() => {
-    markSplashDone();
-    play(code);
-  }, [markSplashDone, play, code]);
+  const { handleLoadPreset, handleSplashClick } = useAudioVisualizerActions({
+    code,
+    play,
+    getById,
+    setCode,
+    closePresets,
+    markSplashDone,
+  });
 
   useAudioVisualizerPersistence({
     code,
