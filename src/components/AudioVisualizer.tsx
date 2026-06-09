@@ -12,6 +12,8 @@ import { useAudioVisualizerCode } from "../hooks/useAudioVisualizerCode";
 import { useBackgroundVisualizerNode } from "../hooks/useBackgroundVisualizerNode";
 import { useAudioVisualizerHeaderActions } from "../hooks/useAudioVisualizerHeaderActions";
 import { useAudioVisualizerSettingsDrawerProps } from "../hooks/useAudioVisualizerSettingsDrawerProps";
+import { useAudioWorkspaceProps } from "../hooks/useAudioWorkspaceProps";
+import { useOverlayDialogsProps } from "../hooks/useOverlayDialogsProps";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import { SettingsDrawer } from "./SettingsDrawer";
@@ -223,6 +225,50 @@ export const AudioVisualizer: React.FC = () => {
     audioData,
   });
 
+  const audioWorkspaceProps = useAudioWorkspaceProps({
+    code,
+    play,
+    stop,
+    status,
+    error,
+    loadMsg,
+    opacity: editorOpacity,
+    colorPreset: editorColorPreset,
+    fontPreset: editorFontPreset,
+    fontSize: editorFontSize,
+    livePulseStrip,
+    livePlayingNoteHighlights,
+    activeNote,
+    activeNotes,
+    activeLiterals,
+    activeControls,
+    nPulse,
+    onCodeChange,
+    isExportingMp3,
+    mp3Quality,
+    mp3Status,
+    mp3Progress,
+    mp3Speed,
+    isMobile,
+    mobileHeaderExpanded,
+  });
+
+  const overlayDialogsProps = useOverlayDialogsProps({
+    presetsOpen,
+    helpOpen,
+    splashDone,
+    currentCode: code,
+    presets,
+    onClosePresets: closePresets,
+    onCloseHelp: closeHelp,
+    onSaveAsNew: saveAsNew,
+    onOverwrite: overwrite,
+    onRename: rename,
+    onDelete: remove,
+    onLoadPreset: handleLoadPreset,
+    onSplashClick: handleSplashClick,
+  });
+
   return (
     <Layout backgroundVisualizer={background}>
       {/* header */}
@@ -241,52 +287,12 @@ export const AudioVisualizer: React.FC = () => {
         onRecordStop={onRecordStop}
       />
 
-      <AudioWorkspace
-        code={code}
-        play={play}
-        stop={stop}
-        status={status}
-        error={error}
-        loadMsg={loadMsg}
-        opacity={editorOpacity}
-        colorPreset={editorColorPreset}
-        fontPreset={editorFontPreset}
-        fontSize={editorFontSize}
-        livePulseStrip={livePulseStrip}
-        livePlayingNoteHighlights={livePlayingNoteHighlights}
-        activeNote={activeNote}
-        activeNotes={activeNotes}
-        activeLiterals={activeLiterals}
-        activeControls={activeControls}
-        nPulse={nPulse}
-        onCodeChange={onCodeChange}
-        isExportingMp3={isExportingMp3}
-        mp3Quality={mp3Quality}
-        mp3Status={mp3Status}
-        mp3Progress={mp3Progress}
-        mp3Speed={mp3Speed}
-        isMobile={isMobile}
-        mobileHeaderExpanded={mobileHeaderExpanded}
-      />
+      <AudioWorkspace {...audioWorkspaceProps} />
 
       {/* settings drawer */}
       <SettingsDrawer {...settingsDrawerProps} />
 
-      <OverlayDialogs
-        presetsOpen={presetsOpen}
-        helpOpen={helpOpen}
-        splashDone={splashDone}
-        currentCode={code}
-        presets={presets}
-        onClosePresets={closePresets}
-        onCloseHelp={closeHelp}
-        onSaveAsNew={saveAsNew}
-        onOverwrite={overwrite}
-        onRename={rename}
-        onDelete={remove}
-        onLoadPreset={handleLoadPreset}
-        onSplashClick={handleSplashClick}
-      />
+      <OverlayDialogs {...overlayDialogsProps} />
     </Layout>
   );
 };
