@@ -766,9 +766,10 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
 
       const selection = editor.getSelection();
       const fullRange = model.getFullModelRange();
-      const selectedText = selection && !selection.isEmpty()
-        ? model.getValueInRange(selection)
-        : model.getValue();
+      const selectedText =
+        selection && !selection.isEmpty()
+          ? model.getValueInRange(selection)
+          : model.getValue();
 
       const nextText = transform(selectedText);
       editor.executeEdits("strudel-transform", [
@@ -949,57 +950,57 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           }}
         >
           Format
-          <button
-            onClick={wrapInRev}
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.22)",
-              color: themeTokens.text,
-              fontFamily: editorFontFamily,
-              fontSize: 10,
-              letterSpacing: 0.5,
-              borderRadius: 5,
-              padding: "3px 7px 6px",
-              cursor: "pointer",
-              zIndex: 3,
-            }}
-          >
-            rev
-          </button>
-          <button
-            onClick={wrapInGain}
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.22)",
-              color: themeTokens.text,
-              fontFamily: editorFontFamily,
-              fontSize: 10,
-              letterSpacing: 0.5,
-              borderRadius: 5,
-              padding: "3px 7px 6px",
-              cursor: "pointer",
-              zIndex: 3,
-            }}
-          >
-            gain
-          </button>
-          <button
-            onClick={duplicateInStack}
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.22)",
-              color: themeTokens.text,
-              fontFamily: editorFontFamily,
-              fontSize: 10,
-              letterSpacing: 0.5,
-              borderRadius: 5,
-              padding: "3px 7px 6px",
-              cursor: "pointer",
-              zIndex: 3,
-            }}
-          >
-            stack
-          </button>
+        </button>
+        <button
+          onClick={wrapInRev}
+          style={{
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(0,0,0,0.22)",
+            color: themeTokens.text,
+            fontFamily: editorFontFamily,
+            fontSize: 10,
+            letterSpacing: 0.5,
+            borderRadius: 5,
+            padding: "3px 7px 6px",
+            cursor: "pointer",
+            zIndex: 3,
+          }}
+        >
+          rev
+        </button>
+        <button
+          onClick={wrapInGain}
+          style={{
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(0,0,0,0.22)",
+            color: themeTokens.text,
+            fontFamily: editorFontFamily,
+            fontSize: 10,
+            letterSpacing: 0.5,
+            borderRadius: 5,
+            padding: "3px 7px 6px",
+            cursor: "pointer",
+            zIndex: 3,
+          }}
+        >
+          gain
+        </button>
+        <button
+          onClick={duplicateInStack}
+          style={{
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(0,0,0,0.22)",
+            color: themeTokens.text,
+            fontFamily: editorFontFamily,
+            fontSize: 10,
+            letterSpacing: 0.5,
+            borderRadius: 5,
+            padding: "3px 7px 6px",
+            cursor: "pointer",
+            zIndex: 3,
+          }}
+        >
+          stack
         </button>
         <button
           onClick={() =>
