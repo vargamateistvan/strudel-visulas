@@ -186,6 +186,75 @@ const FUNCTION_SIGNATURES: Record<string, string[]> = {
   delay: ["delay(value)", "Apply delay effect amount."],
 };
 
+const FUNCTION_SNIPPETS: Record<string, string> = {
+  stack: "stack(${1:pattern1}, ${2:pattern2})",
+  sound: 'sound("${1:bd ~ sn ~}")',
+  note: 'note("${1:c3 eb3 g3 bb3}")',
+  cpm: "cpm(${1:120})",
+  every: "every(${1:4}, ${2:(pattern) => pattern})",
+  sometimesBy: "sometimesBy(${1:0.5}, ${2:(pattern) => pattern})",
+  gain: "gain(${1:0.8})",
+  delay: "delay(${1:0.25})",
+};
+
+const FUNCTION_EXAMPLES: Record<string, string> = {
+  stack: 'stack(sound("bd ~ bd ~"), sound("~ sn ~ sn"))',
+  sound: 'sound("hh*8").gain(0.5)',
+  note: 'note("c3 eb3 g3 bb3").sound("triangle")',
+  cpm: "cpm(120)",
+  every: "every(4, rev)",
+  sometimesBy: "sometimesBy(0.25, rev)",
+  gain: "gain(0.8)",
+  delay: "delay(0.25)",
+};
+
+function buildCompletionDocumentation(name: string): Monaco.IMarkdownString {
+  const signature = FUNCTION_SIGNATURES[name];
+  const example = FUNCTION_EXAMPLES[name];
+
+  return {
+    value: [
+      `**${signature?.[0] ?? name}**`,
+      signature?.[1] ?? "",
+      example ? "" : "",
+      example
+        ? `Example:\n\n\
+\
+\
+\
+
+\
+
+\
+
+\
+
+\
+\
+\
+\
+\
+\
+\
+
+\
+\
+\
+\
+
+\
+
+\
+\
+
+\`\`\`js\n${example}\n\`\`\``
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  };
+}
+
 function getLineAndColumnFromOffset(
   source: string,
   offset: number,
@@ -418,24 +487,28 @@ function registerStrudelLanguage(monaco: typeof Monaco): Monaco.IDisposable[] {
           endColumn: word.endColumn,
         };
 
+        const insertTextByName = (name: string) =>
+          FUNCTION_SNIPPETS[name] ?? `${name}($0)`;
+
         const globals = STRUDEL_GLOBALS.map((name) => ({
           label: name,
           kind: monaco.languages.CompletionItemKind.Function,
-          insertText: `${name}($0)`,
+          insertText: insertTextByName(name),
           insertTextRules:
             monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           detail: "Strudel function",
-          documentation: FUNCTION_SIGNATURES[name]?.[1] ?? "",
+          documentation: buildCompletionDocumentation(name),
           range,
         }));
 
         const methods = STRUDEL_CHAIN_METHODS.map((name) => ({
           label: name,
           kind: monaco.languages.CompletionItemKind.Method,
-          insertText: `${name}($0)`,
+          insertText: insertTextByName(name),
           insertTextRules:
             monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           detail: "Pattern method",
+          documentation: buildCompletionDocumentation(name),
           range,
         }));
 
@@ -444,7 +517,15 @@ function registerStrudelLanguage(monaco: typeof Monaco): Monaco.IDisposable[] {
           kind: monaco.languages.CompletionItemKind.Snippet,
           insertText: snippet,
           detail: "Preset snippet",
-          documentation: "Insert a ready-to-play Strudel pattern.",
+          documentation: {
+            value: [
+              "Insert a ready-to-play Strudel pattern.",
+              "",
+              "```js",
+              snippet,
+              "```",
+            ].join("\n"),
+          },
           range,
         }));
 
