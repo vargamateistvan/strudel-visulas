@@ -4,6 +4,7 @@ import { useLocalPresets } from "../hooks/useLocalPresets";
 import { useRecordingExport } from "../hooks/useRecordingExport";
 import { useAudioVisualizerPersistence } from "../hooks/useAudioVisualizerPersistence";
 import { useCustomColorPresets } from "../hooks/useCustomColorPresets";
+import { useVisualSettings } from "../hooks/useVisualSettings";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import {
@@ -18,7 +19,6 @@ import { AudioWorkspace } from "./audio/AudioWorkspace";
 import { OverlayDialogs } from "./audio/OverlayDialogs";
 import {
   COLOR_SCHEME_KEY,
-  DEFAULT_VISUAL_SETTINGS,
   EDITOR_COLOR_PRESET_KEY,
   EDITOR_FONT_PRESET_KEY,
   EDITOR_FONT_SIZE_KEY,
@@ -30,11 +30,9 @@ import {
   isEditorColorPreset,
   isEditorFontPreset,
   isVizMode,
-  loadVisualSettingsMap,
   parseBooleanSetting,
   parseEditorFontSize,
   parseOpacity,
-  type VisualSettingsMap,
 } from "./audio/audioVisualizerSettings";
 
 export const AudioVisualizer: React.FC = () => {
@@ -92,9 +90,6 @@ export const AudioVisualizer: React.FC = () => {
       );
     },
   );
-  const [visualSettings, setVisualSettings] = useState<VisualSettingsMap>(() =>
-    loadVisualSettingsMap(),
-  );
   const [editorColorPreset, setEditorColorPreset] = useState<EditorColorPreset>(
     () => {
       const saved = localStorage.getItem(EDITOR_COLOR_PRESET_KEY);
@@ -144,110 +139,21 @@ export const AudioVisualizer: React.FC = () => {
     stopAudioRecording,
   } = useRecordingExport({ status, code, getRecordingStream });
 
-  const currentVisualSettings =
-    visualSettings[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-  const kickSensitivity = currentVisualSettings.kickSensitivity;
-  const fractalQuality = currentVisualSettings.fractalQuality;
-  const mandelbulbSize = currentVisualSettings.mandelbulbSize;
-  const particleDensity = currentVisualSettings.particleDensity;
-  const spectrumBarCount = currentVisualSettings.spectrumBarCount;
-  const spectrumWaveform = currentVisualSettings.spectrumWaveform;
-
-  const setKickSensitivityForViz = useCallback(
-    (value: number) => {
-      setVisualSettings((prev) => {
-        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-        return {
-          ...prev,
-          [vizMode]: {
-            ...existing,
-            kickSensitivity: value,
-          },
-        };
-      });
-    },
-    [vizMode],
-  );
-
-  const setFractalQualityForViz = useCallback(
-    (value: number) => {
-      setVisualSettings((prev) => {
-        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-        return {
-          ...prev,
-          [vizMode]: {
-            ...existing,
-            fractalQuality: Math.max(1, Math.min(3, Math.round(value))),
-          },
-        };
-      });
-    },
-    [vizMode],
-  );
-
-  const setMandelbulbSizeForViz = useCallback(
-    (value: number) => {
-      setVisualSettings((prev) => {
-        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-        return {
-          ...prev,
-          [vizMode]: {
-            ...existing,
-            mandelbulbSize: Math.max(0.7, Math.min(2.2, value)),
-          },
-        };
-      });
-    },
-    [vizMode],
-  );
-
-  const setParticleDensityForViz = useCallback(
-    (value: number) => {
-      setVisualSettings((prev) => {
-        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-        return {
-          ...prev,
-          [vizMode]: {
-            ...existing,
-            particleDensity: Math.max(80, Math.min(420, Math.round(value))),
-          },
-        };
-      });
-    },
-    [vizMode],
-  );
-
-  const setSpectrumBarCountForViz = useCallback(
-    (value: number) => {
-      setVisualSettings((prev) => {
-        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-        return {
-          ...prev,
-          [vizMode]: {
-            ...existing,
-            spectrumBarCount: Math.max(32, Math.min(180, Math.round(value))),
-          },
-        };
-      });
-    },
-    [vizMode],
-  );
-
-  const setSpectrumWaveformForViz = useCallback(
-    (value: boolean) => {
-      setVisualSettings((prev) => {
-        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-        return {
-          ...prev,
-          [vizMode]: {
-            ...existing,
-            spectrumWaveform: value,
-          },
-        };
-      });
-    },
-    [vizMode],
-  );
+  const {
+    visualSettings,
+    kickSensitivity,
+    fractalQuality,
+    mandelbulbSize,
+    particleDensity,
+    spectrumBarCount,
+    spectrumWaveform,
+    setKickSensitivityForViz,
+    setFractalQualityForViz,
+    setMandelbulbSizeForViz,
+    setParticleDensityForViz,
+    setSpectrumBarCountForViz,
+    setSpectrumWaveformForViz,
+  } = useVisualSettings(vizMode);
 
   const onCodeChange = useCallback((c: string) => {
     setCode(c);
