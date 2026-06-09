@@ -787,9 +787,10 @@ export const AudioVisualizer: React.FC = () => {
   useEffect(() => {
     import("@strudel/core");
     import("@strudel/mini");
+    import("@strudel/soundfonts");
     import("@strudel/tonal");
-    import("@strudel/webaudio");
     import("@strudel/transpiler");
+    import("@strudel/webaudio");
   }, []);
 
   useEffect(() => {

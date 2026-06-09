@@ -1,4 +1,5 @@
 declare module "@strudel/core";
+declare module "@strudel/codemirror";
 declare module "@strudel/mini";
 declare module "@strudel/tonal";
 declare module "@strudel/webaudio";

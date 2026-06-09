@@ -646,7 +646,7 @@
     chord-voicings "^0.0.1"
     webmidi "^3.1.12"
 
-"@strudel/transpiler@1.2.6":
+"@strudel/transpiler@1.2.6", "@strudel/transpiler@^1.2.6":
   version "1.2.6"
   resolved "https://registry.yarnpkg.com/@strudel/transpiler/-/transpiler-1.2.6.tgz#cd2424d81093e7eeb149329bf946d3dc4558b4b5"
   integrity sha512-NzmyQDS4BqjafOPzHGFowxILDx3ZRAPD47YszxNaPB7PggMA2rMo9t3rLz80G0GxA0ZAyMbVMR3px9jDWnJ5hg==
