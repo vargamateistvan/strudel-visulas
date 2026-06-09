@@ -7,8 +7,7 @@ if (!("ResizeObserver" in globalThis)) {
     disconnect() {}
   }
 
-  (globalThis as { ResizeObserver: typeof ResizeObserverMock }).ResizeObserver =
-    ResizeObserverMock;
+  Object.assign(globalThis, { ResizeObserver: ResizeObserverMock });
 }
 
 if (!("ImageData" in globalThis)) {
@@ -24,10 +23,10 @@ if (!("ImageData" in globalThis)) {
     }
   }
 
-  (globalThis as { ImageData: typeof ImageDataMock }).ImageData = ImageDataMock;
+  Object.assign(globalThis, { ImageData: ImageDataMock });
 }
 
-HTMLCanvasElement.prototype.getContext = (() => ({
+const canvasContextStub = {
   setTransform: () => undefined,
   fillRect: () => undefined,
   clearRect: () => undefined,
@@ -47,7 +46,7 @@ HTMLCanvasElement.prototype.getContext = (() => ({
   fillText: () => undefined,
   putImageData: () => undefined,
   getImageData: () => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 }),
-  createImageData: (w = 1, h = 1) => ({
+  createImageData: (w: number = 1, h: number = 1) => ({
     data: new Uint8ClampedArray(Math.max(4, w * h * 4)),
     width: w,
     height: h,
@@ -55,4 +54,7 @@ HTMLCanvasElement.prototype.getContext = (() => ({
   drawImage: () => undefined,
   createLinearGradient: () => ({ addColorStop: () => undefined }),
   createRadialGradient: () => ({ addColorStop: () => undefined }),
-})) as typeof HTMLCanvasElement.prototype.getContext;
+};
+
+HTMLCanvasElement.prototype.getContext = (() =>
+  canvasContextStub) as unknown as typeof HTMLCanvasElement.prototype.getContext;
