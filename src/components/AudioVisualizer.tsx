@@ -3,11 +3,11 @@ import { useStrudel, DEFAULT_PATTERN } from "../hooks/useStrudel";
 import { useLocalPresets } from "../hooks/useLocalPresets";
 import { useRecordingExport } from "../hooks/useRecordingExport";
 import { useAudioVisualizerPersistence } from "../hooks/useAudioVisualizerPersistence";
+import { useCustomColorPresets } from "../hooks/useCustomColorPresets";
 import { Layout } from "./Layout";
 import { Header } from "./Header";
 import {
   SettingsDrawer,
-  type CustomColorPreset,
   type ColorScheme,
   type EditorColorPreset,
   type EditorFontPreset,
@@ -17,9 +17,7 @@ import { BackgroundVisualizer } from "./audio/BackgroundVisualizer";
 import { AudioWorkspace } from "./audio/AudioWorkspace";
 import { OverlayDialogs } from "./audio/OverlayDialogs";
 import {
-  ACTIVE_CUSTOM_COLOR_PRESET_KEY,
   COLOR_SCHEME_KEY,
-  DEFAULT_CUSTOM_COLORS,
   DEFAULT_VISUAL_SETTINGS,
   EDITOR_COLOR_PRESET_KEY,
   EDITOR_FONT_PRESET_KEY,
@@ -31,14 +29,11 @@ import {
   isColorScheme,
   isEditorColorPreset,
   isEditorFontPreset,
-  isHexColor,
   isVizMode,
-  loadCustomColorPresets,
   loadVisualSettingsMap,
   parseBooleanSetting,
   parseEditorFontSize,
   parseOpacity,
-  sanitizePresetName,
   type VisualSettingsMap,
 } from "./audio/audioVisualizerSettings";
 
@@ -97,12 +92,6 @@ export const AudioVisualizer: React.FC = () => {
       );
     },
   );
-  const [customColorPresets, setCustomColorPresets] = useState<
-    CustomColorPreset[]
-  >(() => loadCustomColorPresets());
-  const [activeCustomColorPresetId, setActiveCustomColorPresetId] = useState<
-    string | null
-  >(() => localStorage.getItem(ACTIVE_CUSTOM_COLOR_PRESET_KEY));
   const [visualSettings, setVisualSettings] = useState<VisualSettingsMap>(() =>
     loadVisualSettingsMap(),
   );
@@ -131,6 +120,17 @@ export const AudioVisualizer: React.FC = () => {
   const [mobileHeaderExpanded, setMobileHeaderExpanded] = useState(false);
 
   const {
+    customColorPresets,
+    activeCustomColorPresetId,
+    customColors,
+    selectCustomColorPreset,
+    createCustomColorPreset,
+    updateCustomColorPresetColor,
+    renameCustomColorPreset,
+    deleteCustomColorPreset,
+  } = useCustomColorPresets({ colorScheme, setColorScheme });
+
+  const {
     isRecording,
     recordingMode,
     setRecordingMode,
@@ -152,13 +152,6 @@ export const AudioVisualizer: React.FC = () => {
   const particleDensity = currentVisualSettings.particleDensity;
   const spectrumBarCount = currentVisualSettings.spectrumBarCount;
   const spectrumWaveform = currentVisualSettings.spectrumWaveform;
-  const activeCustomPreset =
-    customColorPresets.find((p) => p.id === activeCustomColorPresetId) ??
-    customColorPresets[0] ??
-    null;
-  const customColors: [string, string, string] = activeCustomPreset
-    ? activeCustomPreset.colors
-    : DEFAULT_CUSTOM_COLORS;
 
   const setKickSensitivityForViz = useCallback(
     (value: number) => {
@@ -254,72 +247,6 @@ export const AudioVisualizer: React.FC = () => {
       });
     },
     [vizMode],
-  );
-
-  const selectCustomColorPreset = useCallback((id: string) => {
-    setActiveCustomColorPresetId(id);
-    setColorScheme("custom");
-  }, []);
-
-  const createCustomColorPreset = useCallback(() => {
-    setCustomColorPresets((prev) => {
-      const nextIndex = prev.length + 1;
-      const id = `custom-${Date.now()}-${nextIndex}`;
-      const preset: CustomColorPreset = {
-        id,
-        name: `Custom ${nextIndex}`,
-        colors: activeCustomPreset?.colors ?? DEFAULT_CUSTOM_COLORS,
-      };
-      setActiveCustomColorPresetId(id);
-      setColorScheme("custom");
-      return [...prev, preset];
-    });
-  }, [activeCustomPreset]);
-
-  const updateCustomColorPresetColor = useCallback(
-    (id: string, index: 0 | 1 | 2, color: string) => {
-      if (!isHexColor(color)) return;
-      setCustomColorPresets((prev) =>
-        prev.map((preset) => {
-          if (preset.id !== id) return preset;
-          const nextColors: [string, string, string] = [...preset.colors];
-          nextColors[index] = color;
-          return {
-            ...preset,
-            colors: nextColors,
-          };
-        }),
-      );
-    },
-    [],
-  );
-
-  const renameCustomColorPreset = useCallback((id: string, name: string) => {
-    setCustomColorPresets((prev) =>
-      prev.map((preset) =>
-        preset.id === id
-          ? { ...preset, name: sanitizePresetName(name) }
-          : preset,
-      ),
-    );
-  }, []);
-
-  const deleteCustomColorPreset = useCallback(
-    (id: string) => {
-      setCustomColorPresets((prev) => {
-        const next = prev.filter((preset) => preset.id !== id);
-        const nextActive =
-          next.find((preset) => preset.id === activeCustomColorPresetId) ??
-          next[0] ??
-          null;
-        setActiveCustomColorPresetId(nextActive ? nextActive.id : null);
-        if (!nextActive && colorScheme === "custom") {
-          setColorScheme("neon");
-        }
-        return next;
-      });
-    },
-    [activeCustomColorPresetId, colorScheme],
   );
 
   const onCodeChange = useCallback((c: string) => {
