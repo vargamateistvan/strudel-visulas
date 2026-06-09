@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useStrudel, DEFAULT_PATTERN } from "../hooks/useStrudel";
 import { useLocalPresets } from "../hooks/useLocalPresets";
+import { useRecordingExport } from "../hooks/useRecordingExport";
 import { Layout } from "./Layout";
-import { Header, type RecordingMode } from "./Header";
+import { Header } from "./Header";
 import {
   SettingsDrawer,
   type CustomColorPreset,
@@ -12,8 +13,6 @@ import {
   type VizMode,
 } from "./SettingsDrawer";
 import { BackgroundVisualizer } from "./audio/BackgroundVisualizer";
-import { buildMidiFromCode } from "../utils/midiExport";
-import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
 import { AudioWorkspace } from "./audio/AudioWorkspace";
 import { OverlayDialogs } from "./audio/OverlayDialogs";
 import {
@@ -28,16 +27,12 @@ import {
   EDITOR_OPACITY_KEY,
   LIVE_PLAYING_NOTE_HIGHLIGHTS_KEY,
   LIVE_PULSE_STRIP_KEY,
-  MP3_QUALITY_KEY,
-  RECORDING_MODE_KEY,
   VISUAL_SETTINGS_KEY,
   VIZ_MODE_KEY,
-  errorMessage,
   isColorScheme,
   isEditorColorPreset,
   isEditorFontPreset,
   isHexColor,
-  isMp3Quality,
   isVizMode,
   loadCustomColorPresets,
   loadVisualSettingsMap,
@@ -136,24 +131,19 @@ export const AudioVisualizer: React.FC = () => {
   );
   const [mobileHeaderExpanded, setMobileHeaderExpanded] = useState(false);
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingMode, setRecordingMode] = useState<RecordingMode>(() => {
-    const saved = localStorage.getItem(RECORDING_MODE_KEY);
-    return saved === "video" || saved === "midi" ? saved : "audio";
-  });
-  const [mp3Quality, setMp3Quality] = useState<Mp3QualityPreset>(() => {
-    const saved = localStorage.getItem(MP3_QUALITY_KEY);
-    return saved && isMp3Quality(saved) ? saved : "good";
-  });
-  const [isExportingMp3, setIsExportingMp3] = useState(false);
-  const [mp3Progress, setMp3Progress] = useState(0);
-  const [mp3Status, setMp3Status] = useState("");
-  const [mp3Speed, setMp3Speed] = useState("");
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
-  const displayStreamRef = useRef<MediaStream | null>(null);
-
-  const clearRecordingTimer = useCallback(() => {}, []);
+  const {
+    isRecording,
+    recordingMode,
+    setRecordingMode,
+    mp3Quality,
+    setMp3Quality,
+    isExportingMp3,
+    mp3Progress,
+    mp3Status,
+    mp3Speed,
+    startRecording,
+    stopAudioRecording,
+  } = useRecordingExport({ status, code, getRecordingStream });
 
   const currentVisualSettings =
     visualSettings[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
@@ -353,227 +343,6 @@ export const AudioVisualizer: React.FC = () => {
     play(code);
   }, [play, code]);
 
-  const pickAudioMimeType = useCallback((): string | undefined => {
-    if (typeof MediaRecorder === "undefined") return undefined;
-    const candidates = [
-      "audio/webm;codecs=opus",
-      "audio/webm",
-      "audio/ogg;codecs=opus",
-      "audio/ogg",
-    ];
-    return candidates.find((c) => MediaRecorder.isTypeSupported(c));
-  }, []);
-
-  const stopAudioRecording = useCallback(() => {
-    clearRecordingTimer();
-    if (recorderRef.current && recorderRef.current.state !== "inactive") {
-      recorderRef.current.stop();
-    } else {
-      setIsRecording(false);
-    }
-    if (displayStreamRef.current) {
-      displayStreamRef.current.getTracks().forEach((t) => t.stop());
-      displayStreamRef.current = null;
-    }
-  }, [clearRecordingTimer]);
-
-  const startAudioRecording = useCallback(async () => {
-    try {
-      if (status !== "playing") return;
-      if (isRecording) return;
-      if (isExportingMp3) return;
-      if (typeof MediaRecorder === "undefined") {
-        window.alert("MediaRecorder is not supported in this browser.");
-        return;
-      }
-
-      const stream = await getRecordingStream();
-      const mimeType = pickAudioMimeType();
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
-
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.onerror = () => {
-        setIsRecording(false);
-        clearRecordingTimer();
-      };
-      recorder.onstop = async () => {
-        const blobType = recorder.mimeType || mimeType || "audio/webm";
-        clearRecordingTimer();
-        setIsRecording(false);
-
-        const blob = new Blob(chunksRef.current, { type: blobType });
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
-
-        try {
-          setIsExportingMp3(true);
-          setMp3Progress(0);
-          setMp3Status("Preparing MP3 export...");
-
-          const mp3Blob = await convertWebmToMp3(blob, {
-            quality: mp3Quality,
-            onProgress: (p) => setMp3Progress(p),
-            onStatus: (s) => setMp3Status(s),
-            onSpeed: (speed) => setMp3Speed(speed),
-          });
-
-          const url = URL.createObjectURL(mp3Blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `strudel-recording-${ts}.mp3`;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-        } catch (e: unknown) {
-          const ext = blobType.includes("ogg") ? "ogg" : "webm";
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `strudel-recording-${ts}.${ext}`;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-          window.alert(
-            `MP3 conversion failed, downloaded original ${ext.toUpperCase()} instead. ${errorMessage(e)}`,
-          );
-        } finally {
-          setIsExportingMp3(false);
-          setMp3Status("");
-          setMp3Progress(0);
-          setMp3Speed("");
-        }
-      };
-
-      recorderRef.current = recorder;
-      recorder.start(250);
-      setIsRecording(true);
-    } catch (e: unknown) {
-      window.alert(errorMessage(e) || "Failed to start recording.");
-    }
-  }, [
-    clearRecordingTimer,
-    getRecordingStream,
-    isExportingMp3,
-    isRecording,
-    mp3Quality,
-    pickAudioMimeType,
-    status,
-  ]);
-
-  const startVideoRecording = useCallback(async () => {
-    try {
-      if (status !== "playing") return;
-      if (isRecording) return;
-      if (!navigator.mediaDevices?.getDisplayMedia) {
-        window.alert("Display capture is not supported in this browser.");
-        return;
-      }
-      if (typeof MediaRecorder === "undefined") {
-        window.alert("MediaRecorder is not supported in this browser.");
-        return;
-      }
-
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: 60 },
-        audio: false,
-      });
-      displayStreamRef.current = displayStream;
-
-      const audioStream = await getRecordingStream();
-      const combined = new MediaStream();
-      displayStream.getVideoTracks().forEach((t) => combined.addTrack(t));
-      audioStream.getAudioTracks().forEach((t) => combined.addTrack(t));
-
-      const candidates = [
-        "video/webm;codecs=vp9,opus",
-        "video/webm;codecs=vp8,opus",
-        "video/webm",
-      ];
-      const mimeType = candidates.find((c) => MediaRecorder.isTypeSupported(c));
-      const recorder = mimeType
-        ? new MediaRecorder(combined, { mimeType })
-        : new MediaRecorder(combined);
-
-      displayStream.getVideoTracks().forEach((track) => {
-        track.onended = () => {
-          if (recorder.state !== "inactive") {
-            recorder.stop();
-          }
-        };
-      });
-
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.onstop = () => {
-        clearRecordingTimer();
-        const blob = new Blob(chunksRef.current, {
-          type: recorder.mimeType || "video/webm",
-        });
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `strudel-video-${ts}.webm`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        displayStream.getTracks().forEach((t) => t.stop());
-        displayStreamRef.current = null;
-        setIsRecording(false);
-      };
-      recorder.onerror = () => {
-        clearRecordingTimer();
-        setIsRecording(false);
-        displayStream.getTracks().forEach((t) => t.stop());
-        displayStreamRef.current = null;
-      };
-
-      recorderRef.current = recorder;
-      recorder.start(250);
-      setIsRecording(true);
-    } catch {
-      clearRecordingTimer();
-      setIsRecording(false);
-      if (displayStreamRef.current) {
-        displayStreamRef.current.getTracks().forEach((t) => t.stop());
-      }
-      displayStreamRef.current = null;
-    }
-  }, [clearRecordingTimer, getRecordingStream, isRecording, status]);
-
-  const exportMidi = useCallback(() => {
-    const blob = buildMidiFromCode(code);
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `strudel-pattern-${ts}.mid`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }, [code]);
-
-  const startRecording = useCallback(() => {
-    if (isExportingMp3) return;
-    if (recordingMode === "audio") {
-      startAudioRecording();
-      return;
-    }
-    if (recordingMode === "video") {
-      startVideoRecording();
-      return;
-    }
-    exportMidi();
-  }, [
-    exportMidi,
-    isExportingMp3,
-    recordingMode,
-    startAudioRecording,
-    startVideoRecording,
-  ]);
-
   // Preload modules in the background while idle so first play is instant
   useEffect(() => {
     import("@strudel/core");
@@ -635,10 +404,6 @@ export const AudioVisualizer: React.FC = () => {
   }, [livePlayingNoteHighlights]);
 
   useEffect(() => {
-    localStorage.setItem(RECORDING_MODE_KEY, recordingMode);
-  }, [recordingMode]);
-
-  useEffect(() => {
     localStorage.setItem(VISUAL_SETTINGS_KEY, JSON.stringify(visualSettings));
   }, [visualSettings]);
 
@@ -661,10 +426,6 @@ export const AudioVisualizer: React.FC = () => {
   }, [activeCustomColorPresetId]);
 
   useEffect(() => {
-    localStorage.setItem(MP3_QUALITY_KEY, mp3Quality);
-  }, [mp3Quality]);
-
-  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
@@ -678,24 +439,6 @@ export const AudioVisualizer: React.FC = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  useEffect(() => {
-    return () => {
-      clearRecordingTimer();
-      if (recorderRef.current && recorderRef.current.state !== "inactive") {
-        recorderRef.current.stop();
-      }
-      if (displayStreamRef.current) {
-        displayStreamRef.current.getTracks().forEach((t) => t.stop());
-      }
-    };
-  }, [clearRecordingTimer]);
-
-  useEffect(() => {
-    if (status !== "playing" && isRecording) {
-      stopAudioRecording();
-    }
-  }, [isRecording, status, stopAudioRecording]);
 
   const background = (
     <BackgroundVisualizer
