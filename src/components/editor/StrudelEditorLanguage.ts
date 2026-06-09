@@ -542,16 +542,16 @@ export function registerStrudelLanguage(
               "```",
             ].join("\n"),
           },
-            sortText: `2_${label}`,
+          sortText: `2_${label}`,
           range,
         }));
 
-          const suggestions = methodContext
-            ? [...methods]
-            : [...globals, ...methods, ...snippets];
+        const suggestions = methodContext
+          ? [...methods]
+          : [...globals, ...methods, ...snippets];
 
         return {
-            suggestions,
+          suggestions,
         };
       },
     }),
