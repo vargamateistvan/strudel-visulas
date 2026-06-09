@@ -364,6 +364,57 @@ const NOISY_RUNTIME_PATTERNS = [
 
 const MASTER_VOLUME_KEY = "strudel:master-volume:v1";
 
+const SOUND_TOKEN_ALIASES: Record<string, string> = {
+  recorder_bass_sus: "sawtooth",
+  ocarina: "gm_ocarina",
+  AlesisHR16_bd: "RolandTR909_bd",
+  AlesisHR16_sd: "RolandTR909_sd",
+  AlesisHR16_hh: "RolandTR909_hh",
+  AlesisHR16_oh: "RolandTR909_oh",
+  AlesisHR16_cp: "RolandTR909_cp",
+  AlesisHR16_cr: "RolandTR909_cr",
+};
+
+function normalizeUnsupportedSoundTokens(code: string): {
+  normalizedCode: string;
+  changed: boolean;
+} {
+  let changed = false;
+
+  const applyTokenAliases = (body: string): string => {
+    let next = body;
+    for (const [from, to] of Object.entries(SOUND_TOKEN_ALIASES)) {
+      const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp(`\\b${escaped}\\b`, "g");
+      if (re.test(next)) {
+        next = next.replace(re, to);
+      }
+    }
+    return next;
+  };
+
+  const withSoundAliases = code.replace(
+    /(\b(?:sound|s)\s*\(\s*["'])([^"']*)(["']\s*\))/g,
+    (_match, head: string, body: string, tail: string) => {
+      const normalizedBody = applyTokenAliases(body);
+      if (normalizedBody !== body) {
+        changed = true;
+      }
+      return `${head}${normalizedBody}${tail}`;
+    },
+  );
+
+  const withBankAliases = withSoundAliases.replace(
+    /(\bbank\s*\(\s*["'])AlesisHR16(["']\s*\))/gi,
+    (_match, head: string, tail: string) => {
+      changed = true;
+      return `${head}RolandTR909${tail}`;
+    },
+  );
+
+  return { normalizedCode: withBankAliases, changed };
+}
+
 function clampMasterVolume(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.max(0, Math.min(1, value));
@@ -671,6 +722,13 @@ export const useStrudel = () => {
       setError(null);
       setStatus("loading");
 
+      const { normalizedCode, changed } = normalizeUnsupportedSoundTokens(code);
+      if (changed) {
+        console.warn(
+          "[useStrudel] replaced unsupported sound/bank names with compatible aliases",
+        );
+      }
+
       try {
         setLoadMsg("Loading modules…");
         await loadScope();
@@ -899,7 +957,7 @@ export const useStrudel = () => {
             }
           },
         });
-        await r.evaluate(code);
+        await r.evaluate(normalizedCode);
         replRef.current = r;
 
         setStatus("playing");
@@ -931,8 +989,14 @@ export const useStrudel = () => {
   const updatePattern = useCallback(
     async (code: string) => {
       if (!replRef.current || status !== "playing") return;
+      const { normalizedCode, changed } = normalizeUnsupportedSoundTokens(code);
+      if (changed) {
+        console.warn(
+          "[useStrudel] replaced unsupported sound/bank names with compatible aliases",
+        );
+      }
       try {
-        await replRef.current.evaluate(code);
+        await replRef.current.evaluate(normalizedCode);
         setError(null);
       } catch (err: unknown) {
         // Keep currently running audio alive when a live edit is temporarily invalid.
