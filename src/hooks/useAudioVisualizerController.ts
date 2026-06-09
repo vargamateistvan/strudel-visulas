@@ -11,10 +11,6 @@ import { useAudioVisualizerPreferences } from "./useAudioVisualizerPreferences";
 import { useAudioVisualizerCode } from "./useAudioVisualizerCode";
 import { useBackgroundVisualizerNode } from "./useBackgroundVisualizerNode";
 import { useAudioVisualizerHeaderActions } from "./useAudioVisualizerHeaderActions";
-import { useAudioVisualizerSettingsDrawerProps } from "./useAudioVisualizerSettingsDrawerProps";
-import { useAudioWorkspaceProps } from "./useAudioWorkspaceProps";
-import { useOverlayDialogsProps } from "./useOverlayDialogsProps";
-import { useHeaderProps } from "./useHeaderProps";
 import { AudioVisualizerShell } from "../components/audio/AudioVisualizerShell";
 
 export function useAudioVisualizerController(): ComponentProps<
@@ -180,7 +176,7 @@ export function useAudioVisualizerController(): ComponentProps<
     spectrumWaveform,
   });
 
-  const settingsDrawerProps = useAudioVisualizerSettingsDrawerProps({
+  const settingsDrawerProps = {
     open: drawerOpen,
     onClose: closeDrawer,
     colorScheme,
@@ -223,9 +219,9 @@ export function useAudioVisualizerController(): ComponentProps<
     editorFontSize,
     onEditorFontSize: setEditorFontSize,
     audioData,
-  });
+  };
 
-  const audioWorkspaceProps = useAudioWorkspaceProps({
+  const audioWorkspaceProps = {
     code,
     play,
     stop,
@@ -251,9 +247,9 @@ export function useAudioVisualizerController(): ComponentProps<
     mp3Speed,
     isMobile,
     mobileHeaderExpanded,
-  });
+  };
 
-  const overlayDialogsProps = useOverlayDialogsProps({
+  const overlayDialogsProps = {
     presetsOpen,
     helpOpen,
     splashDone,
@@ -267,9 +263,9 @@ export function useAudioVisualizerController(): ComponentProps<
     onDelete: remove,
     onLoadPreset: handleLoadPreset,
     onSplashClick: handleSplashClick,
-  });
+  };
 
-  const headerProps = useHeaderProps({
+  const headerProps = {
     status,
     isMobile,
     onMobileAdvancedOpenChange: setMobileHeaderExpanded,
@@ -282,7 +278,7 @@ export function useAudioVisualizerController(): ComponentProps<
     isExportingMp3,
     onRecordStart,
     onRecordStop,
-  });
+  };
 
   return {
     background,
