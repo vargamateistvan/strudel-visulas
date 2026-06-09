@@ -13,9 +13,7 @@ import {
   type EditorFontPreset,
   type VizMode,
 } from "./SettingsDrawer";
-import { ParticleField } from "../visualizations/ParticleField";
-import { SpectrumAnalyzer } from "../visualizations/SpectrumAnalyzer";
-import { FractalField } from "../visualizations/FractalField";
+import { BackgroundVisualizer } from "./audio/BackgroundVisualizer";
 import { buildMidiFromCode } from "../utils/midiExport";
 import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
 import { AudioWorkspace } from "./audio/AudioWorkspace";
@@ -967,183 +965,19 @@ export const AudioVisualizer: React.FC = () => {
   }, [isRecording, status, stopAudioRecording]);
 
   const background = (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {(vizMode === "particles" || vizMode === "both") && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <ParticleField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            particleDensity={particleDensity}
-          />
-        </div>
-      )}
-      {(vizMode === "spectrum" || vizMode === "both") && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: vizMode === "both" ? 0.4 : 1,
-          }}
-        >
-          <SpectrumAnalyzer
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            barCount={spectrumBarCount}
-            showWaveform={spectrumWaveform}
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-          />
-        </div>
-      )}
-      {vizMode === "lissajous" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="lissajous"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "julia" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="julia"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "kaleidoscope" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="kaleidoscope"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "kaleidoTunnel" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="kaleidoTunnel"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "mandelbulb" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="mandelbulb"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-            mandelbulbSize={mandelbulbSize}
-          />
-        </div>
-      )}
-      {vizMode === "mandelbox" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="mandelbox"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "ifs" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="ifs"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "thueMorse" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="thueMorse"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {vizMode === "lSystem" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="lindenmayer"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {(vizMode as string) === "mandelbrot" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="mandelbrot"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {(vizMode as string) === "burningShip" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="burningShip"
-            isPlaying={status === "playing"}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-    </div>
+    <BackgroundVisualizer
+      audioData={audioData}
+      colorScheme={colorScheme}
+      customColors={customColors}
+      vizMode={vizMode}
+      status={status}
+      kickSensitivity={kickSensitivity}
+      fractalQuality={fractalQuality}
+      mandelbulbSize={mandelbulbSize}
+      particleDensity={particleDensity}
+      spectrumBarCount={spectrumBarCount}
+      spectrumWaveform={spectrumWaveform}
+    />
   );
 
   return (
