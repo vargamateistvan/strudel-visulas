@@ -1,4 +1,4 @@
-import { useMemo, type ComponentProps } from "react";
+import { useEffect, useMemo, type ComponentProps } from "react";
 import { useStrudel, DEFAULT_PATTERN } from "./useStrudel";
 import { useLocalPresets } from "./useLocalPresets";
 import { useRecordingExport } from "./useRecordingExport";
@@ -11,7 +11,28 @@ import { useAudioVisualizerPreferences } from "./useAudioVisualizerPreferences";
 import { useAudioVisualizerCode } from "./useAudioVisualizerCode";
 import { useBackgroundVisualizerNode } from "./useBackgroundVisualizerNode";
 import { useAudioVisualizerHeaderActions } from "./useAudioVisualizerHeaderActions";
+import { useAiMusicComposer } from "./useAiMusicComposer";
 import { AudioVisualizerShell } from "../components/audio/AudioVisualizerShell";
+
+function parseComposerSlashCommand(
+  rawPrompt: string,
+  fallbackIntent: "new" | "refine" | "variation",
+): {
+  intent: "new" | "refine" | "variation";
+  prompt: string;
+} {
+  const trimmed = rawPrompt.trim();
+  const slashMatch = trimmed.match(/^\/(new|rework|variation)\b/i);
+  if (!slashMatch) {
+    return { intent: fallbackIntent, prompt: trimmed };
+  }
+
+  const cmd = slashMatch[1].toLowerCase();
+  const intent =
+    cmd === "rework" ? "refine" : cmd === "variation" ? "variation" : "new";
+  const prompt = trimmed.slice(slashMatch[0].length).trim();
+  return { intent, prompt };
+}
 
 const IDLE_AUDIO_DATA = {
   frequencies: new Uint8Array(512),
@@ -93,6 +114,30 @@ export function useAudioVisualizerController(): ComponentProps<
     loadDraft,
     defaultCode: DEFAULT_PATTERN,
   });
+
+  const {
+    enabled: aiComposerEnabled,
+    setEnabled: setAiComposerEnabled,
+    provider: aiProvider,
+    setProvider: setAiProvider,
+    prompt: aiPrompt,
+    setPrompt: setAiPrompt,
+    applyMode: aiApplyMode,
+    setApplyMode: setAiApplyMode,
+    rememberApiKey,
+    setRememberApiKey,
+    apiKey: aiApiKey,
+    setApiKey: setAiApiKey,
+    clearApiKey,
+    isGenerating: isAiGenerating,
+    error: aiError,
+    setError: setAiError,
+    lastUpdatedAt: aiLastUpdatedAt,
+    history: aiHistory,
+    clearHistory: clearAiHistory,
+    canGenerate: canGenerateAi,
+    generate,
+  } = useAiMusicComposer();
 
   const {
     customColorPresets,
@@ -230,6 +275,17 @@ export function useAudioVisualizerController(): ComponentProps<
       onEditorFontPreset: setEditorFontPreset,
       editorFontSize,
       onEditorFontSize: setEditorFontSize,
+      aiComposerEnabled,
+      onAiComposerEnabled: setAiComposerEnabled,
+      aiProvider,
+      onAiProvider: setAiProvider,
+      aiApplyMode,
+      onAiApplyMode: setAiApplyMode,
+      aiApiKey,
+      onAiApiKey: setAiApiKey,
+      onAiClearApiKey: clearApiKey,
+      aiRememberApiKey: rememberApiKey,
+      onAiRememberApiKey: setRememberApiKey,
       audioData: drawerAudioData,
     }),
     [
@@ -274,6 +330,17 @@ export function useAudioVisualizerController(): ComponentProps<
       setEditorFontPreset,
       editorFontSize,
       setEditorFontSize,
+      aiComposerEnabled,
+      setAiComposerEnabled,
+      aiProvider,
+      setAiProvider,
+      aiApplyMode,
+      setAiApplyMode,
+      aiApiKey,
+      setAiApiKey,
+      clearApiKey,
+      rememberApiKey,
+      setRememberApiKey,
       drawerAudioData,
     ],
   );
@@ -303,6 +370,42 @@ export function useAudioVisualizerController(): ComponentProps<
       mp3Speed,
       isMobile,
       mobileHeaderExpanded,
+      aiComposerProps: {
+        enabled: aiComposerEnabled,
+        prompt: aiPrompt,
+        onPromptChange: setAiPrompt,
+        isGenerating: isAiGenerating,
+        canGenerate: canGenerateAi,
+        error: aiError,
+        lastUpdatedAt: aiLastUpdatedAt,
+        history: aiHistory,
+        onClearHistory: clearAiHistory,
+        onGenerate: (intent: "new" | "refine" | "variation") => {
+          void (async () => {
+            try {
+              const parsed = parseComposerSlashCommand(aiPrompt, intent);
+              if (!parsed.prompt) {
+                setAiError("Add a request after /new, /rework, or /variation.");
+                return;
+              }
+
+              const aiCode = await generate({
+                currentCode: code,
+                intent: parsed.intent,
+                promptOverride: parsed.prompt,
+              });
+              if (aiApplyMode === "append") {
+                const base = code.trimEnd();
+                setCode(`${base}\n\n${aiCode}`);
+              } else {
+                setCode(aiCode);
+              }
+            } catch {
+              // Hook already stores the user-visible error.
+            }
+          })();
+        },
+      },
     }),
     [
       code,
@@ -328,8 +431,27 @@ export function useAudioVisualizerController(): ComponentProps<
       mp3Speed,
       isMobile,
       mobileHeaderExpanded,
+      aiComposerEnabled,
+      aiPrompt,
+      setAiPrompt,
+      isAiGenerating,
+      canGenerateAi,
+      aiError,
+      aiLastUpdatedAt,
+      aiHistory,
+      clearAiHistory,
+      setAiError,
+      generate,
+      aiApplyMode,
+      setCode,
     ],
   );
+
+  useEffect(() => {
+    if (!aiComposerEnabled) {
+      setAiError(null);
+    }
+  }, [aiComposerEnabled, setAiError]);
 
   const overlayDialogsProps = useMemo(
     () => ({

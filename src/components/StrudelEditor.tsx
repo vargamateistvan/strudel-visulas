@@ -625,6 +625,20 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     }
   }, []);
 
+  const undoEdit = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.trigger("strudel-toolbar", "undo", null);
+    editor.focus();
+  }, []);
+
+  const redoEdit = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.trigger("strudel-toolbar", "redo", null);
+    editor.focus();
+  }, []);
+
   const statusPills = useMemo(() => {
     if (!livePulseStrip) {
       return [];
@@ -680,6 +694,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
 
       <EditorToolbar
         fontFamily={editorFontFamily}
+        onUndo={undoEdit}
+        onRedo={redoEdit}
         onFormat={formatCode}
         onWrapRev={wrapInRev}
         onWrapGain={wrapInGain}
