@@ -3,7 +3,8 @@ import type { AudioData } from "../hooks/useStrudel";
 
 interface FractalFieldProps {
   audioData: AudioData;
-  colorScheme?: "neon" | "pastel" | "fire" | "ocean";
+  colorScheme?: "neon" | "pastel" | "fire" | "ocean" | "custom";
+  customColors?: [string, string, string];
   mode?:
     | "lissajous"
     | "julia"
@@ -22,6 +23,8 @@ interface FractalFieldProps {
   mandelbulbSize?: number;
 }
 
+let runtimeCustomColors: [string, string, string] | null = null;
+
 // ─── colour palettes ──────────────────────────────────────────────────────────
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   s /= 100;
@@ -38,6 +41,21 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 }
 
 function schemeHue(scheme: string, t: number): number {
+  if (scheme === "custom" && runtimeCustomColors) {
+    const [c1, c2, c3] = runtimeCustomColors;
+    const palette = [c1, c2, c3];
+    const p = ((t % 1) + 1) % 1;
+    const seg = p * palette.length;
+    const i0 = Math.floor(seg) % palette.length;
+    const i1 = (i0 + 1) % palette.length;
+    const local = seg - Math.floor(seg);
+
+    const hueA = hexToHue(palette[i0]);
+    const hueB = hexToHue(palette[i1]);
+    const delta = ((hueB - hueA + 540) % 360) - 180;
+    return (hueA + delta * local + 360) % 360;
+  }
+
   switch (scheme) {
     case "fire":
       return t * 60;
@@ -48,6 +66,24 @@ function schemeHue(scheme: string, t: number): number {
     default:
       return 120 + t * 200; // neon: green→cyan→magenta
   }
+}
+
+function hexToHue(hex: string): number {
+  const normalized = hex.replace("#", "");
+  const r = parseInt(normalized.slice(0, 2), 16) / 255;
+  const g = parseInt(normalized.slice(2, 4), 16) / 255;
+  const b = parseInt(normalized.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  if (delta === 0) return 0;
+
+  let hue = 0;
+  if (max === r) hue = ((g - b) / delta) % 6;
+  else if (max === g) hue = (b - r) / delta + 2;
+  else hue = (r - g) / delta + 4;
+  hue *= 60;
+  return hue < 0 ? hue + 360 : hue;
 }
 
 // ─── Lissajous ────────────────────────────────────────────────────────────────
@@ -914,6 +950,7 @@ function drawLindenmayer(
 export const FractalField: React.FC<FractalFieldProps> = ({
   audioData,
   colorScheme = "neon",
+  customColors,
   mode = "lissajous",
   isPlaying = false,
   kickSensitivity = 1,
@@ -937,6 +974,8 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     const is3DMode = mode === "mandelbulb" || mode === "mandelbox";
+    runtimeCustomColors =
+      colorScheme === "custom" ? (customColors ?? null) : null;
     const isRasterMode =
       mode === "julia" ||
       mode === "mandelbrot" ||
@@ -1164,9 +1203,11 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     return () => {
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
+      runtimeCustomColors = null;
     };
   }, [
     colorScheme,
+    customColors,
     mode,
     isPlaying,
     kickSensitivity,

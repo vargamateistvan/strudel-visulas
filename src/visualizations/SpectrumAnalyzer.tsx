@@ -3,7 +3,8 @@ import type { AudioData } from "../hooks/useStrudel";
 
 interface SpectrumAnalyzerProps {
   audioData: AudioData;
-  colorScheme?: "neon" | "pastel" | "fire" | "ocean";
+  colorScheme?: "neon" | "pastel" | "fire" | "ocean" | "custom";
+  customColors?: [string, string, string];
   barCount?: number;
   showWaveform?: boolean;
   isPlaying?: boolean;
@@ -36,6 +37,7 @@ const GRADIENTS: Record<string, [string, string][]> = {
 export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
   audioData,
   colorScheme = "neon",
+  customColors,
   barCount = 80,
   showWaveform = true,
   isPlaying = false,
@@ -70,7 +72,14 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    const stops = GRADIENTS[colorScheme];
+    const stops: [string, string][] =
+      colorScheme === "custom" && customColors
+        ? [
+            [customColors[0], customColors[1]],
+            [customColors[1], customColors[2]],
+            [customColors[2], customColors[0]],
+          ]
+        : (GRADIENTS[colorScheme] ?? GRADIENTS.neon);
 
     const draw = () => {
       const { frequencies, waveform, bass } = audioRef.current;
@@ -158,7 +167,14 @@ export const SpectrumAnalyzer: React.FC<SpectrumAnalyzerProps> = ({
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, barCount, showWaveform, isPlaying, kickSensitivity]);
+  }, [
+    colorScheme,
+    customColors,
+    barCount,
+    showWaveform,
+    isPlaying,
+    kickSensitivity,
+  ]);
 
   return (
     <canvas

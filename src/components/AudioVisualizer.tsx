@@ -8,6 +8,7 @@ import { PresetsDialog } from "./PresetsDialog";
 import { HowItWorksDialog } from "./HowItWorksDialog";
 import {
   SettingsDrawer,
+  type CustomColorPreset,
   type ColorScheme,
   type EditorColorPreset,
   type VizMode,
@@ -26,6 +27,14 @@ const MP3_QUALITY_KEY = "strudel:mp3-quality:v1";
 const KICK_SENSITIVITY_KEY = "strudel:kick-sensitivity:v1";
 const FRACTAL_QUALITY_KEY = "strudel:fractal-quality:v1";
 const VISUAL_SETTINGS_KEY = "strudel:visual-settings:v1";
+const CUSTOM_COLOR_PRESETS_KEY = "strudel:custom-color-presets:v1";
+const ACTIVE_CUSTOM_COLOR_PRESET_KEY = "strudel:active-custom-color-preset:v1";
+
+const DEFAULT_CUSTOM_COLORS: [string, string, string] = [
+  "#00ff88",
+  "#00ffff",
+  "#ff00ff",
+];
 
 type VisualSettings = {
   kickSensitivity: number;
@@ -46,7 +55,8 @@ function isColorScheme(value: string): value is ColorScheme {
     value === "neon" ||
     value === "pastel" ||
     value === "fire" ||
-    value === "ocean"
+    value === "ocean" ||
+    value === "custom"
   );
 }
 
@@ -106,6 +116,59 @@ function isEditorColorPreset(value: string): value is EditorColorPreset {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isHexColor(value: string): boolean {
+  return /^#[0-9a-fA-F]{6}$/.test(value);
+}
+
+function sanitizePresetName(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.slice(0, 28) : "Custom";
+}
+
+function loadCustomColorPresets(): CustomColorPreset[] {
+  const saved = localStorage.getItem(CUSTOM_COLOR_PRESETS_KEY);
+  if (!saved) {
+    return [
+      {
+        id: "custom-1",
+        name: "Custom 1",
+        colors: DEFAULT_CUSTOM_COLORS,
+      },
+    ];
+  }
+
+  try {
+    const parsed = JSON.parse(saved) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const presets: CustomColorPreset[] = [];
+    for (const entry of parsed) {
+      if (!isRecord(entry)) continue;
+      const id = entry.id;
+      const name = entry.name;
+      const colors = entry.colors;
+      if (
+        typeof id === "string" &&
+        typeof name === "string" &&
+        Array.isArray(colors) &&
+        colors.length === 3 &&
+        colors.every((c) => typeof c === "string" && isHexColor(c))
+      ) {
+        presets.push({
+          id,
+          name: sanitizePresetName(name),
+          colors: [colors[0], colors[1], colors[2]],
+        });
+      }
+    }
+    return presets;
+  } catch {
+    return [];
+  }
 }
 
 function parseVisualSettings(value: unknown): VisualSettings | null {
@@ -233,6 +296,12 @@ export const AudioVisualizer: React.FC = () => {
   const [editorOpacity, setEditorOpacity] = useState(() => {
     return parseOpacity(localStorage.getItem(EDITOR_OPACITY_KEY)) ?? 0.45;
   });
+  const [customColorPresets, setCustomColorPresets] = useState<
+    CustomColorPreset[]
+  >(() => loadCustomColorPresets());
+  const [activeCustomColorPresetId, setActiveCustomColorPresetId] = useState<
+    string | null
+  >(() => localStorage.getItem(ACTIVE_CUSTOM_COLOR_PRESET_KEY));
   const [visualSettings, setVisualSettings] = useState<VisualSettingsMap>(() =>
     loadVisualSettingsMap(),
   );
@@ -271,6 +340,13 @@ export const AudioVisualizer: React.FC = () => {
   const kickSensitivity = currentVisualSettings.kickSensitivity;
   const fractalQuality = currentVisualSettings.fractalQuality;
   const mandelbulbSize = currentVisualSettings.mandelbulbSize;
+  const activeCustomPreset =
+    customColorPresets.find((p) => p.id === activeCustomColorPresetId) ??
+    customColorPresets[0] ??
+    null;
+  const customColors: [string, string, string] = activeCustomPreset
+    ? activeCustomPreset.colors
+    : DEFAULT_CUSTOM_COLORS;
 
   const setKickSensitivityForViz = useCallback(
     (value: number) => {
@@ -318,6 +394,72 @@ export const AudioVisualizer: React.FC = () => {
       });
     },
     [vizMode],
+  );
+
+  const selectCustomColorPreset = useCallback((id: string) => {
+    setActiveCustomColorPresetId(id);
+    setColorScheme("custom");
+  }, []);
+
+  const createCustomColorPreset = useCallback(() => {
+    setCustomColorPresets((prev) => {
+      const nextIndex = prev.length + 1;
+      const id = `custom-${Date.now()}-${nextIndex}`;
+      const preset: CustomColorPreset = {
+        id,
+        name: `Custom ${nextIndex}`,
+        colors: activeCustomPreset?.colors ?? DEFAULT_CUSTOM_COLORS,
+      };
+      setActiveCustomColorPresetId(id);
+      setColorScheme("custom");
+      return [...prev, preset];
+    });
+  }, [activeCustomPreset]);
+
+  const updateCustomColorPresetColor = useCallback(
+    (id: string, index: 0 | 1 | 2, color: string) => {
+      if (!isHexColor(color)) return;
+      setCustomColorPresets((prev) =>
+        prev.map((preset) => {
+          if (preset.id !== id) return preset;
+          const nextColors: [string, string, string] = [...preset.colors];
+          nextColors[index] = color;
+          return {
+            ...preset,
+            colors: nextColors,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
+  const renameCustomColorPreset = useCallback((id: string, name: string) => {
+    setCustomColorPresets((prev) =>
+      prev.map((preset) =>
+        preset.id === id
+          ? { ...preset, name: sanitizePresetName(name) }
+          : preset,
+      ),
+    );
+  }, []);
+
+  const deleteCustomColorPreset = useCallback(
+    (id: string) => {
+      setCustomColorPresets((prev) => {
+        const next = prev.filter((preset) => preset.id !== id);
+        const nextActive =
+          next.find((preset) => preset.id === activeCustomColorPresetId) ??
+          next[0] ??
+          null;
+        setActiveCustomColorPresetId(nextActive ? nextActive.id : null);
+        if (!nextActive && colorScheme === "custom") {
+          setColorScheme("neon");
+        }
+        return next;
+      });
+    },
+    [activeCustomColorPresetId, colorScheme],
   );
 
   const onCodeChange = useCallback((c: string) => {
@@ -594,6 +736,24 @@ export const AudioVisualizer: React.FC = () => {
   }, [visualSettings]);
 
   useEffect(() => {
+    localStorage.setItem(
+      CUSTOM_COLOR_PRESETS_KEY,
+      JSON.stringify(customColorPresets),
+    );
+  }, [customColorPresets]);
+
+  useEffect(() => {
+    if (activeCustomColorPresetId) {
+      localStorage.setItem(
+        ACTIVE_CUSTOM_COLOR_PRESET_KEY,
+        activeCustomColorPresetId,
+      );
+    } else {
+      localStorage.removeItem(ACTIVE_CUSTOM_COLOR_PRESET_KEY);
+    }
+  }, [activeCustomColorPresetId]);
+
+  useEffect(() => {
     localStorage.setItem(MP3_QUALITY_KEY, mp3Quality);
   }, [mp3Quality]);
 
@@ -645,6 +805,7 @@ export const AudioVisualizer: React.FC = () => {
           <ParticleField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
           />
@@ -661,6 +822,7 @@ export const AudioVisualizer: React.FC = () => {
           <SpectrumAnalyzer
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             barCount={96}
             showWaveform
             isPlaying={status === "playing"}
@@ -673,6 +835,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="lissajous"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -685,6 +848,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="julia"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -697,6 +861,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="kaleidoscope"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -709,6 +874,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="kaleidoTunnel"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -721,6 +887,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="mandelbulb"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -734,6 +901,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="mandelbox"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -746,6 +914,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="ifs"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -758,6 +927,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="thueMorse"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -770,6 +940,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="lindenmayer"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -782,6 +953,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="kaleidoscope"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -794,6 +966,7 @@ export const AudioVisualizer: React.FC = () => {
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
+            customColors={customColors}
             mode="kaleidoTunnel"
             isPlaying={status === "playing"}
             kickSensitivity={kickSensitivity}
@@ -964,6 +1137,13 @@ export const AudioVisualizer: React.FC = () => {
         onClose={() => setDrawerOpen(false)}
         colorScheme={colorScheme}
         onColorScheme={setColorScheme}
+        customColorPresets={customColorPresets}
+        activeCustomColorPresetId={activeCustomColorPresetId}
+        onSelectCustomColorPreset={selectCustomColorPreset}
+        onCreateCustomColorPreset={createCustomColorPreset}
+        onUpdateCustomColorPresetColor={updateCustomColorPresetColor}
+        onRenameCustomColorPreset={renameCustomColorPreset}
+        onDeleteCustomColorPreset={deleteCustomColorPreset}
         vizMode={vizMode}
         onVizMode={setVizMode}
         kickSensitivity={kickSensitivity}

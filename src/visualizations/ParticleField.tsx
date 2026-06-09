@@ -16,7 +16,8 @@ interface Particle {
 
 interface ParticleFieldProps {
   audioData: AudioData;
-  colorScheme?: "neon" | "pastel" | "fire" | "ocean";
+  colorScheme?: "neon" | "pastel" | "fire" | "ocean" | "custom";
+  customColors?: [string, string, string];
   isPlaying?: boolean;
   kickSensitivity?: number;
 }
@@ -27,6 +28,23 @@ const SCHEME_HUES: Record<string, [number, number]> = {
   fire: [0, 60],
   ocean: [180, 240],
 };
+
+function hexToHue(hex: string): number {
+  const normalized = hex.replace("#", "");
+  const r = parseInt(normalized.slice(0, 2), 16) / 255;
+  const g = parseInt(normalized.slice(2, 4), 16) / 255;
+  const b = parseInt(normalized.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  if (delta === 0) return 0;
+  let hue = 0;
+  if (max === r) hue = ((g - b) / delta) % 6;
+  else if (max === g) hue = (b - r) / delta + 2;
+  else hue = (r - g) / delta + 4;
+  hue *= 60;
+  return hue < 0 ? hue + 360 : hue;
+}
 
 function spawnParticle(
   w: number,
@@ -53,6 +71,7 @@ function spawnParticle(
 export const ParticleField: React.FC<ParticleFieldProps> = ({
   audioData,
   colorScheme = "neon",
+  customColors,
   isPlaying = false,
   kickSensitivity = 1,
 }) => {
@@ -88,7 +107,10 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
     ro.observe(canvas);
 
     const MAX_PARTICLES = 220;
-    const hueRange = SCHEME_HUES[colorScheme];
+    const hueRange: [number, number] =
+      colorScheme === "custom" && customColors
+        ? [hexToHue(customColors[0]), hexToHue(customColors[2])]
+        : (SCHEME_HUES[colorScheme] ?? SCHEME_HUES.neon);
 
     // seed initial particles
     for (let i = 0; i < 80; i++) {
@@ -210,7 +232,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [colorScheme, isPlaying, kickSensitivity]);
+  }, [colorScheme, customColors, isPlaying, kickSensitivity]);
 
   return (
     <canvas

@@ -1,7 +1,7 @@
 import React from "react";
 import type { AudioData } from "../hooks/useStrudel";
 
-export type ColorScheme = "neon" | "pastel" | "fire" | "ocean";
+export type ColorScheme = "neon" | "pastel" | "fire" | "ocean" | "custom";
 export type VizMode =
   | "particles"
   | "spectrum"
@@ -17,11 +17,28 @@ export type VizMode =
   | "both";
 export type EditorColorPreset = "neon" | "amber" | "ice" | "mono";
 
+export interface CustomColorPreset {
+  id: string;
+  name: string;
+  colors: [string, string, string];
+}
+
 interface SettingsDrawerProps {
   open: boolean;
   onClose: () => void;
   colorScheme: ColorScheme;
   onColorScheme: (s: ColorScheme) => void;
+  customColorPresets: CustomColorPreset[];
+  activeCustomColorPresetId: string | null;
+  onSelectCustomColorPreset: (id: string) => void;
+  onCreateCustomColorPreset: () => void;
+  onUpdateCustomColorPresetColor: (
+    id: string,
+    index: 0 | 1 | 2,
+    color: string,
+  ) => void;
+  onRenameCustomColorPreset: (id: string, name: string) => void;
+  onDeleteCustomColorPreset: (id: string) => void;
   vizMode: VizMode;
   onVizMode: (m: VizMode) => void;
   kickSensitivity: number;
@@ -174,6 +191,13 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onClose,
   colorScheme,
   onColorScheme,
+  customColorPresets,
+  activeCustomColorPresetId,
+  onSelectCustomColorPreset,
+  onCreateCustomColorPreset,
+  onUpdateCustomColorPresetColor,
+  onRenameCustomColorPreset,
+  onDeleteCustomColorPreset,
   vizMode,
   onVizMode,
   kickSensitivity,
@@ -339,6 +363,176 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   </span>
                 </button>
               ))}
+            </div>
+
+            <div
+              style={{
+                marginTop: 10,
+                borderTop: "1px solid rgba(255,255,255,0.04)",
+                paddingTop: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 8,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    letterSpacing: 1,
+                    color: "#444",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Custom Presets
+                </span>
+                <button
+                  onClick={onCreateCustomColorPreset}
+                  style={{
+                    borderRadius: 6,
+                    border: "1px solid rgba(0,255,136,0.24)",
+                    background: "rgba(0,255,136,0.08)",
+                    color: "#00ff88",
+                    fontSize: 10,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    letterSpacing: 1,
+                    padding: "4px 7px",
+                    cursor: "pointer",
+                  }}
+                >
+                  + Add
+                </button>
+              </div>
+
+              {customColorPresets.map((preset) => {
+                const isActive =
+                  colorScheme === "custom" &&
+                  activeCustomColorPresetId === preset.id;
+                return (
+                  <div
+                    key={preset.id}
+                    style={{
+                      borderRadius: 6,
+                      border: isActive
+                        ? "1px solid rgba(0,255,136,0.3)"
+                        : "1px solid rgba(255,255,255,0.05)",
+                      background: isActive
+                        ? "rgba(0,255,136,0.08)"
+                        : "rgba(255,255,255,0.02)",
+                      padding: "8px 8px 9px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 7,
+                    }}
+                  >
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <input
+                        value={preset.name}
+                        onChange={(e) =>
+                          onRenameCustomColorPreset(preset.id, e.target.value)
+                        }
+                        onFocus={() => onSelectCustomColorPreset(preset.id)}
+                        style={{
+                          flex: 1,
+                          background: "rgba(255,255,255,0.03)",
+                          color: isActive ? "#00ff88" : "#888",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 5,
+                          fontSize: 11,
+                          fontFamily: '"JetBrains Mono",monospace',
+                          padding: "4px 6px",
+                        }}
+                      />
+                      <button
+                        onClick={() => onSelectCustomColorPreset(preset.id)}
+                        style={{
+                          borderRadius: 5,
+                          border: "1px solid rgba(255,255,255,0.09)",
+                          background: "rgba(255,255,255,0.03)",
+                          color: "#9aa8b2",
+                          fontSize: 10,
+                          fontFamily: '"JetBrains Mono",monospace',
+                          letterSpacing: 1,
+                          padding: "4px 6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Use
+                      </button>
+                      <button
+                        onClick={() => onDeleteCustomColorPreset(preset.id)}
+                        style={{
+                          borderRadius: 5,
+                          border: "1px solid rgba(255,122,122,0.24)",
+                          background: "rgba(255,122,122,0.08)",
+                          color: "#ff9a9a",
+                          fontSize: 10,
+                          fontFamily: '"JetBrains Mono",monospace',
+                          letterSpacing: 1,
+                          padding: "4px 6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Del
+                      </button>
+                    </div>
+
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 7 }}
+                    >
+                      {preset.colors.map((c, idx) => (
+                        <label
+                          key={idx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            flex: 1,
+                          }}
+                        >
+                          <input
+                            type="color"
+                            value={c}
+                            onChange={(e) =>
+                              onUpdateCustomColorPresetColor(
+                                preset.id,
+                                idx as 0 | 1 | 2,
+                                e.target.value,
+                              )
+                            }
+                            style={{
+                              width: 26,
+                              height: 20,
+                              padding: 0,
+                              border: "none",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontFamily: '"JetBrains Mono",monospace',
+                              color: "#65707d",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {idx + 1}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
