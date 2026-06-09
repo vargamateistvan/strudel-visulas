@@ -26,7 +26,8 @@ interface StrudelEditorProps {
   colorPreset: EditorColorPreset;
   fontPreset: EditorFontPreset;
   fontSize: number;
-  liveNoteHighlights: boolean;
+  livePulseStrip: boolean;
+  livePlayingNoteHighlights: boolean;
   activeNote: string | null;
   activeNotes?: string[];
   activeLiterals?: string[];
@@ -736,12 +737,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   colorPreset,
   fontPreset,
   fontSize,
-  liveNoteHighlights,
+  livePulseStrip,
+  livePlayingNoteHighlights,
   activeNote,
-  activeNotes,
-  activeLiterals,
-  activeControls,
-  nPulse,
   onCodeChange,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -776,22 +774,6 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     themeTokens.background,
     Math.max(0.38, opacity),
   );
-  const activeNoteCount = activeNotes?.length ?? 0;
-  const activeLiteralCount = activeLiterals?.length ?? 0;
-  const activeControlCount = activeControls?.length ?? 0;
-  const activePlayingTokens = useMemo(() => {
-    const values = new Set<string>();
-    if (activeNote) values.add(activeNote);
-    for (const token of activeNotes ?? []) values.add(token);
-    for (const token of activeLiterals ?? []) values.add(token);
-    for (const token of activeControls ?? []) {
-      if (token === "n" || token === "note" || token === "freq") {
-        values.add(token);
-      }
-    }
-    return Array.from(values);
-  }, [activeControls, activeLiterals, activeNote, activeNotes]);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -905,25 +887,18 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     const model = editor.getModel();
     if (!model) return;
 
-    if (
-      !liveNoteHighlights ||
-      status !== "playing" ||
-      activePlayingTokens.length === 0
-    ) {
+    if (!livePlayingNoteHighlights || status !== "playing" || !activeNote) {
       noteDecorationsRef.current?.clear();
       return;
     }
 
     const source = model.getValue();
-    const primaryTokens = activeNote ? [activeNote] : [];
-    const secondaryTokens = activePlayingTokens.filter(
-      (token) => !primaryTokens.includes(token),
+    const decorations = buildTokenDecorations(
+      source,
+      [activeNote],
+      monaco,
+      true,
     );
-
-    const decorations = [
-      ...buildTokenDecorations(source, secondaryTokens, monaco, false),
-      ...buildTokenDecorations(source, primaryTokens, monaco, true),
-    ];
 
     if (!noteDecorationsRef.current) {
       noteDecorationsRef.current =
@@ -932,11 +907,11 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     }
 
     noteDecorationsRef.current.set(decorations);
-  }, [activeNote, activePlayingTokens, liveNoteHighlights, status]);
+  }, [activeNote, livePlayingNoteHighlights, status]);
 
   useEffect(() => {
     updateActiveHighlights();
-  }, [code, nPulse, status, updateActiveHighlights]);
+  }, [code, status, updateActiveHighlights]);
 
   const insertSnippet = useCallback((name: keyof typeof SNIPPETS) => {
     const editor = editorRef.current;
@@ -1104,7 +1079,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   }, []);
 
   const statusPills = useMemo(() => {
-    if (!liveNoteHighlights) {
+    if (!livePulseStrip) {
       return [];
     }
 
@@ -1116,56 +1091,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         accent: themeTokens.caret,
       });
     }
-    if (activeNote) {
-      pills.push({
-        label: "Primary",
-        value: activeNote,
-        accent: themeTokens.caret,
-      });
-    }
-    if (activeNoteCount > 0) {
-      pills.push({
-        label: "Notes",
-        value: String(activeNoteCount),
-        accent: themeTokens.keyword,
-      });
-    }
-    if (activeLiteralCount > 0) {
-      pills.push({
-        label: "Literals",
-        value: String(activeLiteralCount),
-        accent: themeTokens.number,
-      });
-    }
-    if (activeControlCount > 0) {
-      pills.push({
-        label: "Controls",
-        value: String(activeControlCount),
-        accent: themeTokens.comment,
-      });
-    }
-    if (typeof nPulse === "number") {
-      pills.push({
-        label: "Pulse",
-        value: String(nPulse),
-        accent: themeTokens.string,
-      });
-    }
     return pills;
-  }, [
-    activeControlCount,
-    activeLiteralCount,
-    activeNote,
-    activeNoteCount,
-    nPulse,
-    status,
-    themeTokens.caret,
-    themeTokens.comment,
-    themeTokens.keyword,
-    themeTokens.number,
-    themeTokens.string,
-    liveNoteHighlights,
-  ]);
+  }, [activeNote, status, themeTokens.caret, livePulseStrip]);
 
   return (
     <div

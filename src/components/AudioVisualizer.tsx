@@ -26,7 +26,9 @@ const EDITOR_FONT_SIZE_KEY = "strudel:editor-font-size:v1";
 const COLOR_SCHEME_KEY = "strudel:color-scheme:v1";
 const VIZ_MODE_KEY = "strudel:viz-mode:v1";
 const EDITOR_OPACITY_KEY = "strudel:editor-opacity:v1";
-const LIVE_NOTE_HIGHLIGHTS_KEY = "strudel:live-note-highlights:v1";
+const LIVE_PULSE_STRIP_KEY = "strudel:live-pulse-strip:v1";
+const LIVE_PLAYING_NOTE_HIGHLIGHTS_KEY =
+  "strudel:live-playing-note-highlights:v1";
 const RECORDING_MODE_KEY = "strudel:recording-mode:v1";
 const MP3_QUALITY_KEY = "strudel:mp3-quality:v1";
 const KICK_SENSITIVITY_KEY = "strudel:kick-sensitivity:v1";
@@ -367,12 +369,20 @@ export const AudioVisualizer: React.FC = () => {
   const [editorOpacity, setEditorOpacity] = useState(() => {
     return parseOpacity(localStorage.getItem(EDITOR_OPACITY_KEY)) ?? 0.45;
   });
-  const [liveNoteHighlights, setLiveNoteHighlights] = useState(() => {
+  const [livePulseStrip, setLivePulseStrip] = useState(() => {
     return parseBooleanSetting(
-      localStorage.getItem(LIVE_NOTE_HIGHLIGHTS_KEY),
+      localStorage.getItem(LIVE_PULSE_STRIP_KEY),
       true,
     );
   });
+  const [livePlayingNoteHighlights, setLivePlayingNoteHighlights] = useState(
+    () => {
+      return parseBooleanSetting(
+        localStorage.getItem(LIVE_PLAYING_NOTE_HIGHLIGHTS_KEY),
+        true,
+      );
+    },
+  );
   const [customColorPresets, setCustomColorPresets] = useState<
     CustomColorPreset[]
   >(() => loadCustomColorPresets());
@@ -883,8 +893,15 @@ export const AudioVisualizer: React.FC = () => {
   }, [editorOpacity]);
 
   useEffect(() => {
-    localStorage.setItem(LIVE_NOTE_HIGHLIGHTS_KEY, String(liveNoteHighlights));
-  }, [liveNoteHighlights]);
+    localStorage.setItem(LIVE_PULSE_STRIP_KEY, String(livePulseStrip));
+  }, [livePulseStrip]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      LIVE_PLAYING_NOTE_HIGHLIGHTS_KEY,
+      String(livePlayingNoteHighlights),
+    );
+  }, [livePlayingNoteHighlights]);
 
   useEffect(() => {
     localStorage.setItem(RECORDING_MODE_KEY, recordingMode);
@@ -1270,7 +1287,8 @@ export const AudioVisualizer: React.FC = () => {
             colorPreset={editorColorPreset}
             fontPreset={editorFontPreset}
             fontSize={editorFontSize}
-            liveNoteHighlights={liveNoteHighlights}
+            livePulseStrip={livePulseStrip}
+            livePlayingNoteHighlights={livePlayingNoteHighlights}
             activeNote={activeNote}
             activeNotes={activeNotes}
             activeLiterals={activeLiterals}
@@ -1310,8 +1328,10 @@ export const AudioVisualizer: React.FC = () => {
         onMandelbulbSize={setMandelbulbSizeForViz}
         editorOpacity={editorOpacity}
         onEditorOpacity={setEditorOpacity}
-        liveNoteHighlights={liveNoteHighlights}
-        onLiveNoteHighlights={setLiveNoteHighlights}
+        livePulseStrip={livePulseStrip}
+        onLivePulseStrip={setLivePulseStrip}
+        livePlayingNoteHighlights={livePlayingNoteHighlights}
+        onLivePlayingNoteHighlights={setLivePlayingNoteHighlights}
         recordingMode={recordingMode}
         onRecordingMode={setRecordingMode}
         mp3Quality={mp3Quality}
