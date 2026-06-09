@@ -755,6 +755,46 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     editor.focus();
   }, []);
 
+  const applySelectionTransform = useCallback(
+    (transform: (source: string) => string) => {
+      const editor = editorRef.current;
+      const monaco = monacoRef.current;
+      if (!editor || !monaco) return;
+
+      const model = editor.getModel();
+      if (!model) return;
+
+      const selection = editor.getSelection();
+      const fullRange = model.getFullModelRange();
+      const selectedText = selection && !selection.isEmpty()
+        ? model.getValueInRange(selection)
+        : model.getValue();
+
+      const nextText = transform(selectedText);
+      editor.executeEdits("strudel-transform", [
+        {
+          range: selection && !selection.isEmpty() ? selection : fullRange,
+          text: nextText,
+          forceMoveMarkers: true,
+        },
+      ]);
+      editor.focus();
+    },
+    [],
+  );
+
+  const wrapInRev = useCallback(() => {
+    applySelectionTransform((source) => `(${source}).rev`);
+  }, [applySelectionTransform]);
+
+  const wrapInGain = useCallback(() => {
+    applySelectionTransform((source) => `(${source}).gain(0.8)`);
+  }, [applySelectionTransform]);
+
+  const duplicateInStack = useCallback(() => {
+    applySelectionTransform((source) => `stack(${source}, ${source})`);
+  }, [applySelectionTransform]);
+
   const handleMount = useCallback(
     (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
       editorRef.current = editor;
@@ -800,12 +840,39 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           insertSnippet("Ambient Chords");
         },
       });
+
+      editor.addAction({
+        id: "strudel-wrap-rev",
+        label: "Strudel: Wrap in rev",
+        run: () => {
+          wrapInRev();
+        },
+      });
+
+      editor.addAction({
+        id: "strudel-wrap-gain",
+        label: "Strudel: Wrap in gain(0.8)",
+        run: () => {
+          wrapInGain();
+        },
+      });
+
+      editor.addAction({
+        id: "strudel-stack-duplicate",
+        label: "Strudel: Duplicate in stack",
+        run: () => {
+          duplicateInStack();
+        },
+      });
     },
     [
+      duplicateInStack,
       insertSnippet,
       isPlaying,
       monacoThemeName,
       play,
+      wrapInGain,
+      wrapInRev,
       stop,
       themeTokens,
       updateDiagnostics,
@@ -882,6 +949,57 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           }}
         >
           Format
+          <button
+            onClick={wrapInRev}
+            style={{
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.22)",
+              color: themeTokens.text,
+              fontFamily: editorFontFamily,
+              fontSize: 10,
+              letterSpacing: 0.5,
+              borderRadius: 5,
+              padding: "3px 7px 6px",
+              cursor: "pointer",
+              zIndex: 3,
+            }}
+          >
+            rev
+          </button>
+          <button
+            onClick={wrapInGain}
+            style={{
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.22)",
+              color: themeTokens.text,
+              fontFamily: editorFontFamily,
+              fontSize: 10,
+              letterSpacing: 0.5,
+              borderRadius: 5,
+              padding: "3px 7px 6px",
+              cursor: "pointer",
+              zIndex: 3,
+            }}
+          >
+            gain
+          </button>
+          <button
+            onClick={duplicateInStack}
+            style={{
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.22)",
+              color: themeTokens.text,
+              fontFamily: editorFontFamily,
+              fontSize: 10,
+              letterSpacing: 0.5,
+              borderRadius: 5,
+              padding: "3px 7px 6px",
+              cursor: "pointer",
+              zIndex: 3,
+            }}
+          >
+            stack
+          </button>
         </button>
         <button
           onClick={() =>
