@@ -15,11 +15,7 @@ import { useAudioVisualizerSettingsDrawerProps } from "../hooks/useAudioVisualiz
 import { useAudioWorkspaceProps } from "../hooks/useAudioWorkspaceProps";
 import { useOverlayDialogsProps } from "../hooks/useOverlayDialogsProps";
 import { useHeaderProps } from "../hooks/useHeaderProps";
-import { Layout } from "./Layout";
-import { Header } from "./Header";
-import { SettingsDrawer } from "./SettingsDrawer";
-import { AudioWorkspace } from "./audio/AudioWorkspace";
-import { OverlayDialogs } from "./audio/OverlayDialogs";
+import { AudioVisualizerShell } from "./audio/AudioVisualizerShell";
 
 export const AudioVisualizer: React.FC = () => {
   const {
@@ -286,16 +282,12 @@ export const AudioVisualizer: React.FC = () => {
   });
 
   return (
-    <Layout backgroundVisualizer={background}>
-      {/* header */}
-      <Header {...headerProps} />
-
-      <AudioWorkspace {...audioWorkspaceProps} />
-
-      {/* settings drawer */}
-      <SettingsDrawer {...settingsDrawerProps} />
-
-      <OverlayDialogs {...overlayDialogsProps} />
-    </Layout>
+    <AudioVisualizerShell
+      background={background}
+      headerProps={headerProps}
+      audioWorkspaceProps={audioWorkspaceProps}
+      settingsDrawerProps={settingsDrawerProps}
+      overlayDialogsProps={overlayDialogsProps}
+    />
   );
 };
