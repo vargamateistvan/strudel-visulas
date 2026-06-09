@@ -6,8 +6,15 @@ import React, {
   useState,
 } from "react";
 import { type StrudelStatus } from "../hooks/useStrudel";
-import { type EditorColorPreset } from "./SettingsDrawer";
+import {
+  type EditorColorPreset,
+  type EditorFontPreset,
+} from "./SettingsDrawer";
 import { LoadingOverlay } from "./LoadingOverlay";
+import "@fontsource/jetbrains-mono";
+import "@fontsource/bitcount-single";
+import "@fontsource/doto";
+import "@fontsource/fira-code";
 
 interface StrudelEditorProps {
   code: string;
@@ -18,6 +25,8 @@ interface StrudelEditorProps {
   loadMsg: string;
   opacity: number;
   colorPreset: EditorColorPreset;
+  fontPreset: EditorFontPreset;
+  fontSize: number;
   activeNote: string | null;
   activeNotes?: string[];
   activeLiterals?: string[];
@@ -109,6 +118,13 @@ const EDITOR_THEME: Record<
     punct: "rgba(210,218,227,0.92)",
     operator: "#bfc8d3",
   },
+};
+
+const EDITOR_FONT_FAMILY: Record<EditorFontPreset, string> = {
+  jetbrainsMono: '"JetBrains Mono",ui-monospace,monospace',
+  bitcountSingle: '"Bitcount Single",ui-monospace,monospace',
+  doto: '"Doto",ui-monospace,monospace',
+  firaCode: '"Fira Code",ui-monospace,monospace',
 };
 
 const NOTE_TOKEN_RE = /\b([a-g](?:b|#)?-?\d*)\b/gi;
@@ -910,6 +926,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   loadMsg,
   opacity,
   colorPreset,
+  fontPreset,
+  fontSize,
   activeNote,
   activeNotes = [],
   activeLiterals = [],
@@ -961,6 +979,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   // Derive panel alpha from opacity prop
   const bgAlpha = (opacity * 0.75).toFixed(2);
   const theme = EDITOR_THEME[colorPreset];
+  const editorFontFamily =
+    EDITOR_FONT_FAMILY[fontPreset] ?? EDITOR_FONT_FAMILY.jetbrainsMono;
+  const editorFontSize = Math.max(11, Math.min(22, Math.round(fontSize)));
   const diagnostics = useMemo(() => analyzeDiagnostics(code), [code]);
   const diagnosticOffsets = useMemo(
     () => buildDiagnosticOffsetMap(code, diagnostics),
@@ -1210,7 +1231,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             background: "rgba(255,51,102,0.1)",
             borderBottom: "1px solid rgba(255,51,102,0.2)",
             fontSize: 11,
-            fontFamily: '"JetBrains Mono",monospace',
+            fontFamily: editorFontFamily,
             color: "#ff3366",
             whiteSpace: "pre-wrap",
           }}
@@ -1293,8 +1314,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           border: "none",
           outline: "none",
           padding: `${editorTopInset}px 18px 16px`,
-          fontFamily: '"JetBrains Mono",ui-monospace,monospace',
-          fontSize: 13,
+          fontFamily: editorFontFamily,
+          fontSize: editorFontSize,
           lineHeight: 1.75,
           color: "transparent",
           background: "transparent",
@@ -1324,7 +1345,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             border: "1px solid rgba(255,255,255,0.12)",
             background: "rgba(0,0,0,0.22)",
             color: theme.punct,
-            fontFamily: '"JetBrains Mono",monospace',
+            fontFamily: editorFontFamily,
             fontSize: 10,
             letterSpacing: 0.5,
             borderRadius: 5,
@@ -1341,7 +1362,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             border: "1px solid rgba(255,255,255,0.12)",
             background: "rgba(0,0,0,0.22)",
             color: theme.punct,
-            fontFamily: '"JetBrains Mono",monospace',
+            fontFamily: editorFontFamily,
             fontSize: 10,
             letterSpacing: 0.5,
             borderRadius: 5,
@@ -1358,7 +1379,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             border: "1px solid rgba(255,255,255,0.12)",
             background: "rgba(0,0,0,0.22)",
             color: theme.punct,
-            fontFamily: '"JetBrains Mono",monospace',
+            fontFamily: editorFontFamily,
             fontSize: 10,
             letterSpacing: 0.5,
             borderRadius: 5,
@@ -1418,7 +1439,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
                 >
                   <span
                     style={{
-                      fontFamily: '"JetBrains Mono",monospace',
+                      fontFamily: editorFontFamily,
                       fontSize: 11,
                       fontWeight: 700,
                     }}
@@ -1427,7 +1448,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
                   </span>
                   <span
                     style={{
-                      fontFamily: '"JetBrains Mono",monospace',
+                      fontFamily: editorFontFamily,
                       fontSize: 10,
                       opacity: 0.72,
                       textTransform: "uppercase",
@@ -1439,7 +1460,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
                 <div
                   style={{
                     marginTop: 4,
-                    fontFamily: '"JetBrains Mono",monospace',
+                    fontFamily: editorFontFamily,
                     fontSize: 10,
                     opacity: 0.78,
                   }}
@@ -1465,7 +1486,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             borderRadius: 8,
             boxShadow: `0 10px 24px ${theme.glow}`,
             padding: "8px 10px",
-            fontFamily: '"JetBrains Mono",monospace',
+            fontFamily: editorFontFamily,
           }}
         >
           <div style={{ fontSize: 11, color: "#d9ffee", marginBottom: 4 }}>
@@ -1518,7 +1539,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
             display: "flex",
             alignItems: "center",
             gap: 8,
-            fontFamily: '"JetBrains Mono",monospace',
+            fontFamily: editorFontFamily,
           }}
         >
           <span
@@ -1685,7 +1706,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           }}
         >
           {lineMarkers.map((marker) => {
-            const top = marker.line * 13 * 1.75 - scrollTop;
+            const top = marker.line * editorFontSize * 1.75 - scrollTop;
             const visible = top > -10 && top < 9999;
             if (!visible) return null;
             return (
@@ -1725,8 +1746,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           zIndex: 1,
           overflow: "hidden",
           pointerEvents: "none",
-          fontFamily: '"JetBrains Mono",ui-monospace,monospace',
-          fontSize: 13,
+          fontFamily: editorFontFamily,
+          fontSize: editorFontSize,
           lineHeight: 1.75,
           color: theme.text,
         }}
@@ -1735,6 +1756,9 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           style={{
             margin: 0,
             padding: `${editorTopInset}px 18px 16px`,
+            fontFamily: editorFontFamily,
+            fontSize: editorFontSize,
+            lineHeight: 1.75,
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
             wordBreak: "break-word",
@@ -1798,7 +1822,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           right: 14,
           top: 10,
           zIndex: 3,
-          fontFamily: '"JetBrains Mono",monospace',
+          fontFamily: editorFontFamily,
           fontSize: 10,
           color: theme.comment,
           letterSpacing: 0.4,

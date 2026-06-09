@@ -16,6 +16,11 @@ export type VizMode =
   | "kaleidoTunnel"
   | "both";
 export type EditorColorPreset = "neon" | "amber" | "ice" | "mono";
+export type EditorFontPreset =
+  | "jetbrainsMono"
+  | "bitcountSingle"
+  | "doto"
+  | "firaCode";
 
 export interface CustomColorPreset {
   id: string;
@@ -57,6 +62,10 @@ interface SettingsDrawerProps {
   onEditorOpacity: (v: number) => void;
   editorColorPreset: EditorColorPreset;
   onEditorColorPreset: (preset: EditorColorPreset) => void;
+  editorFontPreset: EditorFontPreset;
+  onEditorFontPreset: (preset: EditorFontPreset) => void;
+  editorFontSize: number;
+  onEditorFontSize: (size: number) => void;
   audioData: AudioData;
 }
 
@@ -130,6 +139,33 @@ const EDITOR_PRESETS: {
     key: "mono",
     label: "Mono Slate",
     colors: ["#c0c7d1", "#9fa7b3", "#e2e7ef"],
+  },
+];
+
+const EDITOR_FONTS: {
+  key: EditorFontPreset;
+  label: string;
+  family: string;
+}[] = [
+  {
+    key: "jetbrainsMono",
+    label: "JetBrains Mono",
+    family: '"JetBrains Mono", ui-monospace, monospace',
+  },
+  {
+    key: "bitcountSingle",
+    label: "Bitcount Single",
+    family: '"Bitcount Single", ui-monospace, monospace',
+  },
+  {
+    key: "doto",
+    label: "Doto",
+    family: '"Doto", ui-monospace, monospace',
+  },
+  {
+    key: "firaCode",
+    label: "Fira Code",
+    family: '"Fira Code", ui-monospace, monospace',
   },
 ];
 
@@ -222,6 +258,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onEditorOpacity,
   editorColorPreset,
   onEditorColorPreset,
+  editorFontPreset,
+  onEditorFontPreset,
+  editorFontSize,
+  onEditorFontSize,
   audioData,
 }) => {
   const show3DFractalQuality =
@@ -929,6 +969,111 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   </span>
                 </button>
               ))}
+            </div>
+          </section>
+
+          {/* Editor font */}
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              Editor Font
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {EDITOR_FONTS.map(({ key, label, family }) => (
+                <button
+                  key={key}
+                  onClick={() => onEditorFontPreset(key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border:
+                      editorFontPreset === key
+                        ? "1px solid rgba(0,255,136,0.24)"
+                        : "1px solid rgba(255,255,255,0.05)",
+                    background:
+                      editorFontPreset === key
+                        ? "rgba(0,255,136,0.08)"
+                        : "rgba(255,255,255,0.02)",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    textAlign: "left",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontFamily: family,
+                      color: editorFontPreset === key ? "#b9ffe2" : "#8da1af",
+                      fontWeight: editorFontPreset === key ? 700 : 500,
+                    }}
+                  >
+                    {label}
+                  </span>
+                  {editorFontPreset === key && (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontFamily: '"JetBrains Mono",monospace',
+                        color: "#00ff88",
+                        letterSpacing: 1,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Active
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Editor font size */}
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              Editor Font Size
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="range"
+                min={11}
+                max={22}
+                step={1}
+                value={editorFontSize}
+                onChange={(e) => onEditorFontSize(parseInt(e.target.value, 10))}
+                style={{ flex: 1 }}
+              />
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: '"JetBrains Mono",monospace',
+                  color: "#444",
+                  width: 42,
+                  textAlign: "right",
+                }}
+              >
+                {editorFontSize}px
+              </span>
             </div>
           </section>
 

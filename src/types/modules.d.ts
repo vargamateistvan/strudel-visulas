@@ -5,4 +5,5 @@ declare module "@strudel/tonal";
 declare module "@strudel/webaudio";
 declare module "@strudel/soundfonts";
 declare module "@strudel/transpiler";
+declare module "@fontsource/*";
 declare module "superdough";

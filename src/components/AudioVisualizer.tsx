@@ -11,6 +11,7 @@ import {
   type CustomColorPreset,
   type ColorScheme,
   type EditorColorPreset,
+  type EditorFontPreset,
   type VizMode,
 } from "./SettingsDrawer";
 import { ParticleField } from "../visualizations/ParticleField";
@@ -20,6 +21,8 @@ import { buildMidiFromCode } from "../utils/midiExport";
 import { convertWebmToMp3, type Mp3QualityPreset } from "../utils/mp3Export";
 
 const EDITOR_COLOR_PRESET_KEY = "strudel:editor-color-preset:v1";
+const EDITOR_FONT_PRESET_KEY = "strudel:editor-font-preset:v1";
+const EDITOR_FONT_SIZE_KEY = "strudel:editor-font-size:v1";
 const COLOR_SCHEME_KEY = "strudel:color-scheme:v1";
 const VIZ_MODE_KEY = "strudel:viz-mode:v1";
 const EDITOR_OPACITY_KEY = "strudel:editor-opacity:v1";
@@ -118,6 +121,23 @@ function isEditorColorPreset(value: string): value is EditorColorPreset {
   return (
     value === "neon" || value === "amber" || value === "ice" || value === "mono"
   );
+}
+
+function isEditorFontPreset(value: string): value is EditorFontPreset {
+  return (
+    value === "jetbrainsMono" ||
+    value === "bitcountSingle" ||
+    value === "doto" ||
+    value === "firaCode"
+  );
+}
+
+function parseEditorFontSize(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 11 || parsed > 22) return null;
+  return Math.round(parsed);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -349,6 +369,17 @@ export const AudioVisualizer: React.FC = () => {
       return saved && isEditorColorPreset(saved) ? saved : "neon";
     },
   );
+  const [editorFontPreset, setEditorFontPreset] = useState<EditorFontPreset>(
+    () => {
+      const saved = localStorage.getItem(EDITOR_FONT_PRESET_KEY);
+      return saved && isEditorFontPreset(saved) ? saved : "jetbrainsMono";
+    },
+  );
+  const [editorFontSize, setEditorFontSize] = useState<number>(() => {
+    return (
+      parseEditorFontSize(localStorage.getItem(EDITOR_FONT_SIZE_KEY)) ?? 13
+    );
+  });
   const [splashDone, setSplashDone] = useState(false);
   const [code, setCode] = useState(DEFAULT_PATTERN);
   const [isMobile, setIsMobile] = useState(() =>
@@ -810,6 +841,14 @@ export const AudioVisualizer: React.FC = () => {
   }, [editorColorPreset]);
 
   useEffect(() => {
+    localStorage.setItem(EDITOR_FONT_PRESET_KEY, editorFontPreset);
+  }, [editorFontPreset]);
+
+  useEffect(() => {
+    localStorage.setItem(EDITOR_FONT_SIZE_KEY, String(editorFontSize));
+  }, [editorFontSize]);
+
+  useEffect(() => {
     localStorage.setItem(COLOR_SCHEME_KEY, colorScheme);
   }, [colorScheme]);
 
@@ -1212,6 +1251,8 @@ export const AudioVisualizer: React.FC = () => {
             loadMsg={loadMsg}
             opacity={editorOpacity}
             colorPreset={editorColorPreset}
+            fontPreset={editorFontPreset}
+            fontSize={editorFontSize}
             activeNote={activeNote}
             activeNotes={activeNotes}
             activeLiterals={activeLiterals}
@@ -1253,6 +1294,10 @@ export const AudioVisualizer: React.FC = () => {
         onEditorOpacity={setEditorOpacity}
         editorColorPreset={editorColorPreset}
         onEditorColorPreset={setEditorColorPreset}
+        editorFontPreset={editorFontPreset}
+        onEditorFontPreset={setEditorFontPreset}
+        editorFontSize={editorFontSize}
+        onEditorFontSize={setEditorFontSize}
         audioData={audioData}
       />
 
