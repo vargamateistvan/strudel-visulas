@@ -183,6 +183,10 @@ export function SampleBrowserPanel({
       return;
     }
 
+    if (event.metaKey || event.ctrlKey || event.altKey) {
+      return;
+    }
+
     const key = event.key.toLowerCase();
     if (key === "l") {
       event.preventDefault();
@@ -195,6 +199,36 @@ export function SampleBrowserPanel({
       event.preventDefault();
       setMacroApplyMode("replace");
       setFxApplyHint("Macro mode set to Replace.");
+      return;
+    }
+
+    if (key === "v") {
+      event.preventDefault();
+      handlePatternTool("reverse");
+      return;
+    }
+
+    if (key === "[") {
+      event.preventDefault();
+      handlePatternTool("slow2");
+      return;
+    }
+
+    if (key === "]") {
+      event.preventDefault();
+      handlePatternTool("fast2");
+      return;
+    }
+
+    if (key === "d") {
+      event.preventDefault();
+      handlePatternTool("density2");
+      return;
+    }
+
+    if (key === "t") {
+      event.preventDefault();
+      handlePatternTool("stutter");
     }
   };
 
@@ -1053,7 +1087,7 @@ export function SampleBrowserPanel({
               }}
               title="Keyboard shortcuts: L = Layer, R = Replace"
             >
-              L/R shortcuts
+              L/R + V/[ ]/D/T
             </span>
             <button
               type="button"
