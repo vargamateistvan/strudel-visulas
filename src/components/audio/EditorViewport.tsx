@@ -186,6 +186,7 @@ export function EditorViewport({
           }}
         >
           <SampleBrowserPanel
+            opacity={opacity}
             category={category}
             onCategoryChange={setCategory}
             query={query}

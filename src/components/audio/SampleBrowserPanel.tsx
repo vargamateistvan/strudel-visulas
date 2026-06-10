@@ -229,6 +229,7 @@ function parseImportedShortcutProfiles(
 }
 
 type SampleBrowserPanelProps = {
+  opacity: number;
   category: SampleCategory | "all";
   onCategoryChange: (value: SampleCategory | "all") => void;
   query: string;
@@ -352,6 +353,7 @@ function badgeStyle(status: AuditionStatus) {
 }
 
 export function SampleBrowserPanel({
+  opacity,
   category,
   onCategoryChange,
   query,
@@ -415,6 +417,7 @@ export function SampleBrowserPanel({
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
+  const panelSurfaceOpacity = Math.max(0.38, Math.min(1, opacity));
   const panelRef = useRef<HTMLDivElement | null>(null);
   const profileFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -918,7 +921,7 @@ export function SampleBrowserPanel({
         border: panelHasFocus
           ? "1px solid rgba(0,255,136,0.45)"
           : "1px solid rgba(255,255,255,0.07)",
-        background: "rgba(8,8,18,0.92)",
+        background: `rgba(8,8,18,${panelSurfaceOpacity})`,
         backdropFilter: "blur(24px)",
         boxShadow: panelHasFocus
           ? "0 18px 40px rgba(0,0,0,0.38), 0 0 0 2px rgba(0,255,136,0.18)"

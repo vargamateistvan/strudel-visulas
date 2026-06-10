@@ -12,6 +12,7 @@ import { SampleBrowserPanel } from "./SampleBrowserPanel";
 const noop = vi.fn();
 
 const createProps = () => ({
+  opacity: 0.8,
   category: "all" as const,
   onCategoryChange: noop,
   query: "",
