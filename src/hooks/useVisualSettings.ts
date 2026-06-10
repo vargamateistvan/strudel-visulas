@@ -21,6 +21,9 @@ export function useVisualSettings(vizMode: VizMode) {
   const spectrumBarCount = currentVisualSettings.spectrumBarCount;
   const spectrumWaveform = currentVisualSettings.spectrumWaveform;
   const ifsShape = currentVisualSettings.ifsShape;
+  const ifsSize = currentVisualSettings.ifsSize;
+  const lissajousSize = currentVisualSettings.lissajousSize;
+  const kaleidoscopeSize = currentVisualSettings.kaleidoscopeSize;
 
   const setKickSensitivityForViz = useCallback(
     (value: number) => {
@@ -134,6 +137,31 @@ export function useVisualSettings(vizMode: VizMode) {
     [vizMode],
   );
 
+  const makeNumericSetter = (
+    field: "ifsSize" | "lissajousSize" | "kaleidoscopeSize",
+  ) =>
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useCallback(
+      (value: number) => {
+        setVisualSettings((prev) => {
+          const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+          return {
+            ...prev,
+            [vizMode]: {
+              ...existing,
+              [field]: Math.max(0.2, Math.min(4, value)),
+            },
+          };
+        });
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [vizMode],
+    );
+
+  const setIfsSizeForViz = makeNumericSetter("ifsSize");
+  const setLissajousSizeForViz = makeNumericSetter("lissajousSize");
+  const setKaleidoscopeSizeForViz = makeNumericSetter("kaleidoscopeSize");
+
   return {
     visualSettings,
     kickSensitivity,
@@ -143,6 +171,9 @@ export function useVisualSettings(vizMode: VizMode) {
     spectrumBarCount,
     spectrumWaveform,
     ifsShape,
+    ifsSize,
+    lissajousSize,
+    kaleidoscopeSize,
     setKickSensitivityForViz,
     setFractalQualityForViz,
     setMandelbulbSizeForViz,
@@ -150,5 +181,8 @@ export function useVisualSettings(vizMode: VizMode) {
     setSpectrumBarCountForViz,
     setSpectrumWaveformForViz,
     setIfsShapeForViz,
+    setIfsSizeForViz,
+    setLissajousSizeForViz,
+    setKaleidoscopeSizeForViz,
   };
 }

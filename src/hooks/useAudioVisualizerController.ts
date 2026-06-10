@@ -176,6 +176,9 @@ export function useAudioVisualizerController(): ComponentProps<
     spectrumBarCount,
     spectrumWaveform,
     ifsShape,
+    ifsSize,
+    lissajousSize,
+    kaleidoscopeSize,
     setKickSensitivityForViz,
     setFractalQualityForViz,
     setMandelbulbSizeForViz,
@@ -183,6 +186,9 @@ export function useAudioVisualizerController(): ComponentProps<
     setSpectrumBarCountForViz,
     setSpectrumWaveformForViz,
     setIfsShapeForViz,
+    setIfsSizeForViz,
+    setLissajousSizeForViz,
+    setKaleidoscopeSizeForViz,
   } = useVisualSettings(vizMode);
 
   const { handleLoadPreset, handleSplashClick } = useAudioVisualizerActions({
@@ -254,6 +260,9 @@ export function useAudioVisualizerController(): ComponentProps<
     spectrumBarCount,
     spectrumWaveform,
     ifsShape,
+    ifsSize,
+    lissajousSize,
+    kaleidoscopeSize,
   });
 
   const drawerAudioData = drawerOpen ? audioData : IDLE_AUDIO_DATA;
@@ -283,6 +292,12 @@ export function useAudioVisualizerController(): ComponentProps<
       onSpectrumWaveform: setSpectrumWaveformForViz,
       ifsShape,
       onIfsShape: setIfsShapeForViz,
+      ifsSize,
+      onIfsSize: setIfsSizeForViz,
+      lissajousSize,
+      onLissajousSize: setLissajousSizeForViz,
+      kaleidoscopeSize,
+      onKaleidoscopeSize: setKaleidoscopeSizeForViz,
       fractalQuality,
       onFractalQuality: setFractalQualityForViz,
       mandelbulbSize,
@@ -342,6 +357,12 @@ export function useAudioVisualizerController(): ComponentProps<
       setSpectrumWaveformForViz,
       ifsShape,
       setIfsShapeForViz,
+      ifsSize,
+      setIfsSizeForViz,
+      lissajousSize,
+      setLissajousSizeForViz,
+      kaleidoscopeSize,
+      setKaleidoscopeSizeForViz,
       fractalQuality,
       setFractalQualityForViz,
       mandelbulbSize,

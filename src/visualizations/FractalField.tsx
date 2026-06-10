@@ -29,6 +29,9 @@ interface FractalFieldProps {
   fractalQuality?: number;
   mandelbulbSize?: number;
   ifsShape?: "fern" | "spiral" | "crystal";
+  ifsSize?: number;
+  lissajousSize?: number;
+  kaleidoscopeSize?: number;
 }
 
 let runtimeCustomColors: [string, string, string] | null = null;
@@ -105,6 +108,7 @@ function drawLissajous(
   treble: number,
   volume: number,
   scheme: string,
+  lissajousScale: number,
 ) {
   const n = waveform.length;
   const half = n >> 1;
@@ -116,7 +120,7 @@ function drawLissajous(
 
   const cx = w / 2,
     cy = h / 2;
-  const scale = Math.min(w, h) * 3.6;
+  const scale = Math.min(w, h) * 3.6 * lissajousScale;
 
   // draw multiple phase-shifted copies for richness
   const layers = 3;
@@ -517,13 +521,14 @@ function drawKaleidoscope(
   volume: number,
   scheme: string,
   frame: number,
+  kaleidoscopeScale: number,
 ) {
   if (waveform.length < 2) return;
 
   const t = frame * 0.02;
   const cx = w / 2;
   const cy = h / 2;
-  const maxR = Math.min(w, h) * (0.36 + bass * 0.16);
+  const maxR = Math.min(w, h) * (0.36 + bass * 0.16) * kaleidoscopeScale;
   const sectors = 8 + Math.floor(treble * 8 + mid * 4);
   const points = Math.min(260, waveform.length);
 
@@ -1226,6 +1231,7 @@ function drawIFS(
   w: number,
   h: number,
   ifsShape: "fern" | "spiral" | "crystal",
+  ifsScale: number,
   bass: number,
   mid: number,
   treble: number,
@@ -1293,9 +1299,11 @@ function drawIFS(
     y = ny;
 
     const scaleBase =
-      ifsShape === "spiral" ? 0.075 : ifsShape === "crystal" ? 0.09 : 0.055;
+      (ifsShape === "spiral" ? 0.075 : ifsShape === "crystal" ? 0.09 : 0.055) *
+      ifsScale;
     const verticalBase =
-      ifsShape === "spiral" ? 0.068 : ifsShape === "crystal" ? 0.078 : 0.055;
+      (ifsShape === "spiral" ? 0.068 : ifsShape === "crystal" ? 0.078 : 0.055) *
+      ifsScale;
     const px = cx + x * (w * (scaleBase + bass * 0.03));
     const yOffset =
       ifsShape === "spiral" ? h * 0.12 : ifsShape === "crystal" ? h * 0.16 : 0;
@@ -1446,6 +1454,9 @@ export const FractalField: React.FC<FractalFieldProps> = ({
   fractalQuality = 2,
   mandelbulbSize = 1.28,
   ifsShape = "fern",
+  ifsSize = 1,
+  lissajousSize = 1,
+  kaleidoscopeSize = 1,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -1545,6 +1556,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           trebleReactive,
           volumeReactive,
           colorScheme,
+          lissajousSize,
         );
       } else if (mode === "spectrumHalo") {
         drawSpectrumHalo(
@@ -1636,6 +1648,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           volumeReactive,
           colorScheme,
           frameRef.current,
+          kaleidoscopeSize,
         );
       } else if (mode === "kaleidoTunnel") {
         drawKaleidoTunnel(
@@ -1656,6 +1669,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           w,
           h,
           ifsShape,
+          ifsSize,
           bassReactive,
           midReactive,
           trebleReactive,
@@ -1807,6 +1821,9 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     fractalQuality,
     mandelbulbSize,
     ifsShape,
+    ifsSize,
+    lissajousSize,
+    kaleidoscopeSize,
   ]);
 
   return (

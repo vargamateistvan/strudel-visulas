@@ -40,6 +40,9 @@ export type VisualSettings = {
   spectrumBarCount: number;
   spectrumWaveform: boolean;
   ifsShape: IfsShape;
+  ifsSize: number;
+  lissajousSize: number;
+  kaleidoscopeSize: number;
 };
 
 export type VisualSettingsMap = Partial<Record<VizMode, VisualSettings>>;
@@ -52,6 +55,9 @@ export const DEFAULT_VISUAL_SETTINGS: VisualSettings = {
   spectrumBarCount: 96,
   spectrumWaveform: true,
   ifsShape: "fern",
+  ifsSize: 1,
+  lissajousSize: 1,
+  kaleidoscopeSize: 1,
 };
 
 function isIfsShape(value: unknown): value is IfsShape {
@@ -219,6 +225,9 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
   const spectrumBarCountRaw = value.spectrumBarCount;
   const spectrumWaveformRaw = value.spectrumWaveform;
   const ifsShapeRaw = value.ifsShape;
+  const ifsSizeRaw = value.ifsSize;
+  const lissajousSizeRaw = value.lissajousSize;
+  const kaleidoscopeSizeRaw = value.kaleidoscopeSize;
   if (
     typeof kickRaw !== "number" ||
     typeof fractalRaw !== "number" ||
@@ -263,6 +272,14 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
     ? ifsShapeRaw
     : DEFAULT_VISUAL_SETTINGS.ifsShape;
 
+  function parseSizeField(raw: unknown): number {
+    if (typeof raw === "number" && raw >= 0.2 && raw <= 4) return raw;
+    return 1;
+  }
+  const ifsSize = parseSizeField(ifsSizeRaw);
+  const lissajousSize = parseSizeField(lissajousSizeRaw);
+  const kaleidoscopeSize = parseSizeField(kaleidoscopeSizeRaw);
+
   return {
     kickSensitivity,
     fractalQuality,
@@ -271,6 +288,9 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
     spectrumBarCount,
     spectrumWaveform,
     ifsShape,
+    ifsSize,
+    lissajousSize,
+    kaleidoscopeSize,
   };
 }
 
@@ -341,6 +361,9 @@ export function loadVisualSettingsMap(): VisualSettingsMap {
       spectrumBarCount: DEFAULT_VISUAL_SETTINGS.spectrumBarCount,
       spectrumWaveform: DEFAULT_VISUAL_SETTINGS.spectrumWaveform,
       ifsShape: DEFAULT_VISUAL_SETTINGS.ifsShape,
+      ifsSize: DEFAULT_VISUAL_SETTINGS.ifsSize,
+      lissajousSize: DEFAULT_VISUAL_SETTINGS.lissajousSize,
+      kaleidoscopeSize: DEFAULT_VISUAL_SETTINGS.kaleidoscopeSize,
     };
   }
   return fallback;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { AudioData } from "../hooks/useStrudel";
 import type { RecordingMode } from "./Header";
 import type { Mp3Quality } from "./Header";
@@ -73,6 +73,12 @@ interface SettingsDrawerProps {
   onSpectrumWaveform: (enabled: boolean) => void;
   ifsShape: IfsShape;
   onIfsShape: (shape: IfsShape) => void;
+  ifsSize: number;
+  onIfsSize: (v: number) => void;
+  lissajousSize: number;
+  onLissajousSize: (v: number) => void;
+  kaleidoscopeSize: number;
+  onKaleidoscopeSize: (v: number) => void;
   fractalQuality: number;
   onFractalQuality: (v: number) => void;
   mandelbulbSize: number;
@@ -307,6 +313,76 @@ const FreqBar = ({
   </div>
 );
 
+// ─── Accordion helper ──────────────────────────────────────────────────────
+const Accordion: React.FC<{
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}> = ({ title, defaultOpen = false, children }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div
+      style={{
+        borderRadius: 7,
+        border: "1px solid var(--border-faint)",
+        overflow: "hidden",
+      }}
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%",
+          padding: "9px 12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: open ? "var(--surface-active)" : "var(--surface-1)",
+          border: "none",
+          cursor: "pointer",
+          transition: "background 0.15s",
+        }}
+      >
+        <span
+          style={{
+            fontSize: 10,
+            fontFamily: '"JetBrains Mono",monospace',
+            fontWeight: 700,
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            color: open ? "var(--primary)" : "var(--text-dim)",
+          }}
+        >
+          {title}
+        </span>
+        <span
+          style={{
+            fontSize: 11,
+            color: "var(--text-muted)",
+            transition: "transform 0.2s",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            display: "inline-block",
+          }}
+        >
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div
+          style={{
+            padding: "12px",
+            borderTop: "1px solid var(--border-faint)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   open,
   onClose,
@@ -331,6 +407,12 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onSpectrumWaveform,
   ifsShape,
   onIfsShape,
+  ifsSize,
+  onIfsSize,
+  lissajousSize,
+  onLissajousSize,
+  kaleidoscopeSize,
+  onKaleidoscopeSize,
   fractalQuality,
   onFractalQuality,
   mandelbulbSize,
@@ -366,13 +448,6 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onAiRememberApiKey,
   audioData,
 }) => {
-  const show3DFractalQuality =
-    vizMode === "mandelbulb" || vizMode === "mandelbox";
-  const showMandelbulbSize = vizMode === "mandelbulb";
-  const showParticleDensity = vizMode === "particles" || vizMode === "both";
-  const showSpectrumSettings = vizMode === "spectrum" || vizMode === "both";
-  const showIfsSettings = vizMode === "ifs";
-
   return (
     <>
       {/* backdrop */}
@@ -449,245 +524,47 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
         <div
           style={{
-            padding: "16px 16px 24px",
+            padding: "12px 12px 24px",
             display: "flex",
             flexDirection: "column",
-            gap: 24,
+            gap: 6,
           }}
         >
-          <ColorSchemeSection
-            colorScheme={colorScheme}
-            onColorScheme={onColorScheme}
-            customColorPresets={customColorPresets}
-            activeCustomColorPresetId={activeCustomColorPresetId}
-            onSelectCustomColorPreset={onSelectCustomColorPreset}
-            onCreateCustomColorPreset={onCreateCustomColorPreset}
-            onUpdateCustomColorPresetColor={onUpdateCustomColorPresetColor}
-            onRenameCustomColorPreset={onRenameCustomColorPreset}
-            onDeleteCustomColorPreset={onDeleteCustomColorPreset}
-          />
+          {/* ── Colors ── */}
+          <Accordion title="Colors" defaultOpen>
+            <ColorSchemeSection
+              colorScheme={colorScheme}
+              onColorScheme={onColorScheme}
+              customColorPresets={customColorPresets}
+              activeCustomColorPresetId={activeCustomColorPresetId}
+              onSelectCustomColorPreset={onSelectCustomColorPreset}
+              onCreateCustomColorPreset={onCreateCustomColorPreset}
+              onUpdateCustomColorPresetColor={onUpdateCustomColorPresetColor}
+              onRenameCustomColorPreset={onRenameCustomColorPreset}
+              onDeleteCustomColorPreset={onDeleteCustomColorPreset}
+            />
+          </Accordion>
 
-          {/* Visualization mode */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Visualization
-            </p>
+          {/* ── Visualization ── */}
+          <Accordion title="Visualization" defaultOpen>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {VIZ_MODES.map(({ key, label, desc }) => (
-                <button
+                <div
                   key={key}
-                  onClick={() => onVizMode(key)}
-                  style={{
-                    padding: "8px 10px",
-                    borderRadius: 6,
-                    border:
-                      vizMode === key
-                        ? "1px solid var(--border-accent)"
-                        : "1px solid var(--border-faint)",
-                    background:
-                      vizMode === key
-                        ? "var(--surface-active)"
-                        : "var(--surface-1)",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.2s",
-                  }}
+                  style={{ display: "flex", flexDirection: "column" }}
                 >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontFamily: '"JetBrains Mono",monospace',
-                      color:
-                        vizMode === key ? "var(--primary)" : "var(--text-soft)",
-                      fontWeight: vizMode === key ? 700 : 400,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {label}
-                  </div>
-                  <div style={{ fontSize: 10, color: "var(--text-dim)" }}>
-                    {desc}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Editor opacity */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Kick Sensitivity
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input
-                type="range"
-                min={50}
-                max={300}
-                value={Math.round(kickSensitivity * 100)}
-                onChange={(e) =>
-                  onKickSensitivity(parseInt(e.target.value, 10) / 100)
-                }
-                style={{ flex: 1 }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: '"JetBrains Mono",monospace',
-                  color: "var(--text-muted)",
-                  width: 36,
-                  textAlign: "right",
-                }}
-              >
-                {kickSensitivity.toFixed(2)}x
-              </span>
-            </div>
-          </section>
-
-          {showParticleDensity && (
-            <section>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "var(--text-dim)",
-                  marginBottom: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  fontFamily: '"JetBrains Mono",monospace',
-                }}
-              >
-                Particle Density
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input
-                  type="range"
-                  min={80}
-                  max={420}
-                  value={particleDensity}
-                  onChange={(e) =>
-                    onParticleDensity(parseInt(e.target.value, 10))
-                  }
-                  style={{ flex: 1 }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: '"JetBrains Mono",monospace',
-                    color: "var(--text-muted)",
-                    width: 40,
-                    textAlign: "right",
-                  }}
-                >
-                  {particleDensity}
-                </span>
-              </div>
-            </section>
-          )}
-
-          {showSpectrumSettings && (
-            <section>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "var(--text-dim)",
-                  marginBottom: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  fontFamily: '"JetBrains Mono",monospace',
-                }}
-              >
-                Spectrum Detail
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input
-                  type="range"
-                  min={32}
-                  max={180}
-                  value={spectrumBarCount}
-                  onChange={(e) =>
-                    onSpectrumBarCount(parseInt(e.target.value, 10))
-                  }
-                  style={{ flex: 1 }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: '"JetBrains Mono",monospace',
-                    color: "var(--text-muted)",
-                    width: 34,
-                    textAlign: "right",
-                  }}
-                >
-                  {spectrumBarCount}
-                </span>
-              </div>
-
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginTop: 10,
-                  fontFamily: '"JetBrains Mono",monospace',
-                  fontSize: 11,
-                  color: "var(--text-soft)",
-                }}
-              >
-                Waveform Overlay
-                <input
-                  type="checkbox"
-                  checked={spectrumWaveform}
-                  onChange={(e) => onSpectrumWaveform(e.target.checked)}
-                />
-              </label>
-            </section>
-          )}
-
-          {showIfsSettings && (
-            <section>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "var(--text-dim)",
-                  marginBottom: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  fontFamily: '"JetBrains Mono",monospace',
-                }}
-              >
-                IFS Shape
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {IFS_SHAPES.map(({ key, label, desc }) => (
                   <button
-                    key={key}
-                    onClick={() => onIfsShape(key)}
+                    onClick={() => onVizMode(key)}
                     style={{
                       padding: "8px 10px",
-                      borderRadius: 6,
+                      borderRadius: vizMode === key ? "6px 6px 0 0" : 6,
                       border:
-                        ifsShape === key
+                        vizMode === key
                           ? "1px solid var(--border-accent)"
                           : "1px solid var(--border-faint)",
+                      borderBottom: vizMode === key ? "none" : undefined,
                       background:
-                        ifsShape === key
+                        vizMode === key
                           ? "var(--surface-active)"
                           : "var(--surface-1)",
                       cursor: "pointer",
@@ -700,10 +577,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                         fontSize: 12,
                         fontFamily: '"JetBrains Mono",monospace',
                         color:
-                          ifsShape === key
+                          vizMode === key
                             ? "var(--primary)"
                             : "var(--text-soft)",
-                        fontWeight: ifsShape === key ? 700 : 400,
+                        fontWeight: vizMode === key ? 700 : 400,
                         marginBottom: 2,
                       }}
                     >
@@ -713,410 +590,748 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                       {desc}
                     </div>
                   </button>
+
+                  {vizMode === key && (
+                    <div
+                      style={{
+                        padding: "10px 10px 12px",
+                        border: "1px solid var(--border-accent)",
+                        borderTop: "none",
+                        borderRadius: "0 0 6px 6px",
+                        background: "var(--surface-active)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            fontSize: 9,
+                            color: "var(--text-dim)",
+                            margin: "0 0 5px",
+                            letterSpacing: 1.2,
+                            textTransform: "uppercase",
+                            fontFamily: '"JetBrains Mono",monospace',
+                          }}
+                        >
+                          Kick Sensitivity
+                        </p>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <input
+                            type="range"
+                            min={50}
+                            max={300}
+                            value={Math.round(kickSensitivity * 100)}
+                            onChange={(e) =>
+                              onKickSensitivity(
+                                parseInt(e.target.value, 10) / 100,
+                              )
+                            }
+                            style={{ flex: 1 }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontFamily: '"JetBrains Mono",monospace',
+                              color: "var(--text-muted)",
+                              width: 34,
+                              textAlign: "right",
+                            }}
+                          >
+                            {kickSensitivity.toFixed(2)}x
+                          </span>
+                        </div>
+                      </div>
+
+                      {(key === "particles" || key === "both") && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            Particle Density
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={80}
+                              max={420}
+                              value={particleDensity}
+                              onChange={(e) =>
+                                onParticleDensity(parseInt(e.target.value, 10))
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 38,
+                                textAlign: "right",
+                              }}
+                            >
+                              {particleDensity}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {(key === "spectrum" || key === "both") && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            Spectrum Detail
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={32}
+                              max={180}
+                              value={spectrumBarCount}
+                              onChange={(e) =>
+                                onSpectrumBarCount(parseInt(e.target.value, 10))
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 32,
+                                textAlign: "right",
+                              }}
+                            >
+                              {spectrumBarCount}
+                            </span>
+                          </div>
+                          <label
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              marginTop: 7,
+                              fontFamily: '"JetBrains Mono",monospace',
+                              fontSize: 11,
+                              color: "var(--text-soft)",
+                            }}
+                          >
+                            Waveform Overlay
+                            <input
+                              type="checkbox"
+                              checked={spectrumWaveform}
+                              onChange={(e) =>
+                                onSpectrumWaveform(e.target.checked)
+                              }
+                            />
+                          </label>
+                        </div>
+                      )}
+
+                      {key === "ifs" && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            IFS Shape
+                          </p>
+                          <div style={{ display: "flex", gap: 5 }}>
+                            {IFS_SHAPES.map((s) => (
+                              <button
+                                key={s.key}
+                                onClick={() => onIfsShape(s.key)}
+                                title={s.desc}
+                                style={{
+                                  flex: 1,
+                                  padding: "6px 4px",
+                                  borderRadius: 5,
+                                  border:
+                                    ifsShape === s.key
+                                      ? "1px solid var(--border-accent)"
+                                      : "1px solid var(--border-faint)",
+                                  background:
+                                    ifsShape === s.key
+                                      ? "var(--surface-1)"
+                                      : "transparent",
+                                  cursor: "pointer",
+                                  fontSize: 10,
+                                  fontFamily: '"JetBrains Mono",monospace',
+                                  color:
+                                    ifsShape === s.key
+                                      ? "var(--primary)"
+                                      : "var(--text-dim)",
+                                  fontWeight: ifsShape === s.key ? 700 : 400,
+                                  transition: "all 0.15s",
+                                }}
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "10px 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            Size
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={20}
+                              max={400}
+                              value={Math.round(ifsSize * 100)}
+                              onChange={(e) =>
+                                onIfsSize(parseInt(e.target.value, 10) / 100)
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 38,
+                                textAlign: "right",
+                              }}
+                            >
+                              {ifsSize.toFixed(2)}x
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {(key === "mandelbulb" || key === "mandelbox") && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            3D Fractal Quality
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={1}
+                              max={3}
+                              step={1}
+                              value={fractalQuality}
+                              onChange={(e) =>
+                                onFractalQuality(parseInt(e.target.value, 10))
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 60,
+                                textAlign: "right",
+                              }}
+                            >
+                              {fractalQuality === 1
+                                ? "Low"
+                                : fractalQuality === 2
+                                  ? "Balanced"
+                                  : "High"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {key === "mandelbulb" && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            Mandelbulb Size
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={70}
+                              max={220}
+                              value={Math.round(mandelbulbSize * 100)}
+                              onChange={(e) =>
+                                onMandelbulbSize(
+                                  parseInt(e.target.value, 10) / 100,
+                                )
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 48,
+                                textAlign: "right",
+                              }}
+                            >
+                              {mandelbulbSize.toFixed(2)}x
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {key === "lissajous" && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            Size
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={20}
+                              max={400}
+                              value={Math.round(lissajousSize * 100)}
+                              onChange={(e) =>
+                                onLissajousSize(
+                                  parseInt(e.target.value, 10) / 100,
+                                )
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 38,
+                                textAlign: "right",
+                              }}
+                            >
+                              {lissajousSize.toFixed(2)}x
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {key === "kaleidoscope" && (
+                        <div>
+                          <p
+                            style={{
+                              fontSize: 9,
+                              color: "var(--text-dim)",
+                              margin: "0 0 5px",
+                              letterSpacing: 1.2,
+                              textTransform: "uppercase",
+                              fontFamily: '"JetBrains Mono",monospace',
+                            }}
+                          >
+                            Size
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
+                            <input
+                              type="range"
+                              min={20}
+                              max={400}
+                              value={Math.round(kaleidoscopeSize * 100)}
+                              onChange={(e) =>
+                                onKaleidoscopeSize(
+                                  parseInt(e.target.value, 10) / 100,
+                                )
+                              }
+                              style={{ flex: 1 }}
+                            />
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontFamily: '"JetBrains Mono",monospace',
+                                color: "var(--text-muted)",
+                                width: 38,
+                                textAlign: "right",
+                              }}
+                            >
+                              {kaleidoscopeSize.toFixed(2)}x
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Accordion>
+
+          {/* ── Editor ── */}
+          <Accordion title="Editor">
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-dim)",
+                  marginBottom: 8,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Opacity
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={Math.round(editorOpacity * 100)}
+                  onChange={(e) =>
+                    onEditorOpacity(parseInt(e.target.value) / 100)
+                  }
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: "var(--text-muted)",
+                    width: 32,
+                    textAlign: "right",
+                  }}
+                >
+                  {Math.round(editorOpacity * 100)}%
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-dim)",
+                  marginBottom: 8,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Color Theme
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {EDITOR_PRESETS.map(({ key, label, colors }) => (
+                  <button
+                    key={key}
+                    onClick={() => onEditorColorPreset(key)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      border:
+                        editorColorPreset === key
+                          ? `1px solid ${colors[0]}66`
+                          : "1px solid var(--border-faint)",
+                      background:
+                        editorColorPreset === key
+                          ? `${colors[0]}18`
+                          : "var(--surface-1)",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 3 }}>
+                      {colors.map((c, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: "50%",
+                            background: c,
+                            boxShadow:
+                              editorColorPreset === key
+                                ? `0 0 6px ${c}`
+                                : "none",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontFamily: '"JetBrains Mono",monospace',
+                        color:
+                          editorColorPreset === key
+                            ? colors[0]
+                            : "var(--text-soft)",
+                        fontWeight: editorColorPreset === key ? 700 : 400,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </button>
                 ))}
               </div>
-            </section>
-          )}
-
-          {show3DFractalQuality && (
-            <section>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "var(--text-dim)",
-                  marginBottom: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  fontFamily: '"JetBrains Mono",monospace',
-                }}
-              >
-                3D Fractal Quality
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={1}
-                  value={fractalQuality}
-                  onChange={(e) =>
-                    onFractalQuality(parseInt(e.target.value, 10))
-                  }
-                  style={{ flex: 1 }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: '"JetBrains Mono",monospace',
-                    color: "var(--text-muted)",
-                    width: 68,
-                    textAlign: "right",
-                  }}
-                >
-                  {fractalQuality === 1
-                    ? "Low"
-                    : fractalQuality === 2
-                      ? "Balanced"
-                      : "High"}
-                </span>
-              </div>
-            </section>
-          )}
-
-          {showMandelbulbSize && (
-            <section>
-              <p
-                style={{
-                  fontSize: 10,
-                  color: "var(--text-dim)",
-                  marginBottom: 10,
-                  letterSpacing: 1.5,
-                  textTransform: "uppercase",
-                  fontFamily: '"JetBrains Mono",monospace',
-                }}
-              >
-                Mandelbulb Size
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input
-                  type="range"
-                  min={70}
-                  max={220}
-                  value={Math.round(mandelbulbSize * 100)}
-                  onChange={(e) =>
-                    onMandelbulbSize(parseInt(e.target.value, 10) / 100)
-                  }
-                  style={{ flex: 1 }}
-                />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: '"JetBrains Mono",monospace',
-                    color: "var(--text-muted)",
-                    width: 52,
-                    textAlign: "right",
-                  }}
-                >
-                  {mandelbulbSize.toFixed(2)}x
-                </span>
-              </div>
-            </section>
-          )}
-
-          {/* Editor opacity */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Editor Opacity
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={Math.round(editorOpacity * 100)}
-                onChange={(e) =>
-                  onEditorOpacity(parseInt(e.target.value) / 100)
-                }
-                style={{ flex: 1 }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: '"JetBrains Mono",monospace',
-                  color: "var(--text-muted)",
-                  width: 32,
-                  textAlign: "right",
-                }}
-              >
-                {Math.round(editorOpacity * 100)}%
-              </span>
             </div>
-          </section>
 
-          <LiveFeedbackSection
-            livePulseStrip={livePulseStrip}
-            onLivePulseStrip={onLivePulseStrip}
-            livePlayingNoteHighlights={livePlayingNoteHighlights}
-            onLivePlayingNoteHighlights={onLivePlayingNoteHighlights}
-          />
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-dim)",
+                  marginBottom: 8,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Font
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {EDITOR_FONTS.map(({ key, label, family }) => (
+                  <button
+                    key={key}
+                    onClick={() => onEditorFontPreset(key)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      border:
+                        editorFontPreset === key
+                          ? "1px solid var(--border-accent)"
+                          : "1px solid var(--border-faint)",
+                      background:
+                        editorFontPreset === key
+                          ? "var(--surface-active)"
+                          : "var(--surface-1)",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      textAlign: "left",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontFamily: family,
+                        color: editorFontPreset === key ? "#b9ffe2" : "#8da1af",
+                        fontWeight: editorFontPreset === key ? 700 : 500,
+                      }}
+                    >
+                      {label}
+                    </span>
+                    {editorFontPreset === key && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontFamily: '"JetBrains Mono",monospace',
+                          color: "var(--primary)",
+                          letterSpacing: 1,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Active
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Sample Workspace
-            </p>
+            <div>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-dim)",
+                  marginBottom: 8,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                Font Size
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="range"
+                  min={11}
+                  max={22}
+                  step={1}
+                  value={editorFontSize}
+                  onChange={(e) =>
+                    onEditorFontSize(parseInt(e.target.value, 10))
+                  }
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: '"JetBrains Mono",monospace',
+                    color: "var(--text-muted)",
+                    width: 42,
+                    textAlign: "right",
+                  }}
+                >
+                  {editorFontSize}px
+                </span>
+              </div>
+            </div>
+          </Accordion>
+
+          {/* ── Live Feedback ── */}
+          <Accordion title="Live Feedback">
+            <LiveFeedbackSection
+              livePulseStrip={livePulseStrip}
+              onLivePulseStrip={onLivePulseStrip}
+              livePlayingNoteHighlights={livePlayingNoteHighlights}
+              onLivePlayingNoteHighlights={onLivePlayingNoteHighlights}
+            />
             <SettingToggle
               label="Sample Workspace"
               description="Show or hide the sample browser panel."
               enabled={sampleWorkspaceOpen}
               onToggle={() => onSampleWorkspaceOpenChange(!sampleWorkspaceOpen)}
             />
-          </section>
+          </Accordion>
 
-          <RecordingSection
-            recordingMode={recordingMode}
-            onRecordingMode={onRecordingMode}
-            mp3Quality={mp3Quality}
-            onMp3Quality={onMp3Quality}
-          />
+          {/* ── Recording ── */}
+          <Accordion title="Recording">
+            <RecordingSection
+              recordingMode={recordingMode}
+              onRecordingMode={onRecordingMode}
+              mp3Quality={mp3Quality}
+              onMp3Quality={onMp3Quality}
+            />
+          </Accordion>
 
-          <AiComposerSettingsSection
-            enabled={aiComposerEnabled}
-            onEnabledChange={onAiComposerEnabled}
-            provider={aiProvider}
-            onProviderChange={onAiProvider}
-            applyMode={aiApplyMode}
-            onApplyModeChange={onAiApplyMode}
-            apiKey={aiApiKey}
-            onApiKeyChange={onAiApiKey}
-            onClearApiKey={onAiClearApiKey}
-            rememberApiKey={aiRememberApiKey}
-            onRememberApiKeyChange={onAiRememberApiKey}
-          />
+          {/* ── AI Composer ── */}
+          <Accordion title="AI Composer">
+            <AiComposerSettingsSection
+              enabled={aiComposerEnabled}
+              onEnabledChange={onAiComposerEnabled}
+              provider={aiProvider}
+              onProviderChange={onAiProvider}
+              applyMode={aiApplyMode}
+              onApplyModeChange={onAiApplyMode}
+              apiKey={aiApiKey}
+              onApiKeyChange={onAiApiKey}
+              onClearApiKey={onAiClearApiKey}
+              rememberApiKey={aiRememberApiKey}
+              onRememberApiKeyChange={onAiRememberApiKey}
+            />
+          </Accordion>
 
-          {/* Editor colors */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Editor Colors
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {EDITOR_PRESETS.map(({ key, label, colors }) => (
-                <button
-                  key={key}
-                  onClick={() => onEditorColorPreset(key)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "8px 10px",
-                    borderRadius: 6,
-                    border:
-                      editorColorPreset === key
-                        ? `1px solid ${colors[0]}66`
-                        : "1px solid var(--border-faint)",
-                    background:
-                      editorColorPreset === key
-                        ? `${colors[0]}18`
-                        : "var(--surface-1)",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    textAlign: "left",
-                  }}
-                >
-                  <div style={{ display: "flex", gap: 3 }}>
-                    {colors.map((c, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: "50%",
-                          background: c,
-                          boxShadow:
-                            editorColorPreset === key ? `0 0 6px ${c}` : "none",
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontFamily: '"JetBrains Mono",monospace',
-                      color:
-                        editorColorPreset === key
-                          ? colors[0]
-                          : "var(--text-soft)",
-                      fontWeight: editorColorPreset === key ? 700 : 400,
-                    }}
-                  >
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Editor font */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Editor Font
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {EDITOR_FONTS.map(({ key, label, family }) => (
-                <button
-                  key={key}
-                  onClick={() => onEditorFontPreset(key)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    padding: "8px 10px",
-                    borderRadius: 6,
-                    border:
-                      editorFontPreset === key
-                        ? "1px solid var(--border-accent)"
-                        : "1px solid var(--border-faint)",
-                    background:
-                      editorFontPreset === key
-                        ? "var(--surface-active)"
-                        : "var(--surface-1)",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    textAlign: "left",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontFamily: family,
-                      color: editorFontPreset === key ? "#b9ffe2" : "#8da1af",
-                      fontWeight: editorFontPreset === key ? 700 : 500,
-                    }}
-                  >
-                    {label}
-                  </span>
-                  {editorFontPreset === key && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontFamily: '"JetBrains Mono",monospace',
-                        color: "var(--primary)",
-                        letterSpacing: 1,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Active
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Editor font size */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Editor Font Size
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input
-                type="range"
-                min={11}
-                max={22}
-                step={1}
-                value={editorFontSize}
-                onChange={(e) => onEditorFontSize(parseInt(e.target.value, 10))}
-                style={{ flex: 1 }}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: '"JetBrains Mono",monospace',
-                  color: "var(--text-muted)",
-                  width: 42,
-                  textAlign: "right",
-                }}
-              >
-                {editorFontSize}px
-              </span>
-            </div>
-          </section>
-
-          {/* Frequency meters */}
-          <section>
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Frequency
-            </p>
+          {/* ── Frequency ── */}
+          <Accordion title="Frequency">
             <FreqBar label="BASS" value={audioData.bass} color="#00ff88" />
             <FreqBar label="MID" value={audioData.mid} color="#00ffff" />
             <FreqBar label="TREBLE" value={audioData.treble} color="#ff00ff" />
             <FreqBar label="VOLUME" value={audioData.volume} color="#ffff00" />
-          </section>
+          </Accordion>
 
-          {/* Keyboard hints */}
-          <section
-            style={{
-              borderTop: "1px solid var(--surface-2)",
-              paddingTop: 16,
-            }}
-          >
-            <p
-              style={{
-                fontSize: 10,
-                color: "var(--text-dim)",
-                marginBottom: 8,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                fontFamily: '"JetBrains Mono",monospace',
-              }}
-            >
-              Shortcuts
-            </p>
+          {/* ── Shortcuts ── */}
+          <Accordion title="Shortcuts">
             {[
               ["⌘ + Enter", "Play / Stop"],
               ["Tab", "Indent"],
             ].map(([k, v]) => (
               <div
                 key={k}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 6,
-                }}
+                style={{ display: "flex", justifyContent: "space-between" }}
               >
                 <span
                   style={{
@@ -1135,7 +1350,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 </span>
               </div>
             ))}
-          </section>
+          </Accordion>
         </div>
       </div>
     </>

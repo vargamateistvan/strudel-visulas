@@ -42,6 +42,9 @@ describe("BackgroundVisualizer", () => {
       spectrumBarCount: 32,
       spectrumWaveform: true,
       ifsShape: "fern" as const,
+      ifsSize: 1,
+      lissajousSize: 1,
+      kaleidoscopeSize: 1,
     };
 
     const layered = render(<BackgroundVisualizer {...common} vizMode="both" />);

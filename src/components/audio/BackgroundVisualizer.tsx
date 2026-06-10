@@ -17,6 +17,9 @@ type BackgroundVisualizerProps = {
   spectrumBarCount: number;
   spectrumWaveform: boolean;
   ifsShape: IfsShape;
+  ifsSize: number;
+  lissajousSize: number;
+  kaleidoscopeSize: number;
 };
 
 export function BackgroundVisualizer({
@@ -32,6 +35,9 @@ export function BackgroundVisualizer({
   spectrumBarCount,
   spectrumWaveform,
   ifsShape,
+  ifsSize,
+  lissajousSize,
+  kaleidoscopeSize,
 }: BackgroundVisualizerProps) {
   const isPlaying = status === "playing";
 
@@ -78,6 +84,7 @@ export function BackgroundVisualizer({
             isPlaying={isPlaying}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}
+            lissajousSize={lissajousSize}
           />
         </div>
       )}
@@ -195,6 +202,7 @@ export function BackgroundVisualizer({
             isPlaying={isPlaying}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}
+            kaleidoscopeSize={kaleidoscopeSize}
           />
         </div>
       )}
@@ -246,6 +254,7 @@ export function BackgroundVisualizer({
             customColors={customColors}
             mode="ifs"
             ifsShape={ifsShape}
+            ifsSize={ifsSize}
             isPlaying={isPlaying}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}

@@ -16,6 +16,9 @@ type UseBackgroundVisualizerNodeArgs = {
   spectrumBarCount: number;
   spectrumWaveform: boolean;
   ifsShape: "fern" | "spiral" | "crystal";
+  ifsSize: number;
+  lissajousSize: number;
+  kaleidoscopeSize: number;
 };
 
 export function useBackgroundVisualizerNode({
@@ -31,6 +34,9 @@ export function useBackgroundVisualizerNode({
   spectrumBarCount,
   spectrumWaveform,
   ifsShape,
+  ifsSize,
+  lissajousSize,
+  kaleidoscopeSize,
 }: UseBackgroundVisualizerNodeArgs) {
   return useMemo(
     () => (
@@ -47,6 +53,9 @@ export function useBackgroundVisualizerNode({
         spectrumBarCount={spectrumBarCount}
         spectrumWaveform={spectrumWaveform}
         ifsShape={ifsShape}
+        ifsSize={ifsSize}
+        lissajousSize={lissajousSize}
+        kaleidoscopeSize={kaleidoscopeSize}
       />
     ),
     [
@@ -62,6 +71,9 @@ export function useBackgroundVisualizerNode({
       spectrumBarCount,
       spectrumWaveform,
       ifsShape,
+      ifsSize,
+      lissajousSize,
+      kaleidoscopeSize,
     ],
   );
 }
