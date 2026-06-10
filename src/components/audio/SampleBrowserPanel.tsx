@@ -43,6 +43,105 @@ const LOCKED_SOURCE_IDS = new Set([
   "source-eddyflux-crate",
 ]);
 
+type SynthWaveform =
+  | "sine"
+  | "triangle"
+  | "sawtooth"
+  | "square"
+  | "white"
+  | "pink"
+  | "brown";
+
+type SynthFxBuilderState = {
+  waveform: SynthWaveform;
+  notes: string;
+  cpm: number;
+  attack: number;
+  decay: number;
+  sustain: number;
+  release: number;
+  lpf: number;
+  room: number;
+  delay: number;
+  phaser: number;
+  pan: number;
+  distort: number;
+  crush: number;
+  gain: number;
+};
+
+const SYNTH_MACROS: Array<{ id: string; label: string; code: string }> = [
+  {
+    id: "macro-lofi-hat",
+    label: "Lo-fi Hat",
+    code: 's("hh*16").bank("RolandTR909").gain(0.18).hpf(7200).crush(6).cpm(124)',
+  },
+  {
+    id: "macro-dub-lead",
+    label: "Dub Delay Lead",
+    code: 'note("d4 f4 a4 c5").sound("sawtooth").adsr("0.01:0.08:0.5:0.22").lpf(1800).delay(0.72).delaytime(0.25).delayfeedback(0.55).room(0.35).gain(0.55).cpm(88)',
+  },
+  {
+    id: "macro-sidechain-pad",
+    label: "Sidechain Pad",
+    code: 'stack(\n  note("c4 e4 g4 b4").sound("triangle").adsr("0.08:0.2:0.7:0.4").room(0.55).orbit(2).gain(0.4),\n  s("bd*4").bank("RolandTR909").duckorbit(2).duckattack(0.15).duckdepth(1)\n).cpm(120)',
+  },
+];
+
+const DEFAULT_BUILDER: SynthFxBuilderState = {
+  waveform: "triangle",
+  notes: "c3 e3 g3 b3",
+  cpm: 110,
+  attack: 0.01,
+  decay: 0.08,
+  sustain: 0.6,
+  release: 0.2,
+  lpf: 1400,
+  room: 0.22,
+  delay: 0.0,
+  phaser: 0.0,
+  pan: 0.5,
+  distort: 0.0,
+  crush: 0,
+  gain: 0.55,
+};
+
+function formatNumber(value: number, digits = 3): string {
+  return Number.parseFloat(value.toFixed(digits)).toString();
+}
+
+function buildSynthFxChain(state: SynthFxBuilderState): string {
+  const parts = [
+    `note("${state.notes.trim() || DEFAULT_BUILDER.notes}")`,
+    `.sound("${state.waveform}")`,
+    `.adsr("${formatNumber(state.attack)}:${formatNumber(state.decay)}:${formatNumber(state.sustain)}:${formatNumber(state.release)}")`,
+    `.gain(${formatNumber(state.gain)})`,
+    `.pan(${formatNumber(state.pan)})`,
+  ];
+
+  if (state.lpf > 0) parts.push(`.lpf(${Math.round(state.lpf)})`);
+  if (state.room > 0) parts.push(`.room(${formatNumber(state.room)})`);
+  if (state.delay > 0) parts.push(`.delay(${formatNumber(state.delay)})`);
+  if (state.phaser > 0) parts.push(`.phaser(${formatNumber(state.phaser)})`);
+  if (state.distort > 0) parts.push(`.distort(${formatNumber(state.distort)})`);
+  if (state.crush > 0) parts.push(`.crush(${Math.round(state.crush)})`);
+
+  parts.push(`.cpm(${Math.round(state.cpm)})`);
+  return parts.join("");
+}
+
+function buildFxTail(state: SynthFxBuilderState): string {
+  const parts: string[] = [];
+  if (state.lpf > 0) parts.push(`.lpf(${Math.round(state.lpf)})`);
+  if (state.room > 0) parts.push(`.room(${formatNumber(state.room)})`);
+  if (state.delay > 0) parts.push(`.delay(${formatNumber(state.delay)})`);
+  if (state.phaser > 0) parts.push(`.phaser(${formatNumber(state.phaser)})`);
+  if (state.distort > 0) parts.push(`.distort(${formatNumber(state.distort)})`);
+  if (state.crush > 0) parts.push(`.crush(${Math.round(state.crush)})`);
+  parts.push(`.gain(${formatNumber(state.gain)})`);
+  return parts.join("");
+}
+
 function badgeStyle(status: AuditionStatus) {
   if (status === "loading") {
     return {
@@ -94,9 +193,13 @@ export function SampleBrowserPanel({
   const [sourceName, setSourceName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceError, setSourceError] = useState<string | null>(null);
+  const [builder, setBuilder] = useState<SynthFxBuilderState>(DEFAULT_BUILDER);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
+
+  const chainSnippet = buildSynthFxChain(builder);
+  const fxTailSnippet = buildFxTail(builder);
 
   const handleAudition = async (item: SampleCatalogItem) => {
     setAuditionStatusById((prev) => ({ ...prev, [item.id]: "loading" }));
@@ -338,6 +441,476 @@ export function SampleBrowserPanel({
             </div>
           );
         })}
+      </div>
+
+      <div
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          padding: "10px 12px 12px",
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: 1,
+            color: "rgba(255,255,255,0.56)",
+          }}
+        >
+          SYNTH + FX BUILDER
+        </div>
+
+        <div style={{ display: "grid", gap: 6 }}>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}
+          >
+            <select
+              value={builder.waveform}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  waveform: event.target.value as SynthWaveform,
+                }))
+              }
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            >
+              <option value="triangle">triangle</option>
+              <option value="sine">sine</option>
+              <option value="sawtooth">sawtooth</option>
+              <option value="square">square</option>
+              <option value="white">white</option>
+              <option value="pink">pink</option>
+              <option value="brown">brown</option>
+            </select>
+            <input
+              value={builder.cpm}
+              type="number"
+              min={40}
+              max={220}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  cpm: Number(event.target.value || prev.cpm),
+                }))
+              }
+              placeholder="cpm"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+          </div>
+
+          <input
+            value={builder.notes}
+            onChange={(event) =>
+              setBuilder((prev) => ({ ...prev, notes: event.target.value }))
+            }
+            placeholder="Notes pattern, e.g. c3 e3 g3 b3"
+            style={{
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.05)",
+              color: "#d7e8fb",
+              fontSize: 12,
+              padding: "7px 9px",
+              fontFamily: '"JetBrains Mono", monospace',
+            }}
+          />
+
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}
+          >
+            <input
+              value={builder.attack}
+              type="number"
+              step={0.01}
+              min={0}
+              max={2}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  attack: Number(event.target.value || prev.attack),
+                }))
+              }
+              placeholder="attack"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.decay}
+              type="number"
+              step={0.01}
+              min={0}
+              max={2}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  decay: Number(event.target.value || prev.decay),
+                }))
+              }
+              placeholder="decay"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.sustain}
+              type="number"
+              step={0.01}
+              min={0}
+              max={1}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  sustain: Number(event.target.value || prev.sustain),
+                }))
+              }
+              placeholder="sustain"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.release}
+              type="number"
+              step={0.01}
+              min={0}
+              max={3}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  release: Number(event.target.value || prev.release),
+                }))
+              }
+              placeholder="release"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+          </div>
+
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}
+          >
+            <input
+              value={builder.lpf}
+              type="number"
+              min={0}
+              max={20000}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  lpf: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="lpf"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.room}
+              type="number"
+              step={0.01}
+              min={0}
+              max={1}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  room: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="room"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.delay}
+              type="number"
+              step={0.01}
+              min={0}
+              max={1}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  delay: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="delay"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.phaser}
+              type="number"
+              step={0.1}
+              min={0}
+              max={12}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  phaser: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="phaser"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.pan}
+              type="number"
+              step={0.01}
+              min={0}
+              max={1}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  pan: Number(event.target.value || 0.5),
+                }))
+              }
+              placeholder="pan"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.gain}
+              type="number"
+              step={0.01}
+              min={0}
+              max={2}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  gain: Number(event.target.value || 0.5),
+                }))
+              }
+              placeholder="gain"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.distort}
+              type="number"
+              step={0.1}
+              min={0}
+              max={12}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  distort: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="distort"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+            <input
+              value={builder.crush}
+              type="number"
+              step={1}
+              min={0}
+              max={16}
+              onChange={(event) =>
+                setBuilder((prev) => ({
+                  ...prev,
+                  crush: Number(event.target.value || 0),
+                }))
+              }
+              placeholder="crush"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 12,
+                padding: "7px 9px",
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              color: "rgba(255,255,255,0.53)",
+              fontSize: 10,
+              fontFamily: '"JetBrains Mono", monospace',
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8,
+              padding: "6px 8px",
+              maxHeight: 56,
+              overflow: "auto",
+            }}
+          >
+            {chainSnippet}
+          </div>
+
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}
+          >
+            <button
+              type="button"
+              onClick={() => onInsertCode(chainSnippet)}
+              style={{
+                border: "1px solid rgba(0,255,136,0.34)",
+                borderRadius: 8,
+                background: "rgba(0,255,136,0.1)",
+                color: "#b6ffdb",
+                fontSize: 11,
+                padding: "6px 8px",
+                cursor: "pointer",
+              }}
+            >
+              Insert Synth Chain
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuditionStatusById((prev) => ({
+                  ...prev,
+                  "builder-main": "loading",
+                }));
+                void onAuditionCode(chainSnippet)
+                  .then(() => {
+                    setAuditionStatusById((prev) => ({
+                      ...prev,
+                      "builder-main": "ready",
+                    }));
+                  })
+                  .catch(() => {
+                    setAuditionStatusById((prev) => ({
+                      ...prev,
+                      "builder-main": "error",
+                    }));
+                  });
+              }}
+              style={{
+                border: "1px solid rgba(122,230,255,0.35)",
+                borderRadius: 8,
+                background: "rgba(122,230,255,0.11)",
+                color: "#c6f5ff",
+                fontSize: 11,
+                padding: "6px 8px",
+                cursor: "pointer",
+              }}
+            >
+              Audition Chain
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onInsertCode(fxTailSnippet)}
+            style={{
+              border: "1px solid rgba(255,255,255,0.25)",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.08)",
+              color: "#e8edf4",
+              fontSize: 11,
+              padding: "6px 8px",
+              cursor: "pointer",
+            }}
+          >
+            Insert FX Tail
+          </button>
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {SYNTH_MACROS.map((macro) => (
+            <button
+              key={macro.id}
+              type="button"
+              onClick={() => onInsertCode(macro.code)}
+              style={{
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d6deea",
+                fontSize: 10,
+                padding: "4px 9px",
+                cursor: "pointer",
+              }}
+              title={macro.code}
+            >
+              {macro.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div

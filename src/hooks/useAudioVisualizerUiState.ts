@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 
+const SAMPLE_WORKSPACE_OPEN_KEY = "strudel:sample-workspace-open:v1";
+
+function readSampleWorkspaceOpen(): boolean {
+  if (typeof window === "undefined") return true;
+  const saved = localStorage.getItem(SAMPLE_WORKSPACE_OPEN_KEY);
+  if (saved === null) return true;
+  return saved === "true";
+}
+
 export function useAudioVisualizerUiState() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
-  const [sampleWorkspaceOpen, setSampleWorkspaceOpen] = useState(true);
+  const [sampleWorkspaceOpen, setSampleWorkspaceOpen] = useState(
+    readSampleWorkspaceOpen,
+  );
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
   );
@@ -27,6 +38,14 @@ export function useAudioVisualizerUiState() {
       window.removeEventListener("orientationchange", updateIsMobile);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(
+      SAMPLE_WORKSPACE_OPEN_KEY,
+      String(sampleWorkspaceOpen),
+    );
+  }, [sampleWorkspaceOpen]);
 
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);

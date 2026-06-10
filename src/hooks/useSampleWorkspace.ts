@@ -29,9 +29,85 @@ export type CustomSampleSource = {
   updatedAt: string;
 };
 
+export type SynthWaveform =
+  | "sine"
+  | "triangle"
+  | "sawtooth"
+  | "square"
+  | "white"
+  | "pink"
+  | "brown";
+
+export type SynthFxBuilderState = {
+  notePattern: string;
+  waveform: SynthWaveform;
+  cpm: number;
+  attack: number;
+  decay: number;
+  sustain: number;
+  release: number;
+  gain: number;
+  lpf: number;
+  room: number;
+  delay: number;
+  phaser: number;
+  pan: number;
+  distort: number;
+  crush: number;
+};
+
+export type SynthFxMacro = {
+  id: string;
+  label: string;
+  description: string;
+  snippet: string;
+};
+
 const CUSTOM_SOURCES_KEY = "strudel:sample-workspace:sources:v1";
 const RECENT_TOKENS_KEY = "strudel:sample-workspace:recent:v1";
 const MAX_RECENT_TOKENS = 10;
+
+export const DEFAULT_SYNTH_FX_STATE: SynthFxBuilderState = {
+  notePattern: "c3 eb3 g3 bb3",
+  waveform: "sawtooth",
+  cpm: 90,
+  attack: 0.01,
+  decay: 0.1,
+  sustain: 0.55,
+  release: 0.2,
+  gain: 0.6,
+  lpf: 1200,
+  room: 0.2,
+  delay: 0,
+  phaser: 0,
+  pan: 0.5,
+  distort: 0,
+  crush: 16,
+};
+
+export const SYNTH_FX_MACROS: SynthFxMacro[] = [
+  {
+    id: "macro-lofi-hat",
+    label: "Lo-fi Hat",
+    description: "Noisy hat line with crusher and tight envelope",
+    snippet:
+      's("hh*16").bank("RolandTR909").gain(0.24).crush(5).hpf(5500).room(0.12).pan("0.35 0.65")',
+  },
+  {
+    id: "macro-dub-delay-lead",
+    label: "Dub Delay Lead",
+    description: "Melodic saw lead with delay and room",
+    snippet:
+      'note("c4 eb4 g4 bb4").sound("sawtooth").adsr("0.01:0.1:0.55:0.25").lpf(2200).delay(0.62).delaytime(0.25).delayfeedback(0.55).room(0.35).gain(0.48)',
+  },
+  {
+    id: "macro-sidechain-pad",
+    label: "Sidechain Pad",
+    description: "Wide pad with ducking-ready shape",
+    snippet:
+      'note("<[c4 eb4 g4 bb4] [bb3 d4 f4 a4]>*2").sound("triangle").adsr("0.08:0.2:0.65:0.35").lpf(1800).room(0.55).pan("0.2 0.8").gain(0.4)',
+  },
+];
 
 const DEFAULT_SOURCES: CustomSampleSource[] = [
   {
@@ -348,6 +424,37 @@ export function buildSampleAuditionSnippet(item: SampleCatalogItem): string {
 
 export function buildSourceInsertSnippet(source: CustomSampleSource): string {
   return `samples("${source.url}")`;
+}
+
+function toFixedCompact(value: number, precision = 3): string {
+  return Number(value.toFixed(precision)).toString();
+}
+
+export function buildSynthFxSnippet(state: SynthFxBuilderState): string {
+  const chain = [
+    `note("${state.notePattern.trim() || DEFAULT_SYNTH_FX_STATE.notePattern}")`,
+    `sound("${state.waveform}")`,
+    `adsr("${toFixedCompact(state.attack)}:${toFixedCompact(state.decay)}:${toFixedCompact(state.sustain)}:${toFixedCompact(state.release)}")`,
+    `gain(${toFixedCompact(state.gain)})`,
+    `lpf(${Math.round(state.lpf)})`,
+  ];
+
+  if (state.room > 0) chain.push(`room(${toFixedCompact(state.room)})`);
+  if (state.delay > 0) chain.push(`delay(${toFixedCompact(state.delay)})`);
+  if (state.phaser > 0) chain.push(`phaser(${toFixedCompact(state.phaser)})`);
+  if (state.pan !== 0.5) chain.push(`pan(${toFixedCompact(state.pan)})`);
+  if (state.distort > 0)
+    chain.push(`distort(${toFixedCompact(state.distort)})`);
+  if (state.crush < 16) chain.push(`crush(${Math.round(state.crush)})`);
+
+  return `${chain.join(".")}.cpm(${Math.round(state.cpm)})`;
+}
+
+export function buildSynthFxAuditionSnippet(
+  state: SynthFxBuilderState,
+): string {
+  const synth = buildSynthFxSnippet(state).replace(/\.cpm\(\d+\)$/, "");
+  return `stack(\n  ${synth},\n  s("bd ~ sd ~").bank("RolandTR909").gain(0.5)\n).cpm(${Math.round(state.cpm)})`;
 }
 
 export function useSampleWorkspace() {
