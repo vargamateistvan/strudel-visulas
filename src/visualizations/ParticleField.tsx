@@ -100,7 +100,8 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
     const resize = () => {
       const width = canvas.offsetWidth;
       const height = canvas.offsetHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const maxDpr = window.innerWidth < 900 ? 3 : 2;
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
 
       sizeRef.current = { width, height };
       canvas.width = Math.max(1, Math.floor(width * dpr));
