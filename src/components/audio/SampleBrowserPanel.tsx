@@ -31,6 +31,11 @@ type ShortcutProfileEntry = ShortcutProfileState & {
   id: string;
 };
 
+type ImportedShortcutProfilesPayload = {
+  profiles: ShortcutProfileEntry[];
+  selectedProfileId: string | null;
+};
+
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
   "strudel:sample-workspace:pattern-preview-mode:v1";
@@ -161,6 +166,66 @@ function readSelectedCustomShortcutProfileId(): string | null {
 
 function createCustomShortcutProfileId() {
   return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function parseImportedShortcutProfiles(
+  source: string,
+): ImportedShortcutProfilesPayload | null {
+  try {
+    const parsed = JSON.parse(source) as unknown;
+    let profileItems: unknown[] = [];
+    let selectedProfileId: string | null = null;
+
+    if (Array.isArray(parsed)) {
+      profileItems = parsed;
+    } else if (parsed && typeof parsed === "object") {
+      const root = parsed as Record<string, unknown>;
+      if (Array.isArray(root["profiles"])) {
+        profileItems = root["profiles"];
+      }
+      if (typeof root["selectedProfileId"] === "string") {
+        selectedProfileId = root["selectedProfileId"];
+      } else if (typeof root["selectedId"] === "string") {
+        selectedProfileId = root["selectedId"];
+      }
+    }
+
+    if (profileItems.length === 0) {
+      return null;
+    }
+
+    const profiles: ShortcutProfileEntry[] = profileItems
+      .map((item, index) => {
+        if (!item || typeof item !== "object") return null;
+        const itemRecord = item as Record<string, unknown>;
+        const candidate = item as unknown;
+        if (!isShortcutProfileState(candidate)) return null;
+        const id =
+          typeof itemRecord["id"] === "string" && itemRecord["id"].length > 0
+            ? itemRecord["id"]
+            : `import-${index + 1}`;
+        return {
+          id,
+          name: candidate.name,
+          keyboardModeEnabled: candidate.keyboardModeEnabled,
+          showShortcutHelp: candidate.showShortcutHelp,
+          patternPreviewMode: candidate.patternPreviewMode,
+          macroApplyMode: candidate.macroApplyMode,
+        };
+      })
+      .filter((item): item is ShortcutProfileEntry => Boolean(item));
+
+    if (profiles.length === 0) {
+      return null;
+    }
+
+    return {
+      profiles,
+      selectedProfileId,
+    };
+  } catch {
+    return null;
+  }
 }
 
 type SampleBrowserPanelProps = {
@@ -338,6 +403,7 @@ export function SampleBrowserPanel({
       return selected?.name ?? profiles[0]?.name ?? "My Workflow";
     },
   );
+  const [profileJsonBuffer, setProfileJsonBuffer] = useState("");
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
@@ -683,6 +749,79 @@ export function SampleBrowserPanel({
         `Moved shortcut profile ${direction}: ${selectedCustomShortcutProfile.name}.`,
       );
     }
+  };
+
+  const exportCustomShortcutProfiles = async () => {
+    if (customShortcutProfiles.length === 0) {
+      setFxApplyHint("No custom profiles to export yet.");
+      return;
+    }
+
+    const payload = {
+      version: 1,
+      profiles: customShortcutProfiles,
+      selectedProfileId: fallbackSelectedCustomShortcutProfileId,
+    };
+    const text = JSON.stringify(payload, null, 2);
+    setProfileJsonBuffer(text);
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setFxApplyHint("Exported profiles to clipboard and buffer.");
+        return;
+      }
+    } catch {
+      // Continue with buffer fallback.
+    }
+
+    setFxApplyHint("Export prepared in buffer. Copy JSON manually.");
+  };
+
+  const importCustomShortcutProfiles = (mode: "merge" | "replace") => {
+    const parsed = parseImportedShortcutProfiles(profileJsonBuffer.trim());
+    if (!parsed) {
+      setFxApplyHint("Import failed: invalid profile JSON.");
+      return;
+    }
+
+    const idMap = new Map<string, string>();
+    const importedProfiles = parsed.profiles.map((profile) => {
+      const nextId = createCustomShortcutProfileId();
+      idMap.set(profile.id, nextId);
+      return {
+        ...profile,
+        id: nextId,
+      };
+    });
+
+    const nextSelectedId = parsed.selectedProfileId
+      ? (idMap.get(parsed.selectedProfileId) ?? importedProfiles[0]?.id ?? null)
+      : (importedProfiles[0]?.id ?? null);
+
+    if (mode === "replace") {
+      setCustomShortcutProfiles(importedProfiles);
+      setSelectedCustomShortcutProfileId(nextSelectedId);
+      setCustomShortcutProfileName(importedProfiles[0]?.name ?? "My Workflow");
+      setFxApplyHint(
+        `Imported ${importedProfiles.length} profiles (replace mode).`,
+      );
+      return;
+    }
+
+    setCustomShortcutProfiles((prev) => [...prev, ...importedProfiles]);
+    if (nextSelectedId) {
+      setSelectedCustomShortcutProfileId(nextSelectedId);
+      const selectedImported = importedProfiles.find(
+        (profile) => profile.id === nextSelectedId,
+      );
+      if (selectedImported) {
+        setCustomShortcutProfileName(selectedImported.name);
+      }
+    }
+    setFxApplyHint(
+      `Imported ${importedProfiles.length} profiles (merge mode).`,
+    );
   };
 
   const handlePatternTool = (tool: PatternTool) => {
@@ -1957,6 +2096,137 @@ export function SampleBrowserPanel({
               : customShortcutProfiles.length > 0
                 ? "Choose a profile from the list or select New profile slot."
                 : "Save the current shortcut setup as your first custom profile."}
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 6,
+              paddingTop: 4,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <textarea
+              aria-label="Profile JSON buffer"
+              value={profileJsonBuffer}
+              onChange={(event) => setProfileJsonBuffer(event.target.value)}
+              placeholder="Paste exported profile JSON here"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.04)",
+                color: "#d7e8fb",
+                fontSize: 10,
+                minHeight: 72,
+                padding: "7px 8px",
+                fontFamily: '"JetBrains Mono", monospace',
+                resize: "vertical",
+              }}
+            />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, auto)",
+                gap: 6,
+                justifyContent: "start",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  void exportCustomShortcutProfiles();
+                }}
+                style={{
+                  border: "1px solid rgba(122,230,255,0.3)",
+                  borderRadius: 8,
+                  background: "rgba(122,230,255,0.1)",
+                  color: "#c6f5ff",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                title="Export all custom profiles as JSON"
+              >
+                Export JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => importCustomShortcutProfiles("merge")}
+                disabled={profileJsonBuffer.trim().length === 0}
+                style={{
+                  border: "1px solid rgba(0,255,136,0.34)",
+                  borderRadius: 8,
+                  background:
+                    profileJsonBuffer.trim().length > 0
+                      ? "rgba(0,255,136,0.1)"
+                      : "rgba(255,255,255,0.04)",
+                  color:
+                    profileJsonBuffer.trim().length > 0
+                      ? "#b6ffdb"
+                      : "rgba(255,255,255,0.35)",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor:
+                    profileJsonBuffer.trim().length > 0
+                      ? "pointer"
+                      : "not-allowed",
+                  whiteSpace: "nowrap",
+                }}
+                title="Import profiles and append to current list"
+              >
+                Import Merge
+              </button>
+              <button
+                type="button"
+                onClick={() => importCustomShortcutProfiles("replace")}
+                disabled={profileJsonBuffer.trim().length === 0}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 8,
+                  background:
+                    profileJsonBuffer.trim().length > 0
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(255,255,255,0.04)",
+                  color:
+                    profileJsonBuffer.trim().length > 0
+                      ? "#d6deea"
+                      : "rgba(255,255,255,0.35)",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor:
+                    profileJsonBuffer.trim().length > 0
+                      ? "pointer"
+                      : "not-allowed",
+                  whiteSpace: "nowrap",
+                }}
+                title="Replace current custom profile list with imported JSON"
+              >
+                Import Replace
+              </button>
+              <button
+                type="button"
+                onClick={() => setProfileJsonBuffer("")}
+                disabled={profileJsonBuffer.length === 0}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 8,
+                  background: "rgba(255,255,255,0.04)",
+                  color:
+                    profileJsonBuffer.length > 0
+                      ? "#d6deea"
+                      : "rgba(255,255,255,0.35)",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor:
+                    profileJsonBuffer.length > 0 ? "pointer" : "not-allowed",
+                  whiteSpace: "nowrap",
+                }}
+                title="Clear profile JSON buffer"
+              >
+                Clear Buffer
+              </button>
+            </div>
           </div>
 
           {SYNTH_FX_MACROS.map((macro) => (

@@ -101,4 +101,51 @@ describe("SampleBrowserPanel shortcut profile polish", () => {
     fireEvent.change(list, { target: { value: sessionAOptionValue } });
     expect((nameInput as HTMLInputElement).value).toBe("Session A");
   });
+
+  it("imports custom profiles in replace mode from JSON buffer", () => {
+    render(<SampleBrowserPanel {...createProps()} />);
+
+    const jsonBuffer = screen.getByRole("textbox", {
+      name: "Profile JSON buffer",
+    });
+
+    const payload = {
+      version: 1,
+      selectedProfileId: "p-b",
+      profiles: [
+        {
+          id: "p-a",
+          name: "Imported A",
+          keyboardModeEnabled: false,
+          showShortcutHelp: true,
+          patternPreviewMode: true,
+          macroApplyMode: "layer",
+        },
+        {
+          id: "p-b",
+          name: "Imported B",
+          keyboardModeEnabled: true,
+          showShortcutHelp: false,
+          patternPreviewMode: false,
+          macroApplyMode: "replace",
+        },
+      ],
+    };
+
+    fireEvent.change(jsonBuffer, {
+      target: { value: JSON.stringify(payload) },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Import Replace" }));
+
+    const list = screen.getByRole("combobox", { name: "Custom profile list" });
+    const options = within(list)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+
+    expect(options).toContain("Imported A");
+    expect(options).toContain("Imported B");
+    expect(
+      screen.getByText("Imported 2 profiles (replace mode)."),
+    ).toBeInTheDocument();
+  });
 });
