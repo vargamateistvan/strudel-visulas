@@ -37,6 +37,8 @@ type AudioWorkspaceProps = {
   activeNotes?: string[];
   activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
+  onInsertCode: (snippet: string) => void;
+  onAuditionCode: (snippet: string) => Promise<void>;
   isExportingMp3: boolean;
   mp3Quality: "fast" | "good" | "best";
   mp3Status: string;
@@ -64,6 +66,8 @@ export function AudioWorkspace({
   activeNotes,
   activeMiniLocations,
   onCodeChange,
+  onInsertCode,
+  onAuditionCode,
   isExportingMp3,
   mp3Quality,
   mp3Status,
@@ -120,6 +124,9 @@ export function AudioWorkspace({
           activeNotes={activeNotes}
           activeMiniLocations={activeMiniLocations}
           onCodeChange={onCodeChange}
+          isMobile={isMobile}
+          onInsertCode={onInsertCode}
+          onAuditionCode={onAuditionCode}
           aiComposerProps={aiComposerProps}
         />
       </div>

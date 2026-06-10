@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ComponentProps } from "react";
+import { useCallback, useEffect, useMemo, type ComponentProps } from "react";
 import { useStrudel, DEFAULT_PATTERN } from "./useStrudel";
 import { useLocalPresets } from "./useLocalPresets";
 import { useRecordingExport } from "./useRecordingExport";
@@ -197,6 +197,26 @@ export function useAudioVisualizerController(): ComponentProps<
       stopAudioRecording,
     });
 
+  const insertCodeSnippet = useCallback(
+    (snippet: string) => {
+      const cleaned = snippet.trim();
+      if (!cleaned) return;
+      const base = code.trimEnd();
+      const separator = base.length > 0 ? "\n\n" : "";
+      setCode(`${base}${separator}${cleaned}`);
+    },
+    [code, setCode],
+  );
+
+  const auditionSnippet = useCallback(
+    async (snippet: string) => {
+      const cleaned = snippet.trim();
+      if (!cleaned) return;
+      await play(cleaned);
+    },
+    [play],
+  );
+
   useAudioVisualizerPersistence({
     code,
     saveDraft,
@@ -363,6 +383,8 @@ export function useAudioVisualizerController(): ComponentProps<
       activeNotes,
       activeMiniLocations,
       onCodeChange,
+      onInsertCode: insertCodeSnippet,
+      onAuditionCode: auditionSnippet,
       isExportingMp3,
       mp3Quality,
       mp3Status,
@@ -424,6 +446,8 @@ export function useAudioVisualizerController(): ComponentProps<
       activeNotes,
       activeMiniLocations,
       onCodeChange,
+      insertCodeSnippet,
+      auditionSnippet,
       isExportingMp3,
       mp3Quality,
       mp3Status,

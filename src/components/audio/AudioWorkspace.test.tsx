@@ -44,6 +44,8 @@ describe("AudioWorkspace", () => {
         activeNotes={[]}
         activeMiniLocations={[]}
         onCodeChange={noop}
+        onInsertCode={noop}
+        onAuditionCode={async () => undefined}
         isExportingMp3
         mp3Quality="good"
         mp3Status="Converting"

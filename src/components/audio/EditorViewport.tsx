@@ -1,11 +1,13 @@
 import { StrudelEditor } from "../StrudelEditor";
 import type { StrudelStatus } from "../../hooks/useStrudel";
 import { AiComposerPanel } from "./AiComposerPanel";
+import { SampleBrowserPanel } from "./SampleBrowserPanel";
 import type {
   AiComposerHistoryEntry,
   AiGenerationIntent,
 } from "../../hooks/useAiMusicComposer";
 import type { SourceLocationRange } from "../editor/StrudelEditorLanguage";
+import { useSampleWorkspace } from "../../hooks/useSampleWorkspace";
 
 type AiComposerProps = {
   enabled: boolean;
@@ -37,6 +39,9 @@ type EditorViewportProps = {
   activeNotes?: string[];
   activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
+  isMobile: boolean;
+  onInsertCode: (snippet: string) => void;
+  onAuditionCode: (snippet: string) => Promise<void>;
   aiComposerProps: AiComposerProps;
 };
 
@@ -57,41 +62,95 @@ export function EditorViewport({
   activeNotes,
   activeMiniLocations,
   onCodeChange,
+  isMobile,
+  onInsertCode,
+  onAuditionCode,
   aiComposerProps,
 }: EditorViewportProps) {
+  const {
+    category,
+    setCategory,
+    query,
+    setQuery,
+    filteredCatalog,
+    recentItems,
+    customSources,
+    addRecentToken,
+    addSource,
+    removeSource,
+    toggleSource,
+  } = useSampleWorkspace();
+
   return (
     <div
       style={{
         width: "100%",
-        maxWidth: 760,
+        maxWidth: 1140,
         height: "100%",
         maxHeight: "100%",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: isMobile ? "column" : "row",
+        gap: 12,
       }}
     >
-      <div style={{ flex: "1 1 auto", minHeight: 0 }}>
-        <StrudelEditor
-          code={code}
-          play={play}
-          stop={stop}
-          status={status}
-          error={error}
-          loadMsg={loadMsg}
-          opacity={opacity}
-          colorPreset={colorPreset}
-          fontPreset={fontPreset}
-          fontSize={fontSize}
-          livePulseStrip={livePulseStrip}
-          livePlayingNoteHighlights={livePlayingNoteHighlights}
-          activeNote={activeNote}
-          activeNotes={activeNotes}
-          activeMiniLocations={activeMiniLocations}
-          onCodeChange={onCodeChange}
-        />
+      <div
+        style={{
+          flex: "1 1 auto",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div style={{ flex: "1 1 auto", minHeight: 0 }}>
+          <StrudelEditor
+            code={code}
+            play={play}
+            stop={stop}
+            status={status}
+            error={error}
+            loadMsg={loadMsg}
+            opacity={opacity}
+            colorPreset={colorPreset}
+            fontPreset={fontPreset}
+            fontSize={fontSize}
+            livePulseStrip={livePulseStrip}
+            livePlayingNoteHighlights={livePlayingNoteHighlights}
+            activeNote={activeNote}
+            activeNotes={activeNotes}
+            activeMiniLocations={activeMiniLocations}
+            onCodeChange={onCodeChange}
+          />
+        </div>
+
+        <AiComposerPanel {...aiComposerProps} />
       </div>
 
-      <AiComposerPanel {...aiComposerProps} />
+      <div
+        style={{
+          width: isMobile ? "100%" : 330,
+          minWidth: isMobile ? 0 : 280,
+          maxWidth: isMobile ? "100%" : "34vw",
+          height: isMobile ? 360 : "auto",
+          minHeight: 0,
+          display: "flex",
+        }}
+      >
+        <SampleBrowserPanel
+          category={category}
+          onCategoryChange={setCategory}
+          query={query}
+          onQueryChange={setQuery}
+          filteredCatalog={filteredCatalog}
+          recentItems={recentItems}
+          customSources={customSources}
+          onAddRecentToken={addRecentToken}
+          onInsertCode={onInsertCode}
+          onAuditionCode={onAuditionCode}
+          onAddSource={addSource}
+          onRemoveSource={removeSource}
+          onToggleSource={toggleSource}
+        />
+      </div>
     </div>
   );
 }

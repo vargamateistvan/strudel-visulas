@@ -9,6 +9,9 @@ vi.mock("../StrudelEditor", () => ({
 vi.mock("./AiComposerPanel", () => ({
   AiComposerPanel: () => <div data-testid="ai-composer-panel" />,
 }));
+vi.mock("./SampleBrowserPanel", () => ({
+  SampleBrowserPanel: () => <div data-testid="sample-browser-panel" />,
+}));
 
 const noop = vi.fn();
 const aiComposerProps = {
@@ -44,11 +47,15 @@ describe("EditorViewport", () => {
         activeNotes={[]}
         activeMiniLocations={[]}
         onCodeChange={noop}
+        isMobile={false}
+        onInsertCode={noop}
+        onAuditionCode={async () => undefined}
         aiComposerProps={aiComposerProps}
       />,
     );
 
     expect(screen.getByTestId("strudel-editor")).toBeInTheDocument();
     expect(screen.getByTestId("ai-composer-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("sample-browser-panel")).toBeInTheDocument();
   });
 });
