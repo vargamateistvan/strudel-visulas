@@ -48,10 +48,12 @@ type EditorViewportProps = {
 };
 
 type FxApplyTarget = "selection" | "document" | "none";
+type MacroApplyMode = "layer" | "replace";
 
 type SelectionAppliers = {
   applyFxTailToSelection: (fxTail: string) => FxApplyTarget;
   applyMacroLayerToSelection: (snippet: string) => FxApplyTarget;
+  applyMacroReplaceToSelection: (snippet: string) => FxApplyTarget;
 };
 
 export function EditorViewport({
@@ -94,6 +96,7 @@ export function EditorViewport({
   const selectionAppliersRef = useRef<SelectionAppliers>({
     applyFxTailToSelection: () => "none",
     applyMacroLayerToSelection: () => "none",
+    applyMacroReplaceToSelection: () => "none",
   });
 
   const registerSelectionFxApplier = useCallback(
@@ -107,9 +110,17 @@ export function EditorViewport({
     return selectionAppliersRef.current.applyFxTailToSelection(fxTail);
   }, []);
 
-  const handleApplyMacroToSelection = useCallback((snippet: string) => {
-    return selectionAppliersRef.current.applyMacroLayerToSelection(snippet);
-  }, []);
+  const handleApplyMacroToSelection = useCallback(
+    (snippet: string, mode: MacroApplyMode) => {
+      if (mode === "replace") {
+        return selectionAppliersRef.current.applyMacroReplaceToSelection(
+          snippet,
+        );
+      }
+      return selectionAppliersRef.current.applyMacroLayerToSelection(snippet);
+    },
+    [],
+  );
 
   return (
     <div

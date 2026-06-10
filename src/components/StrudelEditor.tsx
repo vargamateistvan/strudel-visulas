@@ -49,6 +49,9 @@ interface StrudelEditorProps {
         applyMacroLayerToSelection: (
           snippet: string,
         ) => "selection" | "document" | "none";
+        applyMacroReplaceToSelection: (
+          snippet: string,
+        ) => "selection" | "document" | "none";
       }) => void)
     | undefined;
 }
@@ -558,21 +561,33 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     [applySelectionTransform],
   );
 
+  const applyMacroReplaceToSelection = useCallback(
+    (snippet: string) => {
+      const cleaned = snippet.trim();
+      if (!cleaned) return "none" as const;
+      return applySelectionTransform(() => cleaned);
+    },
+    [applySelectionTransform],
+  );
+
   useEffect(() => {
     if (!onRegisterSelectionFxApplier) return;
     onRegisterSelectionFxApplier({
       applyFxTailToSelection,
       applyMacroLayerToSelection,
+      applyMacroReplaceToSelection,
     });
     return () => {
       onRegisterSelectionFxApplier({
         applyFxTailToSelection: () => "none",
         applyMacroLayerToSelection: () => "none",
+        applyMacroReplaceToSelection: () => "none",
       });
     };
   }, [
     applyFxTailToSelection,
     applyMacroLayerToSelection,
+    applyMacroReplaceToSelection,
     onRegisterSelectionFxApplier,
   ]);
 

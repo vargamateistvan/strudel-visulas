@@ -17,6 +17,7 @@ import {
 
 type AuditionStatus = "idle" | "loading" | "ready" | "error";
 type FxApplyTarget = "selection" | "document" | "none";
+type MacroApplyMode = "layer" | "replace";
 
 type SampleBrowserPanelProps = {
   category: SampleCategory | "all";
@@ -30,7 +31,10 @@ type SampleBrowserPanelProps = {
   onInsertCode: (snippet: string) => void;
   onAuditionCode: (snippet: string) => Promise<void>;
   onApplyFxToSelection: (fxTail: string) => FxApplyTarget;
-  onApplyMacroToSelection: (snippet: string) => FxApplyTarget;
+  onApplyMacroToSelection: (
+    snippet: string,
+    mode: MacroApplyMode,
+  ) => FxApplyTarget;
   onAddSource: (name: string, url: string) => void;
   onRemoveSource: (id: string) => void;
   onToggleSource: (id: string) => void;
@@ -109,6 +113,7 @@ export function SampleBrowserPanel({
   const [builder, setBuilder] = useState<SynthFxBuilderState>(
     DEFAULT_SYNTH_FX_STATE,
   );
+  const [macroApplyMode, setMacroApplyMode] = useState<MacroApplyMode>("layer");
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
@@ -855,6 +860,64 @@ export function SampleBrowserPanel({
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              marginRight: 6,
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: 999,
+              padding: 3,
+              background: "rgba(255,255,255,0.04)",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setMacroApplyMode("layer")}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background:
+                  macroApplyMode === "layer"
+                    ? "rgba(122,230,255,0.2)"
+                    : "transparent",
+                color:
+                  macroApplyMode === "layer"
+                    ? "#c6f5ff"
+                    : "rgba(255,255,255,0.7)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="+Sel layers macro with selected code"
+            >
+              Layer
+            </button>
+            <button
+              type="button"
+              onClick={() => setMacroApplyMode("replace")}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background:
+                  macroApplyMode === "replace"
+                    ? "rgba(122,230,255,0.2)"
+                    : "transparent",
+                color:
+                  macroApplyMode === "replace"
+                    ? "#c6f5ff"
+                    : "rgba(255,255,255,0.7)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="+Sel replaces selected code with macro"
+            >
+              Replace
+            </button>
+          </div>
+
           {SYNTH_FX_MACROS.map((macro) => (
             <div key={macro.id} style={{ display: "flex", gap: 4 }}>
               <button
@@ -876,15 +939,30 @@ export function SampleBrowserPanel({
               <button
                 type="button"
                 onClick={() => {
-                  const result = onApplyMacroToSelection(macro.snippet);
+                  const result = onApplyMacroToSelection(
+                    macro.snippet,
+                    macroApplyMode,
+                  );
                   if (result === "selection") {
-                    setFxApplyHint(`Layered ${macro.label} onto selection.`);
+                    if (macroApplyMode === "replace") {
+                      setFxApplyHint(
+                        `Replaced selection with ${macro.label} macro.`,
+                      );
+                    } else {
+                      setFxApplyHint(`Layered ${macro.label} onto selection.`);
+                    }
                     return;
                   }
                   if (result === "document") {
-                    setFxApplyHint(
-                      `No selection found. Layered ${macro.label} onto full document.`,
-                    );
+                    if (macroApplyMode === "replace") {
+                      setFxApplyHint(
+                        `No selection found. Replaced full document with ${macro.label} macro.`,
+                      );
+                    } else {
+                      setFxApplyHint(
+                        `No selection found. Layered ${macro.label} onto full document.`,
+                      );
+                    }
                     return;
                   }
                   setFxApplyHint(
