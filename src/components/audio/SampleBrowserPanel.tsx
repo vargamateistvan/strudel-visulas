@@ -18,6 +18,7 @@ import {
 type AuditionStatus = "idle" | "loading" | "ready" | "error";
 type FxApplyTarget = "selection" | "document" | "none";
 type MacroApplyMode = "layer" | "replace";
+type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
 
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 
@@ -43,6 +44,7 @@ type SampleBrowserPanelProps = {
     snippet: string,
     mode: MacroApplyMode,
   ) => FxApplyTarget;
+  onApplyPatternTool: (tool: PatternTool) => FxApplyTarget;
   onAddSource: (name: string, url: string) => void;
   onRemoveSource: (id: string) => void;
   onToggleSource: (id: string) => void;
@@ -111,6 +113,7 @@ export function SampleBrowserPanel({
   onAuditionCode,
   onApplyFxToSelection,
   onApplyMacroToSelection,
+  onApplyPatternTool,
   onAddSource,
   onRemoveSource,
   onToggleSource,
@@ -178,6 +181,19 @@ export function SampleBrowserPanel({
     } catch {
       setAuditionStatusById((prev) => ({ ...prev, [source.id]: "error" }));
     }
+  };
+
+  const handlePatternTool = (tool: PatternTool, label: string) => {
+    const result = onApplyPatternTool(tool);
+    if (result === "selection") {
+      setFxApplyHint(`Applied ${label} to selection.`);
+      return;
+    }
+    if (result === "document") {
+      setFxApplyHint(`No selection found. Applied ${label} to full document.`);
+      return;
+    }
+    setFxApplyHint("Editor is not ready yet. Try again in a moment.");
   };
 
   return (
@@ -1082,6 +1098,103 @@ export function SampleBrowserPanel({
               </button>
             </div>
           ))}
+        </div>
+
+        <div
+          style={{
+            marginTop: 6,
+            paddingTop: 8,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            display: "grid",
+            gap: 6,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              letterSpacing: 1,
+              color: "rgba(255,255,255,0.56)",
+            }}
+          >
+            PATTERN TOOLS
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => handlePatternTool("reverse", "reverse")}
+              style={{
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d6deea",
+                fontSize: 10,
+                padding: "4px 9px",
+                cursor: "pointer",
+              }}
+            >
+              Reverse
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePatternTool("slow2", "slow x2")}
+              style={{
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d6deea",
+                fontSize: 10,
+                padding: "4px 9px",
+                cursor: "pointer",
+              }}
+            >
+              Slow x2
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePatternTool("fast2", "fast x2")}
+              style={{
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d6deea",
+                fontSize: 10,
+                padding: "4px 9px",
+                cursor: "pointer",
+              }}
+            >
+              Fast x2
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePatternTool("density2", "density x2")}
+              style={{
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d6deea",
+                fontSize: 10,
+                padding: "4px 9px",
+                cursor: "pointer",
+              }}
+            >
+              Density x2
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePatternTool("stutter", "stutter")}
+              style={{
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d6deea",
+                fontSize: 10,
+                padding: "4px 9px",
+                cursor: "pointer",
+              }}
+            >
+              Stutter
+            </button>
+          </div>
         </div>
       </div>
 

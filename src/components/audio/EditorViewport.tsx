@@ -49,11 +49,13 @@ type EditorViewportProps = {
 
 type FxApplyTarget = "selection" | "document" | "none";
 type MacroApplyMode = "layer" | "replace";
+type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
 
 type SelectionAppliers = {
   applyFxTailToSelection: (fxTail: string) => FxApplyTarget;
   applyMacroLayerToSelection: (snippet: string) => FxApplyTarget;
   applyMacroReplaceToSelection: (snippet: string) => FxApplyTarget;
+  applyPatternToolToSelection: (tool: PatternTool) => FxApplyTarget;
 };
 
 export function EditorViewport({
@@ -97,6 +99,7 @@ export function EditorViewport({
     applyFxTailToSelection: () => "none",
     applyMacroLayerToSelection: () => "none",
     applyMacroReplaceToSelection: () => "none",
+    applyPatternToolToSelection: () => "none",
   });
 
   const registerSelectionFxApplier = useCallback(
@@ -121,6 +124,10 @@ export function EditorViewport({
     },
     [],
   );
+
+  const handleApplyPatternTool = useCallback((tool: PatternTool) => {
+    return selectionAppliersRef.current.applyPatternToolToSelection(tool);
+  }, []);
 
   return (
     <div
@@ -191,6 +198,7 @@ export function EditorViewport({
             onAuditionCode={onAuditionCode}
             onApplyFxToSelection={handleApplyFxToSelection}
             onApplyMacroToSelection={handleApplyMacroToSelection}
+            onApplyPatternTool={handleApplyPatternTool}
             onAddSource={addSource}
             onRemoveSource={removeSource}
             onToggleSource={toggleSource}

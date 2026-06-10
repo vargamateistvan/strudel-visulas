@@ -52,6 +52,9 @@ interface StrudelEditorProps {
         applyMacroReplaceToSelection: (
           snippet: string,
         ) => "selection" | "document" | "none";
+        applyPatternToolToSelection: (
+          tool: "reverse" | "slow2" | "fast2" | "density2" | "stutter",
+        ) => "selection" | "document" | "none";
       }) => void)
     | undefined;
 }
@@ -570,24 +573,42 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     [applySelectionTransform],
   );
 
+  const applyPatternToolToSelection = useCallback(
+    (tool: "reverse" | "slow2" | "fast2" | "density2" | "stutter") => {
+      return applySelectionTransform((source) => {
+        if (tool === "reverse") return `(${source}).rev`;
+        if (tool === "slow2") return `(${source}).slow(2)`;
+        if (tool === "fast2") return `(${source}).fast(2)`;
+        if (tool === "density2") {
+          return `stack(${source}, (${source}).fast(2).gain(0.72))`;
+        }
+        return `stack((${source}).fast(2), (${source}).fast(4).gain(0.55))`;
+      });
+    },
+    [applySelectionTransform],
+  );
+
   useEffect(() => {
     if (!onRegisterSelectionFxApplier) return;
     onRegisterSelectionFxApplier({
       applyFxTailToSelection,
       applyMacroLayerToSelection,
       applyMacroReplaceToSelection,
+      applyPatternToolToSelection,
     });
     return () => {
       onRegisterSelectionFxApplier({
         applyFxTailToSelection: () => "none",
         applyMacroLayerToSelection: () => "none",
         applyMacroReplaceToSelection: () => "none",
+        applyPatternToolToSelection: () => "none",
       });
     };
   }, [
     applyFxTailToSelection,
     applyMacroLayerToSelection,
     applyMacroReplaceToSelection,
+    applyPatternToolToSelection,
     onRegisterSelectionFxApplier,
   ]);
 
