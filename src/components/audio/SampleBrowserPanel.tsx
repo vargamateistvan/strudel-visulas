@@ -67,6 +67,23 @@ const LOCKED_SOURCE_IDS = new Set([
   "source-eddyflux-crate",
 ]);
 
+const PATTERN_TOOL_META: Record<
+  PatternTool,
+  { label: string; preview: string }
+> = {
+  reverse: { label: "reverse", preview: "(<selection>).rev" },
+  slow2: { label: "slow x2", preview: "(<selection>).slow(2)" },
+  fast2: { label: "fast x2", preview: "(<selection>).fast(2)" },
+  density2: {
+    label: "density x2",
+    preview: "stack(<selection>, (<selection>).fast(2).gain(0.72))",
+  },
+  stutter: {
+    label: "stutter",
+    preview: "stack((<selection>).fast(2), (<selection>).fast(4).gain(0.55))",
+  },
+};
+
 function badgeStyle(status: AuditionStatus) {
   if (status === "loading") {
     return {
@@ -126,6 +143,9 @@ export function SampleBrowserPanel({
   );
   const [macroApplyMode, setMacroApplyMode] =
     useState<MacroApplyMode>(readMacroApplyMode);
+  const [patternPreviewMode, setPatternPreviewMode] = useState(true);
+  const [pendingPatternTool, setPendingPatternTool] =
+    useState<PatternTool | null>(null);
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
@@ -183,7 +203,7 @@ export function SampleBrowserPanel({
     }
   };
 
-  const handlePatternTool = (tool: PatternTool, label: string) => {
+  const applyPatternToolNow = (tool: PatternTool, label: string) => {
     const result = onApplyPatternTool(tool);
     if (result === "selection") {
       setFxApplyHint(`Applied ${label} to selection.`);
@@ -194,6 +214,16 @@ export function SampleBrowserPanel({
       return;
     }
     setFxApplyHint("Editor is not ready yet. Try again in a moment.");
+  };
+
+  const handlePatternTool = (tool: PatternTool) => {
+    const meta = PATTERN_TOOL_META[tool];
+    if (patternPreviewMode) {
+      setPendingPatternTool(tool);
+      setFxApplyHint(`Preview ready for ${meta.label}. Click Apply Preview.`);
+      return;
+    }
+    applyPatternToolNow(tool, meta.label);
   };
 
   return (
@@ -1109,19 +1139,48 @@ export function SampleBrowserPanel({
             gap: 6,
           }}
         >
-          <div
-            style={{
-              fontSize: 10,
-              letterSpacing: 1,
-              color: "rgba(255,255,255,0.56)",
-            }}
-          >
-            PATTERN TOOLS
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div
+              style={{
+                fontSize: 10,
+                letterSpacing: 1,
+                color: "rgba(255,255,255,0.56)",
+              }}
+            >
+              PATTERN TOOLS
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPatternPreviewMode((prev) => {
+                  const next = !prev;
+                  if (!next) {
+                    setPendingPatternTool(null);
+                  }
+                  return next;
+                });
+              }}
+              style={{
+                marginLeft: "auto",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 999,
+                background: patternPreviewMode
+                  ? "rgba(122,230,255,0.12)"
+                  : "rgba(255,255,255,0.04)",
+                color: patternPreviewMode ? "#c6f5ff" : "#d6deea",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="Toggle preview-before-apply for pattern tools"
+            >
+              {patternPreviewMode ? "Preview On" : "Preview Off"}
+            </button>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             <button
               type="button"
-              onClick={() => handlePatternTool("reverse", "reverse")}
+              onClick={() => handlePatternTool("reverse")}
               style={{
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
@@ -1136,7 +1195,7 @@ export function SampleBrowserPanel({
             </button>
             <button
               type="button"
-              onClick={() => handlePatternTool("slow2", "slow x2")}
+              onClick={() => handlePatternTool("slow2")}
               style={{
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
@@ -1151,7 +1210,7 @@ export function SampleBrowserPanel({
             </button>
             <button
               type="button"
-              onClick={() => handlePatternTool("fast2", "fast x2")}
+              onClick={() => handlePatternTool("fast2")}
               style={{
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
@@ -1166,7 +1225,7 @@ export function SampleBrowserPanel({
             </button>
             <button
               type="button"
-              onClick={() => handlePatternTool("density2", "density x2")}
+              onClick={() => handlePatternTool("density2")}
               style={{
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
@@ -1181,7 +1240,7 @@ export function SampleBrowserPanel({
             </button>
             <button
               type="button"
-              onClick={() => handlePatternTool("stutter", "stutter")}
+              onClick={() => handlePatternTool("stutter")}
               style={{
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
@@ -1195,6 +1254,65 @@ export function SampleBrowserPanel({
               Stutter
             </button>
           </div>
+
+          {patternPreviewMode && pendingPatternTool && (
+            <div style={{ display: "grid", gap: 6 }}>
+              <div
+                style={{
+                  color: "rgba(255,255,255,0.53)",
+                  fontSize: 10,
+                  fontFamily: '"JetBrains Mono", monospace',
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 8,
+                  padding: "6px 8px",
+                  overflow: "auto",
+                }}
+              >
+                {PATTERN_TOOL_META[pendingPatternTool].preview}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tool = pendingPatternTool;
+                    if (!tool) return;
+                    applyPatternToolNow(tool, PATTERN_TOOL_META[tool].label);
+                    setPendingPatternTool(null);
+                  }}
+                  style={{
+                    border: "1px solid rgba(122,230,255,0.35)",
+                    borderRadius: 8,
+                    background: "rgba(122,230,255,0.11)",
+                    color: "#c6f5ff",
+                    fontSize: 10,
+                    padding: "5px 8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Apply Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingPatternTool(null);
+                    setFxApplyHint("Pattern tool preview cleared.");
+                  }}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.22)",
+                    borderRadius: 8,
+                    background: "rgba(255,255,255,0.05)",
+                    color: "#d6deea",
+                    fontSize: 10,
+                    padding: "5px 8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Clear Preview
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
