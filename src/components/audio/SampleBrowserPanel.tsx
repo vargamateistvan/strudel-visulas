@@ -1200,6 +1200,31 @@ export function SampleBrowserPanel({
             >
               {keyboardModeEnabled ? "Keys On" : "Keys Off"}
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setKeyboardModeEnabled(true);
+                setShowShortcutHelp(false);
+                setPatternPreviewMode(true);
+                setMacroApplyMode("layer");
+                setPendingPatternTool(null);
+                setFxApplyHint(
+                  "Workspace shortcuts reset: Keys On, Help Closed, Preview On, Macro Layer.",
+                );
+              }}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background: "transparent",
+                color: "rgba(255,255,255,0.62)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="Reset shortcut-related workspace preferences"
+            >
+              Reset Shortcuts
+            </button>
           </div>
 
           {showShortcutHelp && (
