@@ -320,6 +320,18 @@ export function SampleBrowserPanel({
     }
 
     const key = event.key.toLowerCase();
+    if (event.shiftKey && key === "s") {
+      event.preventDefault();
+      saveCustomShortcutProfile();
+      return;
+    }
+
+    if (event.shiftKey && key === "o") {
+      event.preventDefault();
+      loadCustomShortcutProfile();
+      return;
+    }
+
     if (key === "l") {
       event.preventDefault();
       setMacroApplyMode("layer");
@@ -427,12 +439,24 @@ export function SampleBrowserPanel({
 
   const activeShortcutProfileId = getActiveShortcutProfileId();
 
+  const normalizedCustomShortcutProfileName =
+    customShortcutProfileName.trim() || "My Workflow";
+
   const isCustomShortcutProfileActive = Boolean(
     customShortcutProfile &&
     customShortcutProfile.keyboardModeEnabled === keyboardModeEnabled &&
     customShortcutProfile.showShortcutHelp === showShortcutHelp &&
     customShortcutProfile.patternPreviewMode === patternPreviewMode &&
     customShortcutProfile.macroApplyMode === macroApplyMode,
+  );
+
+  const hasCustomShortcutUnsavedChanges = Boolean(
+    !customShortcutProfile ||
+    customShortcutProfile.name !== normalizedCustomShortcutProfileName ||
+    customShortcutProfile.keyboardModeEnabled !== keyboardModeEnabled ||
+    customShortcutProfile.showShortcutHelp !== showShortcutHelp ||
+    customShortcutProfile.patternPreviewMode !== patternPreviewMode ||
+    customShortcutProfile.macroApplyMode !== macroApplyMode,
   );
 
   const applyShortcutProfile = (profileId: ShortcutProfileId) => {
@@ -450,7 +474,7 @@ export function SampleBrowserPanel({
   };
 
   const saveCustomShortcutProfile = () => {
-    const name = customShortcutProfileName.trim() || "My Workflow";
+    const name = normalizedCustomShortcutProfileName;
     const profile: ShortcutProfileState = {
       name,
       keyboardModeEnabled,
@@ -1447,6 +1471,12 @@ export function SampleBrowserPanel({
               <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
                 T: Pattern Stutter
               </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                Shift+S: Save custom profile
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                Shift+O: Load custom profile
+              </div>
               <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>
                 Press ? to toggle this panel.
               </div>
@@ -1544,18 +1574,57 @@ export function SampleBrowserPanel({
             <button
               type="button"
               onClick={saveCustomShortcutProfile}
+              disabled={!hasCustomShortcutUnsavedChanges}
               style={{
                 border: "1px solid rgba(0,255,136,0.34)",
                 borderRadius: 8,
-                background: "rgba(0,255,136,0.1)",
-                color: "#b6ffdb",
+                background: hasCustomShortcutUnsavedChanges
+                  ? "rgba(0,255,136,0.1)"
+                  : "rgba(255,255,255,0.04)",
+                color: hasCustomShortcutUnsavedChanges
+                  ? "#b6ffdb"
+                  : "rgba(255,255,255,0.35)",
                 fontSize: 11,
                 padding: "6px 10px",
-                cursor: "pointer",
+                cursor: hasCustomShortcutUnsavedChanges
+                  ? "pointer"
+                  : "not-allowed",
                 whiteSpace: "nowrap",
               }}
+              title={
+                hasCustomShortcutUnsavedChanges
+                  ? "Save current shortcut setup"
+                  : "No new changes to save"
+              }
             >
               Save Current
+            </button>
+            <button
+              type="button"
+              onClick={loadCustomShortcutProfile}
+              disabled={!customShortcutProfile || isCustomShortcutProfileActive}
+              style={{
+                border: "1px solid rgba(122,230,255,0.3)",
+                borderRadius: 8,
+                background:
+                  !customShortcutProfile || isCustomShortcutProfileActive
+                    ? "rgba(255,255,255,0.04)"
+                    : "rgba(122,230,255,0.1)",
+                color:
+                  !customShortcutProfile || isCustomShortcutProfileActive
+                    ? "rgba(255,255,255,0.35)"
+                    : "#c6f5ff",
+                fontSize: 11,
+                padding: "6px 10px",
+                cursor:
+                  !customShortcutProfile || isCustomShortcutProfileActive
+                    ? "not-allowed"
+                    : "pointer",
+                whiteSpace: "nowrap",
+              }}
+              title="Restore saved custom shortcut profile"
+            >
+              Restore
             </button>
             <button
               type="button"
@@ -1587,7 +1656,9 @@ export function SampleBrowserPanel({
             }}
           >
             {customShortcutProfile
-              ? `Saved profile: ${customShortcutProfile.name}`
+              ? hasCustomShortcutUnsavedChanges
+                ? `Saved profile: ${customShortcutProfile.name} (unsaved changes)`
+                : `Saved profile: ${customShortcutProfile.name}`
               : "Save the current shortcut setup as a reusable profile."}
           </div>
 
