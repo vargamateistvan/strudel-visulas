@@ -487,7 +487,7 @@ function loadSoundDependencies(): Promise<void> {
       registerSoundfonts();
 
       // Main sample ecosystem used by strudel patterns
-      await samples(DIRT_SAMPLES_MANIFEST_URL);
+      await samples(DIRT_SAMPLES_MANIFEST_URL, DIRT_SAMPLES_BASE_URL);
 
       // Compatibility aliases for legacy bank("RolandTR909") patterns
       await samples({
