@@ -3,11 +3,13 @@ import React from "react";
 type HeaderIconButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
   size?: number;
+  buttonSize?: number;
 };
 
 export function HeaderIconButton({
   active,
   size = 16,
+  buttonSize = 40,
   style,
   children,
   ...props
@@ -16,8 +18,8 @@ export function HeaderIconButton({
     <button
       {...props}
       style={{
-        width: 40,
-        height: 40,
+        width: buttonSize,
+        height: buttonSize,
         padding: 0,
         borderRadius: 6,
         border: active

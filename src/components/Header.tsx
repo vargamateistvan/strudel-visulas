@@ -250,10 +250,11 @@ export const Header: React.FC<HeaderProps> = (props) => {
   }, [onMobileAdvancedOpenChange, isMobile]);
 
   const iconStyle = {
-    width: 16,
-    height: 16,
+    width: isMobile ? 14 : 16,
+    height: isMobile ? 14 : 16,
     display: "block",
   } as const;
+  const headerButtonSize = isMobile ? 34 : 40;
 
   return (
     <header
@@ -263,8 +264,10 @@ export const Header: React.FC<HeaderProps> = (props) => {
         left: 0,
         right: 0,
         zIndex: 40,
-        minHeight: isMobile ? 54 : 52,
-        padding: isMobile ? "8px 10px" : "8px 14px",
+        minHeight: isMobile ? 50 : 52,
+        padding: isMobile
+          ? "calc(env(safe-area-inset-top, 0px) + 6px) 8px 8px"
+          : "8px 14px",
         background:
           "linear-gradient(180deg, rgba(10,10,14,0.96), rgba(10,10,14,0.9))",
         backdropFilter: "blur(20px)",
@@ -297,15 +300,18 @@ export const Header: React.FC<HeaderProps> = (props) => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: isMobile ? 6 : 8,
             overflowX: "auto",
             paddingBottom: 2,
+            scrollbarWidth: "none",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {isPlaying ? (
             <HeaderIconButton
               onClick={onStop}
               active
+              buttonSize={headerButtonSize}
               title="Stop"
               aria-label="Stop"
             >
@@ -318,6 +324,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
               onClick={onPlay}
               disabled={isLoading}
               active={!isLoading}
+              buttonSize={headerButtonSize}
               style={{
                 color: isLoading ? "#6bd6ad" : "#00ff88",
                 border: "1px solid rgba(0,255,136,0.3)",
@@ -340,6 +347,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
             <HeaderIconButton
               onClick={onRecordStop}
               active
+              buttonSize={headerButtonSize}
               style={{
                 border: "1px solid rgba(255,122,135,0.45)",
                 background: "rgba(255,122,135,0.14)",
@@ -357,6 +365,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
               onClick={onRecordStart}
               disabled={!canRecord}
               active={canRecord}
+              buttonSize={headerButtonSize}
               style={{
                 border: canRecord
                   ? "1px solid rgba(255,122,135,0.45)"
@@ -385,6 +394,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
 
           <HeaderIconButton
             onClick={onPresetsOpen}
+            buttonSize={headerButtonSize}
             title="Library"
             aria-label="Library"
           >
@@ -404,6 +414,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
 
           <HeaderIconButton
             onClick={onSettingsOpen}
+            buttonSize={headerButtonSize}
             title="Audio settings"
             aria-label="Audio settings"
           >
@@ -430,6 +441,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
 
           <HeaderIconButton
             onClick={onHowItWorksOpen}
+            buttonSize={headerButtonSize}
             title="How it works"
             aria-label="How it works"
           >

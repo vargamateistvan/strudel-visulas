@@ -64,7 +64,8 @@ export function EditorViewport({
       style={{
         width: "100%",
         maxWidth: 760,
-        height: "82vh",
+        height: "100%",
+        maxHeight: "100%",
         display: "flex",
         flexDirection: "column",
       }}

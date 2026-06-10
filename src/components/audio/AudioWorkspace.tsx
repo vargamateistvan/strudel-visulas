@@ -87,13 +87,19 @@ export function AudioWorkspace({
       <div
         style={{
           position: "absolute",
-          top: isMobile ? (mobileHeaderExpanded ? 142 : 96) : 48,
+          top: isMobile
+            ? `calc(env(safe-area-inset-top, 0px) + ${
+                mobileHeaderExpanded ? 110 : 70
+              }px)`
+            : 48,
           left: 0,
           right: 0,
           bottom: 0,
-          padding: isMobile ? 10 : 24,
+          padding: isMobile
+            ? "8px 8px calc(env(safe-area-inset-bottom, 0px) + 10px)"
+            : 24,
           display: "flex",
-          alignItems: "center",
+          alignItems: "stretch",
           justifyContent: "center",
         }}
       >

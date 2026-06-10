@@ -12,8 +12,9 @@ export const Layout: React.FC<LayoutProps> = ({
   <div
     style={{
       position: "relative",
-      width: "100vw",
-      height: "100vh",
+      width: "100%",
+      height: "100dvh",
+      minHeight: "100dvh",
       overflow: "hidden",
       background: "#050508",
     }}
