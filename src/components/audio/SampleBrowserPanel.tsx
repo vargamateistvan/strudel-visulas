@@ -20,6 +20,13 @@ type FxApplyTarget = "selection" | "document" | "none";
 type MacroApplyMode = "layer" | "replace";
 type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
 type ShortcutProfileId = "live-coding" | "mouse-only" | "preview-heavy";
+type ShortcutProfileState = {
+  name: string;
+  keyboardModeEnabled: boolean;
+  showShortcutHelp: boolean;
+  patternPreviewMode: boolean;
+  macroApplyMode: MacroApplyMode;
+};
 
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
@@ -27,6 +34,8 @@ const PATTERN_PREVIEW_MODE_KEY =
 const SHORTCUT_HELP_OPEN_KEY = "strudel:sample-workspace:shortcut-help-open:v1";
 const KEYBOARD_MODE_ENABLED_KEY =
   "strudel:sample-workspace:keyboard-mode-enabled:v1";
+const CUSTOM_SHORTCUT_PROFILE_KEY =
+  "strudel:sample-workspace:custom-shortcut-profile:v1";
 
 function readMacroApplyMode(): MacroApplyMode {
   if (typeof window === "undefined") return "layer";
@@ -53,6 +62,36 @@ function readKeyboardModeEnabled(): boolean {
   const saved = localStorage.getItem(KEYBOARD_MODE_ENABLED_KEY);
   if (saved === null) return true;
   return saved === "true";
+}
+
+function readCustomShortcutProfile(): ShortcutProfileState | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const saved = localStorage.getItem(CUSTOM_SHORTCUT_PROFILE_KEY);
+    if (!saved) return null;
+
+    const parsed = JSON.parse(saved) as Partial<ShortcutProfileState>;
+    if (
+      typeof parsed.name !== "string" ||
+      typeof parsed.keyboardModeEnabled !== "boolean" ||
+      typeof parsed.showShortcutHelp !== "boolean" ||
+      typeof parsed.patternPreviewMode !== "boolean" ||
+      (parsed.macroApplyMode !== "layer" && parsed.macroApplyMode !== "replace")
+    ) {
+      return null;
+    }
+
+    return {
+      name: parsed.name,
+      keyboardModeEnabled: parsed.keyboardModeEnabled,
+      showShortcutHelp: parsed.showShortcutHelp,
+      patternPreviewMode: parsed.patternPreviewMode,
+      macroApplyMode: parsed.macroApplyMode,
+    };
+  } catch {
+    return null;
+  }
 }
 
 type SampleBrowserPanelProps = {
@@ -215,6 +254,11 @@ export function SampleBrowserPanel({
   const [keyboardModeEnabled, setKeyboardModeEnabled] = useState<boolean>(
     readKeyboardModeEnabled,
   );
+  const [customShortcutProfile, setCustomShortcutProfile] =
+    useState<ShortcutProfileState | null>(readCustomShortcutProfile);
+  const [customShortcutProfileName, setCustomShortcutProfileName] = useState(
+    () => readCustomShortcutProfile()?.name ?? "My Workflow",
+  );
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
@@ -243,6 +287,20 @@ export function SampleBrowserPanel({
       String(keyboardModeEnabled),
     );
   }, [keyboardModeEnabled]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!customShortcutProfile) {
+      localStorage.removeItem(CUSTOM_SHORTCUT_PROFILE_KEY);
+      return;
+    }
+
+    localStorage.setItem(
+      CUSTOM_SHORTCUT_PROFILE_KEY,
+      JSON.stringify(customShortcutProfile),
+    );
+  }, [customShortcutProfile]);
 
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
@@ -347,6 +405,16 @@ export function SampleBrowserPanel({
   };
 
   const getActiveShortcutProfileId = (): ShortcutProfileId | null => {
+    if (
+      customShortcutProfile &&
+      customShortcutProfile.keyboardModeEnabled === keyboardModeEnabled &&
+      customShortcutProfile.showShortcutHelp === showShortcutHelp &&
+      customShortcutProfile.patternPreviewMode === patternPreviewMode &&
+      customShortcutProfile.macroApplyMode === macroApplyMode
+    ) {
+      return null;
+    }
+
     const matchedProfile = SHORTCUT_PROFILES.find(
       (profile) =>
         profile.keyboardModeEnabled === keyboardModeEnabled &&
@@ -358,6 +426,14 @@ export function SampleBrowserPanel({
   };
 
   const activeShortcutProfileId = getActiveShortcutProfileId();
+
+  const isCustomShortcutProfileActive = Boolean(
+    customShortcutProfile &&
+    customShortcutProfile.keyboardModeEnabled === keyboardModeEnabled &&
+    customShortcutProfile.showShortcutHelp === showShortcutHelp &&
+    customShortcutProfile.patternPreviewMode === patternPreviewMode &&
+    customShortcutProfile.macroApplyMode === macroApplyMode,
+  );
 
   const applyShortcutProfile = (profileId: ShortcutProfileId) => {
     const profile = SHORTCUT_PROFILES.find((entry) => entry.id === profileId);
@@ -371,6 +447,45 @@ export function SampleBrowserPanel({
     setMacroApplyMode(profile.macroApplyMode);
     setPendingPatternTool(null);
     setFxApplyHint(`Shortcut profile applied: ${profile.label}.`);
+  };
+
+  const saveCustomShortcutProfile = () => {
+    const name = customShortcutProfileName.trim() || "My Workflow";
+    const profile: ShortcutProfileState = {
+      name,
+      keyboardModeEnabled,
+      showShortcutHelp,
+      patternPreviewMode,
+      macroApplyMode,
+    };
+
+    setCustomShortcutProfile(profile);
+    setCustomShortcutProfileName(name);
+    setFxApplyHint(`Saved shortcut profile: ${name}.`);
+  };
+
+  const loadCustomShortcutProfile = () => {
+    if (!customShortcutProfile) {
+      setFxApplyHint("No custom shortcut profile saved yet.");
+      return;
+    }
+
+    setKeyboardModeEnabled(customShortcutProfile.keyboardModeEnabled);
+    setShowShortcutHelp(customShortcutProfile.showShortcutHelp);
+    setPatternPreviewMode(customShortcutProfile.patternPreviewMode);
+    setMacroApplyMode(customShortcutProfile.macroApplyMode);
+    setPendingPatternTool(null);
+    setCustomShortcutProfileName(customShortcutProfile.name);
+    setFxApplyHint(`Loaded shortcut profile: ${customShortcutProfile.name}.`);
+  };
+
+  const deleteCustomShortcutProfile = () => {
+    if (!customShortcutProfile) {
+      return;
+    }
+
+    setCustomShortcutProfile(null);
+    setFxApplyHint(`Deleted shortcut profile: ${customShortcutProfile.name}.`);
   };
 
   const handlePatternTool = (tool: PatternTool) => {
@@ -1374,6 +1489,106 @@ export function SampleBrowserPanel({
                 </button>
               );
             })}
+            <button
+              type="button"
+              onClick={loadCustomShortcutProfile}
+              disabled={!customShortcutProfile}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background: isCustomShortcutProfileActive
+                  ? "rgba(122,230,255,0.18)"
+                  : "transparent",
+                color: isCustomShortcutProfileActive
+                  ? "#c6f5ff"
+                  : customShortcutProfile
+                    ? "rgba(255,255,255,0.7)"
+                    : "rgba(255,255,255,0.35)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: customShortcutProfile ? "pointer" : "not-allowed",
+              }}
+              title={
+                customShortcutProfile
+                  ? `Load saved shortcut profile: ${customShortcutProfile.name}`
+                  : "Save a custom shortcut profile first"
+              }
+            >
+              {customShortcutProfile ? customShortcutProfile.name : "Custom"}
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto auto",
+              gap: 6,
+            }}
+          >
+            <input
+              value={customShortcutProfileName}
+              onChange={(event) =>
+                setCustomShortcutProfileName(event.target.value)
+              }
+              placeholder="Profile name"
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 11,
+                padding: "6px 8px",
+                fontFamily: '"JetBrains Mono", monospace',
+              }}
+            />
+            <button
+              type="button"
+              onClick={saveCustomShortcutProfile}
+              style={{
+                border: "1px solid rgba(0,255,136,0.34)",
+                borderRadius: 8,
+                background: "rgba(0,255,136,0.1)",
+                color: "#b6ffdb",
+                fontSize: 11,
+                padding: "6px 10px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Save Current
+            </button>
+            <button
+              type="button"
+              onClick={deleteCustomShortcutProfile}
+              disabled={!customShortcutProfile}
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.04)",
+                color: customShortcutProfile
+                  ? "#d6deea"
+                  : "rgba(255,255,255,0.35)",
+                fontSize: 11,
+                padding: "6px 10px",
+                cursor: customShortcutProfile ? "pointer" : "not-allowed",
+                whiteSpace: "nowrap",
+              }}
+              title="Delete the saved custom shortcut profile"
+            >
+              Delete
+            </button>
+          </div>
+
+          <div
+            style={{
+              color: "rgba(255,255,255,0.58)",
+              fontSize: 10,
+              fontFamily: '"JetBrains Mono", monospace',
+            }}
+          >
+            {customShortcutProfile
+              ? `Saved profile: ${customShortcutProfile.name}`
+              : "Save the current shortcut setup as a reusable profile."}
           </div>
 
           {SYNTH_FX_MACROS.map((macro) => (
