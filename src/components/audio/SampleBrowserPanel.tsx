@@ -19,6 +19,7 @@ type AuditionStatus = "idle" | "loading" | "ready" | "error";
 type FxApplyTarget = "selection" | "document" | "none";
 type MacroApplyMode = "layer" | "replace";
 type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
+type ShortcutProfileId = "live-coding" | "mouse-only" | "preview-heavy";
 
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
@@ -109,6 +110,40 @@ const PATTERN_TOOL_META: Record<
     preview: "stack((<selection>).fast(2), (<selection>).fast(4).gain(0.55))",
   },
 };
+
+const SHORTCUT_PROFILES: Array<{
+  id: ShortcutProfileId;
+  label: string;
+  keyboardModeEnabled: boolean;
+  showShortcutHelp: boolean;
+  patternPreviewMode: boolean;
+  macroApplyMode: MacroApplyMode;
+}> = [
+  {
+    id: "live-coding",
+    label: "Live Coding",
+    keyboardModeEnabled: true,
+    showShortcutHelp: false,
+    patternPreviewMode: false,
+    macroApplyMode: "layer",
+  },
+  {
+    id: "mouse-only",
+    label: "Mouse-Only",
+    keyboardModeEnabled: false,
+    showShortcutHelp: true,
+    patternPreviewMode: true,
+    macroApplyMode: "layer",
+  },
+  {
+    id: "preview-heavy",
+    label: "Preview-Heavy",
+    keyboardModeEnabled: true,
+    showShortcutHelp: false,
+    patternPreviewMode: true,
+    macroApplyMode: "replace",
+  },
+];
 
 function badgeStyle(status: AuditionStatus) {
   if (status === "loading") {
@@ -309,6 +344,33 @@ export function SampleBrowserPanel({
       return;
     }
     setFxApplyHint("Editor is not ready yet. Try again in a moment.");
+  };
+
+  const getActiveShortcutProfileId = (): ShortcutProfileId | null => {
+    const matchedProfile = SHORTCUT_PROFILES.find(
+      (profile) =>
+        profile.keyboardModeEnabled === keyboardModeEnabled &&
+        profile.showShortcutHelp === showShortcutHelp &&
+        profile.patternPreviewMode === patternPreviewMode &&
+        profile.macroApplyMode === macroApplyMode,
+    );
+    return matchedProfile?.id ?? null;
+  };
+
+  const activeShortcutProfileId = getActiveShortcutProfileId();
+
+  const applyShortcutProfile = (profileId: ShortcutProfileId) => {
+    const profile = SHORTCUT_PROFILES.find((entry) => entry.id === profileId);
+    if (!profile) {
+      return;
+    }
+
+    setKeyboardModeEnabled(profile.keyboardModeEnabled);
+    setShowShortcutHelp(profile.showShortcutHelp);
+    setPatternPreviewMode(profile.patternPreviewMode);
+    setMacroApplyMode(profile.macroApplyMode);
+    setPendingPatternTool(null);
+    setFxApplyHint(`Shortcut profile applied: ${profile.label}.`);
   };
 
   const handlePatternTool = (tool: PatternTool) => {
@@ -1278,6 +1340,41 @@ export function SampleBrowserPanel({
               </div>
             </div>
           )}
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: 999,
+              padding: 3,
+              background: "rgba(255,255,255,0.04)",
+            }}
+          >
+            {SHORTCUT_PROFILES.map((profile) => {
+              const active = activeShortcutProfileId === profile.id;
+              return (
+                <button
+                  key={profile.id}
+                  type="button"
+                  onClick={() => applyShortcutProfile(profile.id)}
+                  style={{
+                    border: "none",
+                    borderRadius: 999,
+                    background: active ? "rgba(0,255,136,0.18)" : "transparent",
+                    color: active ? "#bcffe0" : "rgba(255,255,255,0.7)",
+                    fontSize: 10,
+                    padding: "3px 8px",
+                    cursor: "pointer",
+                  }}
+                  title={`Apply ${profile.label} shortcut profile`}
+                >
+                  {profile.label}
+                </button>
+              );
+            })}
+          </div>
 
           {SYNTH_FX_MACROS.map((macro) => (
             <div key={macro.id} style={{ display: "flex", gap: 4 }}>
