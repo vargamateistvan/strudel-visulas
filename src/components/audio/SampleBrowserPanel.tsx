@@ -27,6 +27,9 @@ type ShortcutProfileState = {
   patternPreviewMode: boolean;
   macroApplyMode: MacroApplyMode;
 };
+type ShortcutProfileEntry = ShortcutProfileState & {
+  id: string;
+};
 
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
@@ -36,6 +39,10 @@ const KEYBOARD_MODE_ENABLED_KEY =
   "strudel:sample-workspace:keyboard-mode-enabled:v1";
 const CUSTOM_SHORTCUT_PROFILE_KEY =
   "strudel:sample-workspace:custom-shortcut-profile:v1";
+const CUSTOM_SHORTCUT_PROFILES_KEY =
+  "strudel:sample-workspace:custom-shortcut-profiles:v1";
+const SELECTED_CUSTOM_SHORTCUT_PROFILE_ID_KEY =
+  "strudel:sample-workspace:selected-custom-shortcut-profile-id:v1";
 
 function readMacroApplyMode(): MacroApplyMode {
   if (typeof window === "undefined") return "layer";
@@ -92,6 +99,68 @@ function readCustomShortcutProfile(): ShortcutProfileState | null {
   } catch {
     return null;
   }
+}
+
+function isShortcutProfileState(value: unknown): value is ShortcutProfileState {
+  if (!value || typeof value !== "object") return false;
+  const profile = value as Partial<ShortcutProfileState>;
+  return (
+    typeof profile.name === "string" &&
+    typeof profile.keyboardModeEnabled === "boolean" &&
+    typeof profile.showShortcutHelp === "boolean" &&
+    typeof profile.patternPreviewMode === "boolean" &&
+    (profile.macroApplyMode === "layer" || profile.macroApplyMode === "replace")
+  );
+}
+
+function readCustomShortcutProfiles(): ShortcutProfileEntry[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const saved = localStorage.getItem(CUSTOM_SHORTCUT_PROFILES_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item, index) => {
+            if (!item || typeof item !== "object") return null;
+            const itemRecord = item as Record<string, unknown>;
+            const candidate = item as unknown;
+            if (!isShortcutProfileState(candidate)) return null;
+            const id =
+              typeof itemRecord["id"] === "string" &&
+              itemRecord["id"].length > 0
+                ? itemRecord["id"]
+                : `legacy-${index + 1}`;
+            return {
+              id,
+              name: candidate.name,
+              keyboardModeEnabled: candidate.keyboardModeEnabled,
+              showShortcutHelp: candidate.showShortcutHelp,
+              patternPreviewMode: candidate.patternPreviewMode,
+              macroApplyMode: candidate.macroApplyMode,
+            };
+          })
+          .filter((item): item is ShortcutProfileEntry => Boolean(item));
+      }
+    }
+  } catch {
+    // Ignore invalid data and attempt legacy migration.
+  }
+
+  const legacyProfile = readCustomShortcutProfile();
+  if (!legacyProfile) return [];
+  return [{ id: "legacy-1", ...legacyProfile }];
+}
+
+function readSelectedCustomShortcutProfileId(): string | null {
+  if (typeof window === "undefined") return null;
+  const saved = localStorage.getItem(SELECTED_CUSTOM_SHORTCUT_PROFILE_ID_KEY);
+  return saved && saved.length > 0 ? saved : null;
+}
+
+function createCustomShortcutProfileId() {
+  return `profile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 type SampleBrowserPanelProps = {
@@ -254,10 +323,20 @@ export function SampleBrowserPanel({
   const [keyboardModeEnabled, setKeyboardModeEnabled] = useState<boolean>(
     readKeyboardModeEnabled,
   );
-  const [customShortcutProfile, setCustomShortcutProfile] =
-    useState<ShortcutProfileState | null>(readCustomShortcutProfile);
+  const [customShortcutProfiles, setCustomShortcutProfiles] = useState<
+    ShortcutProfileEntry[]
+  >(readCustomShortcutProfiles);
+  const [selectedCustomShortcutProfileId, setSelectedCustomShortcutProfileId] =
+    useState<string | null>(readSelectedCustomShortcutProfileId);
   const [customShortcutProfileName, setCustomShortcutProfileName] = useState(
-    () => readCustomShortcutProfile()?.name ?? "My Workflow",
+    () => {
+      const profiles = readCustomShortcutProfiles();
+      const savedSelectedId = readSelectedCustomShortcutProfileId();
+      const selected = profiles.find(
+        (profile) => profile.id === savedSelectedId,
+      );
+      return selected?.name ?? profiles[0]?.name ?? "My Workflow";
+    },
   );
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
@@ -291,16 +370,32 @@ export function SampleBrowserPanel({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if (!customShortcutProfile) {
-      localStorage.removeItem(CUSTOM_SHORTCUT_PROFILE_KEY);
+    if (customShortcutProfiles.length === 0) {
+      localStorage.removeItem(CUSTOM_SHORTCUT_PROFILES_KEY);
       return;
     }
 
     localStorage.setItem(
-      CUSTOM_SHORTCUT_PROFILE_KEY,
-      JSON.stringify(customShortcutProfile),
+      CUSTOM_SHORTCUT_PROFILES_KEY,
+      JSON.stringify(customShortcutProfiles),
     );
-  }, [customShortcutProfile]);
+    // Clear deprecated single-profile storage once migrated.
+    localStorage.removeItem(CUSTOM_SHORTCUT_PROFILE_KEY);
+  }, [customShortcutProfiles]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!selectedCustomShortcutProfileId) {
+      localStorage.removeItem(SELECTED_CUSTOM_SHORTCUT_PROFILE_ID_KEY);
+      return;
+    }
+
+    localStorage.setItem(
+      SELECTED_CUSTOM_SHORTCUT_PROFILE_ID_KEY,
+      selectedCustomShortcutProfileId,
+    );
+  }, [selectedCustomShortcutProfileId]);
 
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
@@ -417,12 +512,15 @@ export function SampleBrowserPanel({
   };
 
   const getActiveShortcutProfileId = (): ShortcutProfileId | null => {
+    const selectedProfile = customShortcutProfiles.find(
+      (profile) => profile.id === selectedCustomShortcutProfileId,
+    );
     if (
-      customShortcutProfile &&
-      customShortcutProfile.keyboardModeEnabled === keyboardModeEnabled &&
-      customShortcutProfile.showShortcutHelp === showShortcutHelp &&
-      customShortcutProfile.patternPreviewMode === patternPreviewMode &&
-      customShortcutProfile.macroApplyMode === macroApplyMode
+      selectedProfile &&
+      selectedProfile.keyboardModeEnabled === keyboardModeEnabled &&
+      selectedProfile.showShortcutHelp === showShortcutHelp &&
+      selectedProfile.patternPreviewMode === patternPreviewMode &&
+      selectedProfile.macroApplyMode === macroApplyMode
     ) {
       return null;
     }
@@ -439,24 +537,39 @@ export function SampleBrowserPanel({
 
   const activeShortcutProfileId = getActiveShortcutProfileId();
 
+  const fallbackSelectedCustomShortcutProfileId = customShortcutProfiles.some(
+    (profile) => profile.id === selectedCustomShortcutProfileId,
+  )
+    ? selectedCustomShortcutProfileId
+    : (customShortcutProfiles[0]?.id ?? null);
+
+  const selectedCustomShortcutProfile = customShortcutProfiles.find(
+    (profile) => profile.id === fallbackSelectedCustomShortcutProfileId,
+  );
+
+  const selectedCustomShortcutProfileIndex = customShortcutProfiles.findIndex(
+    (profile) => profile.id === fallbackSelectedCustomShortcutProfileId,
+  );
+
   const normalizedCustomShortcutProfileName =
     customShortcutProfileName.trim() || "My Workflow";
 
   const isCustomShortcutProfileActive = Boolean(
-    customShortcutProfile &&
-    customShortcutProfile.keyboardModeEnabled === keyboardModeEnabled &&
-    customShortcutProfile.showShortcutHelp === showShortcutHelp &&
-    customShortcutProfile.patternPreviewMode === patternPreviewMode &&
-    customShortcutProfile.macroApplyMode === macroApplyMode,
+    selectedCustomShortcutProfile &&
+    selectedCustomShortcutProfile.keyboardModeEnabled === keyboardModeEnabled &&
+    selectedCustomShortcutProfile.showShortcutHelp === showShortcutHelp &&
+    selectedCustomShortcutProfile.patternPreviewMode === patternPreviewMode &&
+    selectedCustomShortcutProfile.macroApplyMode === macroApplyMode,
   );
 
   const hasCustomShortcutUnsavedChanges = Boolean(
-    !customShortcutProfile ||
-    customShortcutProfile.name !== normalizedCustomShortcutProfileName ||
-    customShortcutProfile.keyboardModeEnabled !== keyboardModeEnabled ||
-    customShortcutProfile.showShortcutHelp !== showShortcutHelp ||
-    customShortcutProfile.patternPreviewMode !== patternPreviewMode ||
-    customShortcutProfile.macroApplyMode !== macroApplyMode,
+    !selectedCustomShortcutProfile ||
+    selectedCustomShortcutProfile.name !==
+      normalizedCustomShortcutProfileName ||
+    selectedCustomShortcutProfile.keyboardModeEnabled !== keyboardModeEnabled ||
+    selectedCustomShortcutProfile.showShortcutHelp !== showShortcutHelp ||
+    selectedCustomShortcutProfile.patternPreviewMode !== patternPreviewMode ||
+    selectedCustomShortcutProfile.macroApplyMode !== macroApplyMode,
   );
 
   const applyShortcutProfile = (profileId: ShortcutProfileId) => {
@@ -475,7 +588,7 @@ export function SampleBrowserPanel({
 
   const saveCustomShortcutProfile = () => {
     const name = normalizedCustomShortcutProfileName;
-    const profile: ShortcutProfileState = {
+    const profileState: ShortcutProfileState = {
       name,
       keyboardModeEnabled,
       showShortcutHelp,
@@ -483,33 +596,93 @@ export function SampleBrowserPanel({
       macroApplyMode,
     };
 
-    setCustomShortcutProfile(profile);
+    const hasExplicitSelectedProfile = customShortcutProfiles.some(
+      (profile) => profile.id === selectedCustomShortcutProfileId,
+    );
+
+    if (hasExplicitSelectedProfile && selectedCustomShortcutProfileId) {
+      setCustomShortcutProfiles((prev) =>
+        prev.map((profile) =>
+          profile.id === selectedCustomShortcutProfileId
+            ? { ...profile, ...profileState }
+            : profile,
+        ),
+      );
+    } else {
+      const newProfile: ShortcutProfileEntry = {
+        id: createCustomShortcutProfileId(),
+        ...profileState,
+      };
+      setCustomShortcutProfiles((prev) => [...prev, newProfile]);
+      setSelectedCustomShortcutProfileId(newProfile.id);
+    }
+
     setCustomShortcutProfileName(name);
     setFxApplyHint(`Saved shortcut profile: ${name}.`);
   };
 
   const loadCustomShortcutProfile = () => {
-    if (!customShortcutProfile) {
+    if (!selectedCustomShortcutProfile) {
       setFxApplyHint("No custom shortcut profile saved yet.");
       return;
     }
 
-    setKeyboardModeEnabled(customShortcutProfile.keyboardModeEnabled);
-    setShowShortcutHelp(customShortcutProfile.showShortcutHelp);
-    setPatternPreviewMode(customShortcutProfile.patternPreviewMode);
-    setMacroApplyMode(customShortcutProfile.macroApplyMode);
+    setKeyboardModeEnabled(selectedCustomShortcutProfile.keyboardModeEnabled);
+    setShowShortcutHelp(selectedCustomShortcutProfile.showShortcutHelp);
+    setPatternPreviewMode(selectedCustomShortcutProfile.patternPreviewMode);
+    setMacroApplyMode(selectedCustomShortcutProfile.macroApplyMode);
     setPendingPatternTool(null);
-    setCustomShortcutProfileName(customShortcutProfile.name);
-    setFxApplyHint(`Loaded shortcut profile: ${customShortcutProfile.name}.`);
+    setCustomShortcutProfileName(selectedCustomShortcutProfile.name);
+    setFxApplyHint(
+      `Loaded shortcut profile: ${selectedCustomShortcutProfile.name}.`,
+    );
   };
 
   const deleteCustomShortcutProfile = () => {
-    if (!customShortcutProfile) {
+    if (
+      !fallbackSelectedCustomShortcutProfileId ||
+      !selectedCustomShortcutProfile
+    ) {
       return;
     }
 
-    setCustomShortcutProfile(null);
-    setFxApplyHint(`Deleted shortcut profile: ${customShortcutProfile.name}.`);
+    const deletedName = selectedCustomShortcutProfile.name;
+    setCustomShortcutProfiles((prev) =>
+      prev.filter(
+        (profile) => profile.id !== fallbackSelectedCustomShortcutProfileId,
+      ),
+    );
+    setSelectedCustomShortcutProfileId(null);
+    setCustomShortcutProfileName("My Workflow");
+    setFxApplyHint(`Deleted shortcut profile: ${deletedName}.`);
+  };
+
+  const moveSelectedCustomShortcutProfile = (direction: "up" | "down") => {
+    if (selectedCustomShortcutProfileIndex < 0) {
+      return;
+    }
+
+    const targetIndex =
+      direction === "up"
+        ? selectedCustomShortcutProfileIndex - 1
+        : selectedCustomShortcutProfileIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= customShortcutProfiles.length) {
+      return;
+    }
+
+    setCustomShortcutProfiles((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(selectedCustomShortcutProfileIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+
+    if (selectedCustomShortcutProfile) {
+      setFxApplyHint(
+        `Moved shortcut profile ${direction}: ${selectedCustomShortcutProfile.name}.`,
+      );
+    }
   };
 
   const handlePatternTool = (tool: PatternTool) => {
@@ -1521,8 +1694,14 @@ export function SampleBrowserPanel({
             })}
             <button
               type="button"
-              onClick={loadCustomShortcutProfile}
-              disabled={!customShortcutProfile}
+              onClick={() => {
+                if (selectedCustomShortcutProfileId) {
+                  loadCustomShortcutProfile();
+                  return;
+                }
+                setFxApplyHint("Select a custom profile first.");
+              }}
+              disabled={!selectedCustomShortcutProfile}
               style={{
                 border: "none",
                 borderRadius: 999,
@@ -1531,30 +1710,73 @@ export function SampleBrowserPanel({
                   : "transparent",
                 color: isCustomShortcutProfileActive
                   ? "#c6f5ff"
-                  : customShortcutProfile
+                  : selectedCustomShortcutProfile
                     ? "rgba(255,255,255,0.7)"
                     : "rgba(255,255,255,0.35)",
                 fontSize: 10,
                 padding: "3px 8px",
-                cursor: customShortcutProfile ? "pointer" : "not-allowed",
+                cursor: selectedCustomShortcutProfile
+                  ? "pointer"
+                  : "not-allowed",
               }}
               title={
-                customShortcutProfile
-                  ? `Load saved shortcut profile: ${customShortcutProfile.name}`
-                  : "Save a custom shortcut profile first"
+                selectedCustomShortcutProfile
+                  ? `Load selected profile: ${selectedCustomShortcutProfile.name}`
+                  : "Save and select a custom profile first"
               }
             >
-              {customShortcutProfile ? customShortcutProfile.name : "Custom"}
+              {selectedCustomShortcutProfile
+                ? selectedCustomShortcutProfile.name
+                : "Custom"}
             </button>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr auto auto",
+              gridTemplateColumns: "minmax(120px,1fr) minmax(120px,1fr)",
               gap: 6,
             }}
           >
+            <select
+              aria-label="Custom profile list"
+              value={selectedCustomShortcutProfileId ?? ""}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (!value) {
+                  setSelectedCustomShortcutProfileId(null);
+                  setCustomShortcutProfileName("My Workflow");
+                  return;
+                }
+                setSelectedCustomShortcutProfileId(value);
+                const selected = customShortcutProfiles.find(
+                  (profile) => profile.id === value,
+                );
+                if (selected) {
+                  setCustomShortcutProfileName(selected.name);
+                }
+              }}
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.05)",
+                color: "#d7e8fb",
+                fontSize: 11,
+                padding: "6px 8px",
+              }}
+            >
+              {customShortcutProfiles.length === 0 && (
+                <option value="">No custom profiles</option>
+              )}
+              {customShortcutProfiles.length > 0 && (
+                <option value="">New profile slot</option>
+              )}
+              {customShortcutProfiles.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.name}
+                </option>
+              ))}
+            </select>
             <input
               value={customShortcutProfileName}
               onChange={(event) =>
@@ -1571,6 +1793,16 @@ export function SampleBrowserPanel({
                 fontFamily: '"JetBrains Mono", monospace',
               }}
             />
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, auto)",
+              gap: 6,
+              justifyContent: "start",
+            }}
+          >
             <button
               type="button"
               onClick={saveCustomShortcutProfile}
@@ -1602,22 +1834,27 @@ export function SampleBrowserPanel({
             <button
               type="button"
               onClick={loadCustomShortcutProfile}
-              disabled={!customShortcutProfile || isCustomShortcutProfileActive}
+              disabled={
+                !selectedCustomShortcutProfile || isCustomShortcutProfileActive
+              }
               style={{
                 border: "1px solid rgba(122,230,255,0.3)",
                 borderRadius: 8,
                 background:
-                  !customShortcutProfile || isCustomShortcutProfileActive
+                  !selectedCustomShortcutProfile ||
+                  isCustomShortcutProfileActive
                     ? "rgba(255,255,255,0.04)"
                     : "rgba(122,230,255,0.1)",
                 color:
-                  !customShortcutProfile || isCustomShortcutProfileActive
+                  !selectedCustomShortcutProfile ||
+                  isCustomShortcutProfileActive
                     ? "rgba(255,255,255,0.35)"
                     : "#c6f5ff",
                 fontSize: 11,
                 padding: "6px 10px",
                 cursor:
-                  !customShortcutProfile || isCustomShortcutProfileActive
+                  !selectedCustomShortcutProfile ||
+                  isCustomShortcutProfileActive
                     ? "not-allowed"
                     : "pointer",
                 whiteSpace: "nowrap",
@@ -1628,21 +1865,79 @@ export function SampleBrowserPanel({
             </button>
             <button
               type="button"
-              onClick={deleteCustomShortcutProfile}
-              disabled={!customShortcutProfile}
+              onClick={() => moveSelectedCustomShortcutProfile("up")}
+              disabled={selectedCustomShortcutProfileIndex <= 0}
               style={{
                 border: "1px solid rgba(255,255,255,0.18)",
                 borderRadius: 8,
                 background: "rgba(255,255,255,0.04)",
-                color: customShortcutProfile
+                color:
+                  selectedCustomShortcutProfileIndex <= 0
+                    ? "rgba(255,255,255,0.35)"
+                    : "#d6deea",
+                fontSize: 11,
+                padding: "6px 10px",
+                cursor:
+                  selectedCustomShortcutProfileIndex <= 0
+                    ? "not-allowed"
+                    : "pointer",
+                whiteSpace: "nowrap",
+              }}
+              title="Move selected profile up"
+            >
+              Up
+            </button>
+            <button
+              type="button"
+              onClick={() => moveSelectedCustomShortcutProfile("down")}
+              disabled={
+                selectedCustomShortcutProfileIndex < 0 ||
+                selectedCustomShortcutProfileIndex >=
+                  customShortcutProfiles.length - 1
+              }
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.04)",
+                color:
+                  selectedCustomShortcutProfileIndex < 0 ||
+                  selectedCustomShortcutProfileIndex >=
+                    customShortcutProfiles.length - 1
+                    ? "rgba(255,255,255,0.35)"
+                    : "#d6deea",
+                fontSize: 11,
+                padding: "6px 10px",
+                cursor:
+                  selectedCustomShortcutProfileIndex < 0 ||
+                  selectedCustomShortcutProfileIndex >=
+                    customShortcutProfiles.length - 1
+                    ? "not-allowed"
+                    : "pointer",
+                whiteSpace: "nowrap",
+              }}
+              title="Move selected profile down"
+            >
+              Down
+            </button>
+            <button
+              type="button"
+              onClick={deleteCustomShortcutProfile}
+              disabled={!selectedCustomShortcutProfile}
+              style={{
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.04)",
+                color: selectedCustomShortcutProfile
                   ? "#d6deea"
                   : "rgba(255,255,255,0.35)",
                 fontSize: 11,
                 padding: "6px 10px",
-                cursor: customShortcutProfile ? "pointer" : "not-allowed",
+                cursor: selectedCustomShortcutProfile
+                  ? "pointer"
+                  : "not-allowed",
                 whiteSpace: "nowrap",
               }}
-              title="Delete the saved custom shortcut profile"
+              title="Delete selected custom shortcut profile"
             >
               Delete
             </button>
@@ -1655,11 +1950,13 @@ export function SampleBrowserPanel({
               fontFamily: '"JetBrains Mono", monospace',
             }}
           >
-            {customShortcutProfile
+            {selectedCustomShortcutProfile
               ? hasCustomShortcutUnsavedChanges
-                ? `Saved profile: ${customShortcutProfile.name} (unsaved changes)`
-                : `Saved profile: ${customShortcutProfile.name}`
-              : "Save the current shortcut setup as a reusable profile."}
+                ? `Selected profile: ${selectedCustomShortcutProfile.name} (unsaved changes)`
+                : `Selected profile: ${selectedCustomShortcutProfile.name}`
+              : customShortcutProfiles.length > 0
+                ? "Choose a profile from the list or select New profile slot."
+                : "Save the current shortcut setup as your first custom profile."}
           </div>
 
           {SYNTH_FX_MACROS.map((macro) => (

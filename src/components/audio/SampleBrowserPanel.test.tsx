@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SampleBrowserPanel } from "./SampleBrowserPanel";
@@ -39,12 +39,14 @@ describe("SampleBrowserPanel shortcut profile polish", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Save Current" }));
-    expect(screen.getByText("Saved profile: My Workflow")).toBeInTheDocument();
+    expect(
+      screen.getByText("Selected profile: My Workflow"),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Reset Shortcuts" }));
     expect(screen.getByRole("button", { name: "Keys On" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "My Workflow" }));
+    fireEvent.click(screen.getByRole("button", { name: "Restore" }));
     expect(
       screen.getByRole("button", { name: "Keys Off" }),
     ).toBeInTheDocument();
@@ -62,12 +64,41 @@ describe("SampleBrowserPanel shortcut profile polish", () => {
     fireEvent.click(screen.getByRole("button", { name: "Keys On" }));
 
     expect(
-      screen.getByText("Saved profile: My Workflow (unsaved changes)"),
+      screen.getByText("Selected profile: My Workflow (unsaved changes)"),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save Current" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Restore" })).toBeEnabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Restore" }));
     expect(screen.getByRole("button", { name: "Save Current" })).toBeDisabled();
+  });
+
+  it("creates multiple custom profiles and switches by list selection", () => {
+    render(<SampleBrowserPanel {...createProps()} />);
+
+    const nameInput = screen.getByPlaceholderText("Profile name");
+    const list = screen.getByRole("combobox", { name: "Custom profile list" });
+
+    fireEvent.change(nameInput, { target: { value: "Session A" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save Current" }));
+
+    fireEvent.change(list, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Keys On" }));
+    fireEvent.change(nameInput, { target: { value: "Session B" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save Current" }));
+
+    const options = within(list)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(options).toContain("Session A");
+    expect(options).toContain("Session B");
+
+    const sessionAOptionValue = (
+      within(list).getByRole("option", {
+        name: "Session A",
+      }) as HTMLOptionElement
+    ).value;
+    fireEvent.change(list, { target: { value: sessionAOptionValue } });
+    expect((nameInput as HTMLInputElement).value).toBe("Session A");
   });
 });
