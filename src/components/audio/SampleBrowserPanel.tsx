@@ -158,6 +158,7 @@ export function SampleBrowserPanel({
   const [pendingPatternTool, setPendingPatternTool] =
     useState<PatternTool | null>(null);
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
@@ -229,6 +230,12 @@ export function SampleBrowserPanel({
     if (key === "t") {
       event.preventDefault();
       handlePatternTool("stutter");
+      return;
+    }
+
+    if (key === "?") {
+      event.preventDefault();
+      setShowShortcutHelp((prev) => !prev);
     }
   };
 
@@ -1110,7 +1117,74 @@ export function SampleBrowserPanel({
             >
               {panelHasFocus ? "Focused" : "Focus"}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowShortcutHelp((prev) => !prev)}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background: showShortcutHelp
+                  ? "rgba(122,230,255,0.16)"
+                  : "transparent",
+                color: showShortcutHelp ? "#c6f5ff" : "rgba(255,255,255,0.62)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="Toggle shortcut cheatsheet"
+            >
+              ?
+            </button>
           </div>
+
+          {showShortcutHelp && (
+            <div
+              style={{
+                border: "1px solid rgba(122,230,255,0.28)",
+                background: "rgba(122,230,255,0.08)",
+                borderRadius: 10,
+                padding: "8px 10px",
+                display: "grid",
+                gap: 4,
+                minWidth: 230,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                  color: "#c6f5ff",
+                  fontWeight: 700,
+                }}
+              >
+                SHORTCUTS
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                L: Macro mode Layer
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                R: Macro mode Replace
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                V: Pattern Reverse
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                [: Pattern Slow x2
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                ]: Pattern Fast x2
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                D: Pattern Density x2
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.78)", fontSize: 10 }}>
+                T: Pattern Stutter
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>
+                Press ? to toggle this panel.
+              </div>
+            </div>
+          )}
 
           {SYNTH_FX_MACROS.map((macro) => (
             <div key={macro.id} style={{ display: "flex", gap: 4 }}>
