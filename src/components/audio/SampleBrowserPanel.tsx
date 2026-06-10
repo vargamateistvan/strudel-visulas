@@ -1,11 +1,18 @@
 import { useState } from "react";
 import {
+  buildSynthFxAuditionSnippet,
+  buildSynthFxSnippet,
+  buildSynthFxTailSnippet,
   buildSampleAuditionSnippet,
   buildSampleInsertSnippet,
   buildSourceInsertSnippet,
+  DEFAULT_SYNTH_FX_STATE,
+  SYNTH_FX_MACROS,
   type CustomSampleSource,
   type SampleCategory,
   type SampleCatalogItem,
+  type SynthFxBuilderState,
+  type SynthWaveform,
 } from "../../hooks/useSampleWorkspace";
 
 type AuditionStatus = "idle" | "loading" | "ready" | "error";
@@ -21,6 +28,7 @@ type SampleBrowserPanelProps = {
   onAddRecentToken: (token: string) => void;
   onInsertCode: (snippet: string) => void;
   onAuditionCode: (snippet: string) => Promise<void>;
+  onApplyFxToSelection: (fxTail: string) => void;
   onAddSource: (name: string, url: string) => void;
   onRemoveSource: (id: string) => void;
   onToggleSource: (id: string) => void;
@@ -42,105 +50,6 @@ const LOCKED_SOURCE_IDS = new Set([
   "source-dirt-samples",
   "source-eddyflux-crate",
 ]);
-
-type SynthWaveform =
-  | "sine"
-  | "triangle"
-  | "sawtooth"
-  | "square"
-  | "white"
-  | "pink"
-  | "brown";
-
-type SynthFxBuilderState = {
-  waveform: SynthWaveform;
-  notes: string;
-  cpm: number;
-  attack: number;
-  decay: number;
-  sustain: number;
-  release: number;
-  lpf: number;
-  room: number;
-  delay: number;
-  phaser: number;
-  pan: number;
-  distort: number;
-  crush: number;
-  gain: number;
-};
-
-const SYNTH_MACROS: Array<{ id: string; label: string; code: string }> = [
-  {
-    id: "macro-lofi-hat",
-    label: "Lo-fi Hat",
-    code: 's("hh*16").bank("RolandTR909").gain(0.18).hpf(7200).crush(6).cpm(124)',
-  },
-  {
-    id: "macro-dub-lead",
-    label: "Dub Delay Lead",
-    code: 'note("d4 f4 a4 c5").sound("sawtooth").adsr("0.01:0.08:0.5:0.22").lpf(1800).delay(0.72).delaytime(0.25).delayfeedback(0.55).room(0.35).gain(0.55).cpm(88)',
-  },
-  {
-    id: "macro-sidechain-pad",
-    label: "Sidechain Pad",
-    code: 'stack(\n  note("c4 e4 g4 b4").sound("triangle").adsr("0.08:0.2:0.7:0.4").room(0.55).orbit(2).gain(0.4),\n  s("bd*4").bank("RolandTR909").duckorbit(2).duckattack(0.15).duckdepth(1)\n).cpm(120)',
-  },
-];
-
-const DEFAULT_BUILDER: SynthFxBuilderState = {
-  waveform: "triangle",
-  notes: "c3 e3 g3 b3",
-  cpm: 110,
-  attack: 0.01,
-  decay: 0.08,
-  sustain: 0.6,
-  release: 0.2,
-  lpf: 1400,
-  room: 0.22,
-  delay: 0.0,
-  phaser: 0.0,
-  pan: 0.5,
-  distort: 0.0,
-  crush: 0,
-  gain: 0.55,
-};
-
-function formatNumber(value: number, digits = 3): string {
-  return Number.parseFloat(value.toFixed(digits)).toString();
-}
-
-function buildSynthFxChain(state: SynthFxBuilderState): string {
-  const parts = [
-    `note("${state.notes.trim() || DEFAULT_BUILDER.notes}")`,
-    `.sound("${state.waveform}")`,
-    `.adsr("${formatNumber(state.attack)}:${formatNumber(state.decay)}:${formatNumber(state.sustain)}:${formatNumber(state.release)}")`,
-    `.gain(${formatNumber(state.gain)})`,
-    `.pan(${formatNumber(state.pan)})`,
-  ];
-
-  if (state.lpf > 0) parts.push(`.lpf(${Math.round(state.lpf)})`);
-  if (state.room > 0) parts.push(`.room(${formatNumber(state.room)})`);
-  if (state.delay > 0) parts.push(`.delay(${formatNumber(state.delay)})`);
-  if (state.phaser > 0) parts.push(`.phaser(${formatNumber(state.phaser)})`);
-  if (state.distort > 0) parts.push(`.distort(${formatNumber(state.distort)})`);
-  if (state.crush > 0) parts.push(`.crush(${Math.round(state.crush)})`);
-
-  parts.push(`.cpm(${Math.round(state.cpm)})`);
-  return parts.join("");
-}
-
-function buildFxTail(state: SynthFxBuilderState): string {
-  const parts: string[] = [];
-  if (state.lpf > 0) parts.push(`.lpf(${Math.round(state.lpf)})`);
-  if (state.room > 0) parts.push(`.room(${formatNumber(state.room)})`);
-  if (state.delay > 0) parts.push(`.delay(${formatNumber(state.delay)})`);
-  if (state.phaser > 0) parts.push(`.phaser(${formatNumber(state.phaser)})`);
-  if (state.distort > 0) parts.push(`.distort(${formatNumber(state.distort)})`);
-  if (state.crush > 0) parts.push(`.crush(${Math.round(state.crush)})`);
-  parts.push(`.gain(${formatNumber(state.gain)})`);
-  return parts.join("");
-}
 
 function badgeStyle(status: AuditionStatus) {
   if (status === "loading") {
@@ -186,6 +95,7 @@ export function SampleBrowserPanel({
   onAddRecentToken,
   onInsertCode,
   onAuditionCode,
+  onApplyFxToSelection,
   onAddSource,
   onRemoveSource,
   onToggleSource,
@@ -193,13 +103,15 @@ export function SampleBrowserPanel({
   const [sourceName, setSourceName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceError, setSourceError] = useState<string | null>(null);
-  const [builder, setBuilder] = useState<SynthFxBuilderState>(DEFAULT_BUILDER);
+  const [builder, setBuilder] = useState<SynthFxBuilderState>(
+    DEFAULT_SYNTH_FX_STATE,
+  );
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
 
-  const chainSnippet = buildSynthFxChain(builder);
-  const fxTailSnippet = buildFxTail(builder);
+  const chainSnippet = buildSynthFxSnippet(builder);
+  const fxTailSnippet = buildSynthFxTailSnippet(builder);
 
   const handleAudition = async (item: SampleCatalogItem) => {
     setAuditionStatusById((prev) => ({ ...prev, [item.id]: "loading" }));
@@ -515,9 +427,12 @@ export function SampleBrowserPanel({
           </div>
 
           <input
-            value={builder.notes}
+            value={builder.notePattern}
             onChange={(event) =>
-              setBuilder((prev) => ({ ...prev, notes: event.target.value }))
+              setBuilder((prev) => ({
+                ...prev,
+                notePattern: event.target.value,
+              }))
             }
             placeholder="Notes pattern, e.g. c3 e3 g3 b3"
             style={{
@@ -845,7 +760,7 @@ export function SampleBrowserPanel({
                   ...prev,
                   "builder-main": "loading",
                 }));
-                void onAuditionCode(chainSnippet)
+                void onAuditionCode(buildSynthFxAuditionSnippet(builder))
                   .then(() => {
                     setAuditionStatusById((prev) => ({
                       ...prev,
@@ -888,14 +803,30 @@ export function SampleBrowserPanel({
           >
             Insert FX Tail
           </button>
+
+          <button
+            type="button"
+            onClick={() => onApplyFxToSelection(fxTailSnippet)}
+            style={{
+              border: "1px solid rgba(122,230,255,0.35)",
+              borderRadius: 8,
+              background: "rgba(122,230,255,0.11)",
+              color: "#c6f5ff",
+              fontSize: 11,
+              padding: "6px 8px",
+              cursor: "pointer",
+            }}
+          >
+            Apply FX to Selection
+          </button>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {SYNTH_MACROS.map((macro) => (
+          {SYNTH_FX_MACROS.map((macro) => (
             <button
               key={macro.id}
               type="button"
-              onClick={() => onInsertCode(macro.code)}
+              onClick={() => onInsertCode(macro.snippet)}
               style={{
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
@@ -905,7 +836,7 @@ export function SampleBrowserPanel({
                 padding: "4px 9px",
                 cursor: "pointer",
               }}
-              title={macro.code}
+              title={macro.description}
             >
               {macro.label}
             </button>

@@ -457,6 +457,22 @@ export function buildSynthFxAuditionSnippet(
   return `stack(\n  ${synth},\n  s("bd ~ sd ~").bank("RolandTR909").gain(0.5)\n).cpm(${Math.round(state.cpm)})`;
 }
 
+export function buildSynthFxTailSnippet(state: SynthFxBuilderState): string {
+  const tail = [
+    `gain(${toFixedCompact(state.gain)})`,
+    `lpf(${Math.round(state.lpf)})`,
+  ];
+
+  if (state.room > 0) tail.push(`room(${toFixedCompact(state.room)})`);
+  if (state.delay > 0) tail.push(`delay(${toFixedCompact(state.delay)})`);
+  if (state.phaser > 0) tail.push(`phaser(${toFixedCompact(state.phaser)})`);
+  if (state.pan !== 0.5) tail.push(`pan(${toFixedCompact(state.pan)})`);
+  if (state.distort > 0) tail.push(`distort(${toFixedCompact(state.distort)})`);
+  if (state.crush < 16) tail.push(`crush(${Math.round(state.crush)})`);
+
+  return `.${tail.join(".")}`;
+}
+
 export function useSampleWorkspace() {
   const [category, setCategory] = useState<SampleCategory | "all">("all");
   const [query, setQuery] = useState("");

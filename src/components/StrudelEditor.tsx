@@ -41,6 +41,9 @@ interface StrudelEditorProps {
   activeNotes?: string[];
   activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
+  onRegisterSelectionFxApplier?:
+    | ((applyFxTailToSelection: (fxTail: string) => void) => void)
+    | undefined;
 }
 
 type ThemeTokens = {
@@ -205,6 +208,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   activeNotes,
   activeMiniLocations,
   onCodeChange,
+  onRegisterSelectionFxApplier,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -524,6 +528,23 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const duplicateInStack = useCallback(() => {
     applySelectionTransform((source) => `stack(${source}, ${source})`);
   }, [applySelectionTransform]);
+
+  const applyFxTailToSelection = useCallback(
+    (fxTail: string) => {
+      const cleaned = fxTail.trim();
+      if (!cleaned) return;
+      applySelectionTransform((source) => `(${source})${cleaned}`);
+    },
+    [applySelectionTransform],
+  );
+
+  useEffect(() => {
+    if (!onRegisterSelectionFxApplier) return;
+    onRegisterSelectionFxApplier(applyFxTailToSelection);
+    return () => {
+      onRegisterSelectionFxApplier(() => undefined);
+    };
+  }, [applyFxTailToSelection, onRegisterSelectionFxApplier]);
 
   const handleMount = useCallback(
     (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {

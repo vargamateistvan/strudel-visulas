@@ -1,3 +1,4 @@
+import { useCallback, useRef } from "react";
 import { StrudelEditor } from "../StrudelEditor";
 import type { StrudelStatus } from "../../hooks/useStrudel";
 import { AiComposerPanel } from "./AiComposerPanel";
@@ -83,6 +84,19 @@ export function EditorViewport({
     toggleSource,
   } = useSampleWorkspace();
 
+  const applyFxTailRef = useRef<(fxTail: string) => void>(() => undefined);
+
+  const registerSelectionFxApplier = useCallback(
+    (applyFn: (fxTail: string) => void) => {
+      applyFxTailRef.current = applyFn;
+    },
+    [],
+  );
+
+  const handleApplyFxToSelection = useCallback((fxTail: string) => {
+    applyFxTailRef.current(fxTail);
+  }, []);
+
   return (
     <div
       style={{
@@ -121,6 +135,7 @@ export function EditorViewport({
             activeNotes={activeNotes}
             activeMiniLocations={activeMiniLocations}
             onCodeChange={onCodeChange}
+            onRegisterSelectionFxApplier={registerSelectionFxApplier}
           />
         </div>
 
@@ -149,6 +164,7 @@ export function EditorViewport({
             onAddRecentToken={addRecentToken}
             onInsertCode={onInsertCode}
             onAuditionCode={onAuditionCode}
+            onApplyFxToSelection={handleApplyFxToSelection}
             onAddSource={addSource}
             onRemoveSource={removeSource}
             onToggleSource={toggleSource}
