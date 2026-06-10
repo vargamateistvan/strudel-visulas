@@ -79,6 +79,84 @@ export function BackgroundVisualizer({
           />
         </div>
       )}
+      {vizMode === "spectrumHalo" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="spectrumHalo"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "oscilloscopeTunnel" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="oscilloscopeTunnel"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "auroraWaves" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="auroraWaves"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "starfieldWarp" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="starfieldWarp"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "noisePlasma" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="noisePlasma"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
+      {vizMode === "wireframeMountain" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="wireframeMountain"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
       {vizMode === "auroraRings" && (
         <div style={{ position: "absolute", inset: 0 }}>
           <FractalField

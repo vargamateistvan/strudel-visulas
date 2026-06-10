@@ -66,6 +66,12 @@ export function isVizMode(value: string): value is VizMode {
     value === "particles" ||
     value === "spectrum" ||
     value === "lissajous" ||
+    value === "spectrumHalo" ||
+    value === "oscilloscopeTunnel" ||
+    value === "auroraWaves" ||
+    value === "starfieldWarp" ||
+    value === "noisePlasma" ||
+    value === "wireframeMountain" ||
     value === "auroraRings" ||
     value === "kaleidoscope" ||
     value === "kaleidoTunnel" ||
@@ -265,6 +271,12 @@ export function loadVisualSettingsMap(): VisualSettingsMap {
     "particles",
     "spectrum",
     "lissajous",
+    "spectrumHalo",
+    "oscilloscopeTunnel",
+    "auroraWaves",
+    "starfieldWarp",
+    "noisePlasma",
+    "wireframeMountain",
     "auroraRings",
     "julia",
     "mandelbrot",

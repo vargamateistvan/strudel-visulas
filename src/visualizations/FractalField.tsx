@@ -7,6 +7,12 @@ interface FractalFieldProps {
   customColors?: [string, string, string];
   mode?:
     | "lissajous"
+    | "spectrumHalo"
+    | "oscilloscopeTunnel"
+    | "auroraWaves"
+    | "starfieldWarp"
+    | "noisePlasma"
+    | "wireframeMountain"
     | "auroraRings"
     | "julia"
     | "kaleidoscope"
@@ -719,6 +725,370 @@ function drawAuroraRings(
   ctx.shadowBlur = 0;
 }
 
+type WarpStar = {
+  x: number;
+  y: number;
+  z: number;
+};
+
+let warpStars: WarpStar[] = [];
+let warpFieldWidth = 0;
+let warpFieldHeight = 0;
+
+function randRange(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
+
+function ensureWarpStars(w: number, h: number, count: number) {
+  if (
+    warpStars.length === count &&
+    warpFieldWidth === w &&
+    warpFieldHeight === h
+  ) {
+    return;
+  }
+
+  warpFieldWidth = w;
+  warpFieldHeight = h;
+  warpStars = Array.from({ length: count }, () => ({
+    x: randRange(-1.4, 1.4),
+    y: randRange(-1.2, 1.2),
+    z: randRange(0.15, 1),
+  }));
+}
+
+function drawSpectrumHalo(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  frequencies: Uint8Array,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const cx = w / 2;
+  const cy = h / 2;
+  const t = frame * 0.02;
+  const bands = Math.min(128, frequencies.length);
+  const baseRadius = Math.min(w, h) * (0.16 + bass * 0.08);
+
+  ctx.fillStyle = `rgba(4,6,12,${0.2 + volume * 0.1})`;
+  ctx.fillRect(0, 0, w, h);
+
+  for (let i = 0; i < bands; i++) {
+    const p = i / bands;
+    const f = frequencies[Math.floor(p * (frequencies.length - 1))] / 255;
+    const a0 = p * Math.PI * 2 + t * 0.45;
+    const a1 = a0 + (Math.PI * 2) / bands;
+    const inner = baseRadius + f * (14 + treble * 28);
+    const outer = inner + 5 + f * (14 + mid * 20);
+    const hue = schemeHue(scheme, (p * 0.7 + t * 0.04 + bass * 0.2) % 1);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, outer, a0, a1);
+    ctx.arc(cx, cy, inner, a1, a0, true);
+    ctx.closePath();
+    ctx.fillStyle = `hsla(${hue},${75 + treble * 22}%,${48 + f * 22}%,${0.16 + f * 0.42})`;
+    ctx.fill();
+  }
+
+  for (let ring = 0; ring < 3; ring++) {
+    const rp = ring / 3;
+    const hue = schemeHue(scheme, (rp * 0.25 + t * 0.03 + treble * 0.1) % 1);
+    ctx.beginPath();
+    ctx.arc(
+      cx,
+      cy,
+      baseRadius + 12 + ring * 24 + bass * (8 + ring * 4),
+      0,
+      Math.PI * 2,
+    );
+    ctx.strokeStyle = `hsla(${hue},88%,62%,${0.12 + volume * 0.2})`;
+    ctx.lineWidth = 1 + mid * 1.4;
+    ctx.stroke();
+  }
+}
+
+function drawOscilloscopeTunnel(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  waveform: Uint8Array,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const layers = 20;
+  const t = frame * 0.018;
+  const centerY = h * 0.5;
+
+  ctx.fillStyle = `rgba(5,7,13,${0.16 + volume * 0.08})`;
+  ctx.fillRect(0, 0, w, h);
+
+  for (let layer = 0; layer < layers; layer++) {
+    const p = layer / (layers - 1);
+    const depth = 1 - p;
+    const perspective = 0.35 + depth * 1.25;
+    const waveAmp = h * (0.06 + bass * 0.08) * perspective;
+    const yOffset = (layer - layers / 2) * (2.2 + treble * 2);
+    const xMargin = w * p * 0.22;
+    const hue = schemeHue(scheme, (p * 0.4 + t * 0.05 + mid * 0.2) % 1);
+
+    ctx.beginPath();
+    const points = Math.min(waveform.length, 220);
+    for (let i = 0; i < points; i++) {
+      const wp = i / (points - 1);
+      const waveIdx = Math.floor(wp * (waveform.length - 1));
+      const wave = waveform[waveIdx] / 128 - 1;
+      const x = xMargin + wp * (w - xMargin * 2);
+      const y =
+        centerY +
+        yOffset +
+        wave * waveAmp +
+        Math.sin(wp * 12 + t + p * 9) * (2 + treble * 6);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+
+    ctx.strokeStyle = `hsla(${hue},${70 + treble * 22}%,${45 + depth * 30}%,${0.08 + depth * 0.35})`;
+    ctx.lineWidth = 0.7 + depth * 2.1;
+    ctx.stroke();
+  }
+}
+
+function drawAuroraWaves(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  frequencies: Uint8Array,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const layers = 8;
+  const t = frame * 0.014;
+
+  ctx.fillStyle = `rgba(4,6,12,${0.14 + volume * 0.08})`;
+  ctx.fillRect(0, 0, w, h);
+
+  for (let layer = 0; layer < layers; layer++) {
+    const lp = layer / (layers - 1);
+    const yBase = h * (0.18 + lp * 0.72);
+    const amp = h * (0.05 + bass * 0.06) * (1 - lp * 0.35);
+    const hue = schemeHue(scheme, (lp * 0.3 + t * 0.03 + treble * 0.2) % 1);
+    const alpha = 0.1 + (1 - lp) * 0.2 + volume * 0.1;
+
+    ctx.beginPath();
+    const steps = 120;
+    for (let i = 0; i <= steps; i++) {
+      const p = i / steps;
+      const freqIdx = Math.floor(p * (frequencies.length - 1));
+      const f = frequencies[freqIdx] / 255;
+      const x = p * w;
+      const y =
+        yBase +
+        Math.sin(p * 10 + t * (1.2 + lp * 0.8) + lp * 4) * amp +
+        Math.cos(p * 21 + t * 0.9 + layer) * (6 + mid * 10) +
+        (f - 0.5) * (18 + treble * 20);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `hsla(${hue},${72 + mid * 20}%,${44 + lp * 24}%,${alpha})`;
+    ctx.lineWidth = 1.2 + (1 - lp) * 2;
+    ctx.shadowColor = `hsla(${hue},95%,60%,0.6)`;
+    ctx.shadowBlur = 4 + (1 - lp) * 14;
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
+}
+
+function drawStarfieldWarp(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const starCount = 420;
+  const cx = w / 2;
+  const cy = h / 2;
+  const speed = 0.006 + volume * 0.03 + bass * 0.03;
+  const jitter = (treble - 0.5) * 0.004;
+  const t = frame * 0.03;
+
+  ensureWarpStars(w, h, starCount);
+
+  ctx.fillStyle = `rgba(3,5,10,${0.2 + volume * 0.1})`;
+  ctx.fillRect(0, 0, w, h);
+
+  for (const star of warpStars) {
+    const oldZ = star.z;
+    star.z -= speed;
+    if (star.z <= 0.05) {
+      star.x = randRange(-1.4, 1.4);
+      star.y = randRange(-1.2, 1.2);
+      star.z = 1;
+    }
+
+    star.x += Math.sin(t + star.y * 3) * jitter;
+    star.y += Math.cos(t * 0.8 + star.x * 4) * jitter;
+
+    const sx = cx + (star.x / star.z) * w * 0.42;
+    const sy = cy + (star.y / star.z) * h * 0.42;
+    const px = cx + (star.x / oldZ) * w * 0.42;
+    const py = cy + (star.y / oldZ) * h * 0.42;
+
+    if (sx < -40 || sx > w + 40 || sy < -40 || sy > h + 40) {
+      star.x = randRange(-1.2, 1.2);
+      star.y = randRange(-1.1, 1.1);
+      star.z = 1;
+      continue;
+    }
+
+    const bright = (1 - star.z) * (0.5 + treble * 0.7);
+    const hue = schemeHue(scheme, (0.55 + bright * 0.28 + bass * 0.1) % 1);
+    ctx.strokeStyle = `hsla(${hue},${74 + mid * 18}%,${52 + bright * 40}%,${0.25 + bright * 0.6})`;
+    ctx.lineWidth = 0.5 + bright * 2.4;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(sx, sy);
+    ctx.stroke();
+  }
+}
+
+function plasmaNoise(x: number, y: number, t: number): number {
+  const a = Math.sin(x * 5.2 + t * 1.1);
+  const b = Math.cos(y * 4.7 - t * 0.9);
+  const c = Math.sin((x + y) * 3.4 + t * 0.7);
+  const d = Math.cos(Math.hypot(x - 0.5, y - 0.5) * 9.5 - t * 1.3);
+  return (a + b + c + d) * 0.25;
+}
+
+function drawNoisePlasma(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  imgBuf: ImageData,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const t = frame * (0.018 + bass * 0.01);
+  const data = imgBuf.data;
+  const pw = imgBuf.width;
+  const ph = imgBuf.height;
+
+  for (let py = 0; py < ph; py++) {
+    for (let px = 0; px < pw; px++) {
+      const x = px / Math.max(1, pw - 1);
+      const y = py / Math.max(1, ph - 1);
+      const n = plasmaNoise(x + bass * 0.1, y + mid * 0.08, t);
+      const ripple = Math.sin(x * 12 + y * 8 + t * (1.2 + treble));
+      const mix = Math.max(0, Math.min(1, n * 0.5 + 0.5 + ripple * 0.16));
+      const hue = schemeHue(scheme, (mix * 0.78 + volume * 0.1 + t * 0.02) % 1);
+      const sat = 68 + treble * 26;
+      const lum = 14 + mix * 52 + bass * 10;
+      const [r, g, b] = hslToRgb(hue, sat, lum);
+      const idx = (py * pw + px) * 4;
+      data[idx] = r;
+      data[idx + 1] = g;
+      data[idx + 2] = b;
+      data[idx + 3] = 235;
+    }
+  }
+
+  drawRasterUpscaled(ctx, w, h, imgBuf);
+}
+
+function drawWireframeMountain(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  frequencies: Uint8Array,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const cols = 30;
+  const rows = 22;
+  const t = frame * (0.03 + volume * 0.01);
+  const horizon = h * (0.34 + treble * 0.05);
+
+  ctx.fillStyle = `rgba(4,6,12,${0.18 + volume * 0.1})`;
+  ctx.fillRect(0, 0, w, h);
+
+  for (let row = 0; row < rows; row++) {
+    const rp = row / (rows - 1);
+    const depth = rp;
+    const perspective = 1 / (0.28 + depth * 1.5);
+    const hue = schemeHue(scheme, (0.48 + rp * 0.2 + t * 0.01) % 1);
+
+    ctx.beginPath();
+    for (let col = 0; col < cols; col++) {
+      const cp = col / (cols - 1);
+      const xNorm = cp * 2 - 1;
+      const freqIdx = Math.floor(cp * (frequencies.length - 1));
+      const f = frequencies[freqIdx] / 255;
+      const ridge =
+        Math.sin(cp * 16 + t * 1.9 + depth * 6) * (0.02 + mid * 0.08) +
+        Math.cos(cp * 9 + t * 1.1 + depth * 10) * (0.02 + treble * 0.05);
+      const height = (f * (0.28 + bass * 0.34) + ridge) * (1 - depth * 0.45);
+      const sx = w * 0.5 + xNorm * w * 0.42 * perspective;
+      const sy = horizon + (depth * h * 0.78 - height * h * 0.55) * perspective;
+      if (col === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+
+    ctx.strokeStyle = `hsla(${hue},${72 + treble * 20}%,${44 + (1 - rp) * 20}%,${0.16 + (1 - rp) * 0.34})`;
+    ctx.lineWidth = 0.8 + (1 - rp) * 1.6;
+    ctx.stroke();
+  }
+
+  for (let col = 0; col < cols; col += 2) {
+    const cp = col / (cols - 1);
+    const hue = schemeHue(scheme, (cp * 0.25 + t * 0.02 + bass * 0.2) % 1);
+    ctx.beginPath();
+    for (let row = 0; row < rows; row++) {
+      const depth = row / (rows - 1);
+      const perspective = 1 / (0.28 + depth * 1.5);
+      const xNorm = cp * 2 - 1;
+      const freqIdx = Math.floor(cp * (frequencies.length - 1));
+      const f = frequencies[freqIdx] / 255;
+      const ridge =
+        Math.sin(cp * 16 + t * 1.9 + depth * 6) * (0.02 + mid * 0.08) +
+        Math.cos(cp * 9 + t * 1.1 + depth * 10) * (0.02 + treble * 0.05);
+      const height = (f * (0.28 + bass * 0.34) + ridge) * (1 - depth * 0.45);
+      const sx = w * 0.5 + xNorm * w * 0.42 * perspective;
+      const sy = horizon + (depth * h * 0.78 - height * h * 0.55) * perspective;
+      if (row === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.strokeStyle = `hsla(${hue},${66 + mid * 20}%,${42 + volume * 18}%,${0.08 + volume * 0.25})`;
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+  }
+}
+
 function drawMandelbulb(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -1064,6 +1434,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
       mode === "julia" ||
       mode === "mandelbrot" ||
       mode === "burningShip" ||
+      mode === "noisePlasma" ||
       is3DMode;
     const qualityLevel = Math.max(1, Math.min(3, Math.round(fractalQuality)));
     const rasterQuality = is3DMode
@@ -1137,6 +1508,70 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           trebleReactive,
           volumeReactive,
           colorScheme,
+        );
+      } else if (mode === "spectrumHalo") {
+        drawSpectrumHalo(
+          ctx,
+          w,
+          h,
+          frequencies,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
+          colorScheme,
+          frameRef.current,
+        );
+      } else if (mode === "oscilloscopeTunnel") {
+        drawOscilloscopeTunnel(
+          ctx,
+          w,
+          h,
+          waveform,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
+          colorScheme,
+          frameRef.current,
+        );
+      } else if (mode === "auroraWaves") {
+        drawAuroraWaves(
+          ctx,
+          w,
+          h,
+          frequencies,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
+          colorScheme,
+          frameRef.current,
+        );
+      } else if (mode === "starfieldWarp") {
+        drawStarfieldWarp(
+          ctx,
+          w,
+          h,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
+          colorScheme,
+          frameRef.current,
+        );
+      } else if (mode === "wireframeMountain") {
+        drawWireframeMountain(
+          ctx,
+          w,
+          h,
+          frequencies,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
+          colorScheme,
+          frameRef.current,
         );
       } else if (mode === "auroraRings") {
         drawAuroraRings(
@@ -1235,6 +1670,19 @@ export const FractalField: React.FC<FractalFieldProps> = ({
             );
           } else if (mode === "mandelbrot") {
             drawMandelbrot(
+              ctx,
+              w,
+              h,
+              imgBufRef.current,
+              bassReactive,
+              midReactive,
+              trebleReactive,
+              volumeReactive,
+              colorScheme,
+              frameRef.current,
+            );
+          } else if (mode === "noisePlasma") {
+            drawNoisePlasma(
               ctx,
               w,
               h,

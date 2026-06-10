@@ -14,6 +14,12 @@ export type VizMode =
   | "particles"
   | "spectrum"
   | "lissajous"
+  | "spectrumHalo"
+  | "oscilloscopeTunnel"
+  | "auroraWaves"
+  | "starfieldWarp"
+  | "noisePlasma"
+  | "wireframeMountain"
   | "auroraRings"
   | "julia"
   | "mandelbrot"
@@ -108,6 +114,36 @@ const VIZ_MODES: { key: VizMode; label: string; desc: string }[] = [
   },
   { key: "spectrum", label: "Spectrum", desc: "Frequency bar + waveform" },
   { key: "lissajous", label: "Lissajous", desc: "Phase-space oscilloscope" },
+  {
+    key: "spectrumHalo",
+    label: "Spectrum Halo",
+    desc: "Circular frequency rings with glowing bloom",
+  },
+  {
+    key: "oscilloscopeTunnel",
+    label: "Oscilloscope Tunnel",
+    desc: "Layered waveform tunnel with depth motion",
+  },
+  {
+    key: "auroraWaves",
+    label: "Aurora Waves",
+    desc: "Stacked flowing wave curtains",
+  },
+  {
+    key: "starfieldWarp",
+    label: "3D Starfield Warp",
+    desc: "Depth stars warp with kick energy",
+  },
+  {
+    key: "noisePlasma",
+    label: "Noise Plasma Clouds",
+    desc: "Animated plasma fog with audio ripples",
+  },
+  {
+    key: "wireframeMountain",
+    label: "Wireframe Mountain",
+    desc: "Beat-reactive terrain flyover",
+  },
   {
     key: "auroraRings",
     label: "Aurora Rings",
