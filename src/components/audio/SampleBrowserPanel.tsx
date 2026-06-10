@@ -972,6 +972,18 @@ export function SampleBrowserPanel({
             >
               Reset
             </button>
+            <span
+              style={{
+                color: "rgba(255,255,255,0.48)",
+                fontSize: 10,
+                padding: "0 6px 0 2px",
+                letterSpacing: 0.2,
+                userSelect: "none",
+              }}
+              title="Keyboard shortcuts: L = Layer, R = Replace"
+            >
+              L/R shortcuts
+            </span>
           </div>
 
           {SYNTH_FX_MACROS.map((macro) => (
