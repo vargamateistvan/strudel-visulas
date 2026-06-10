@@ -136,6 +136,27 @@ export function SampleBrowserPanel({
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
 
+  const handlePanelKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) {
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+    if (key === "l") {
+      event.preventDefault();
+      setMacroApplyMode("layer");
+      setFxApplyHint("Macro mode set to Layer.");
+      return;
+    }
+
+    if (key === "r") {
+      event.preventDefault();
+      setMacroApplyMode("replace");
+      setFxApplyHint("Macro mode set to Replace.");
+    }
+  };
+
   const handleAudition = async (item: SampleCatalogItem) => {
     setAuditionStatusById((prev) => ({ ...prev, [item.id]: "loading" }));
     try {
@@ -159,6 +180,8 @@ export function SampleBrowserPanel({
 
   return (
     <div
+      tabIndex={0}
+      onKeyDown={handlePanelKeyDown}
       style={{
         width: "100%",
         height: "100%",
