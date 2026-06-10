@@ -110,6 +110,8 @@ describe("UI component smoke coverage", () => {
         isMobile={false}
         onSettingsOpen={onSettingsOpen}
         onPresetsOpen={noop}
+        sampleWorkspaceOpen
+        onSampleWorkspaceToggle={noop}
         onHowItWorksOpen={noop}
         onPlay={onPlay}
         onStop={noop}

@@ -40,6 +40,7 @@ type EditorViewportProps = {
   activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
   isMobile: boolean;
+  showSampleWorkspace: boolean;
   onInsertCode: (snippet: string) => void;
   onAuditionCode: (snippet: string) => Promise<void>;
   aiComposerProps: AiComposerProps;
@@ -63,6 +64,7 @@ export function EditorViewport({
   activeMiniLocations,
   onCodeChange,
   isMobile,
+  showSampleWorkspace,
   onInsertCode,
   onAuditionCode,
   aiComposerProps,
@@ -85,7 +87,7 @@ export function EditorViewport({
     <div
       style={{
         width: "100%",
-        maxWidth: 1140,
+        maxWidth: showSampleWorkspace ? 1140 : 860,
         height: "100%",
         maxHeight: "100%",
         display: "flex",
@@ -125,32 +127,34 @@ export function EditorViewport({
         <AiComposerPanel {...aiComposerProps} />
       </div>
 
-      <div
-        style={{
-          width: isMobile ? "100%" : 330,
-          minWidth: isMobile ? 0 : 280,
-          maxWidth: isMobile ? "100%" : "34vw",
-          height: isMobile ? 360 : "auto",
-          minHeight: 0,
-          display: "flex",
-        }}
-      >
-        <SampleBrowserPanel
-          category={category}
-          onCategoryChange={setCategory}
-          query={query}
-          onQueryChange={setQuery}
-          filteredCatalog={filteredCatalog}
-          recentItems={recentItems}
-          customSources={customSources}
-          onAddRecentToken={addRecentToken}
-          onInsertCode={onInsertCode}
-          onAuditionCode={onAuditionCode}
-          onAddSource={addSource}
-          onRemoveSource={removeSource}
-          onToggleSource={toggleSource}
-        />
-      </div>
+      {showSampleWorkspace && (
+        <div
+          style={{
+            width: isMobile ? "100%" : 330,
+            minWidth: isMobile ? 0 : 280,
+            maxWidth: isMobile ? "100%" : "34vw",
+            height: isMobile ? 360 : "auto",
+            minHeight: 0,
+            display: "flex",
+          }}
+        >
+          <SampleBrowserPanel
+            category={category}
+            onCategoryChange={setCategory}
+            query={query}
+            onQueryChange={setQuery}
+            filteredCatalog={filteredCatalog}
+            recentItems={recentItems}
+            customSources={customSources}
+            onAddRecentToken={addRecentToken}
+            onInsertCode={onInsertCode}
+            onAuditionCode={onAuditionCode}
+            onAddSource={addSource}
+            onRemoveSource={removeSource}
+            onToggleSource={toggleSource}
+          />
+        </div>
+      )}
     </div>
   );
 }

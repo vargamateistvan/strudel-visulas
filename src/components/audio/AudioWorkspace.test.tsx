@@ -44,6 +44,7 @@ describe("AudioWorkspace", () => {
         activeNotes={[]}
         activeMiniLocations={[]}
         onCodeChange={noop}
+        showSampleWorkspace
         onInsertCode={noop}
         onAuditionCode={async () => undefined}
         isExportingMp3

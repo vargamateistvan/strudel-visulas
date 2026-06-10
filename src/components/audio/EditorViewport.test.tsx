@@ -48,6 +48,7 @@ describe("EditorViewport", () => {
         activeMiniLocations={[]}
         onCodeChange={noop}
         isMobile={false}
+        showSampleWorkspace
         onInsertCode={noop}
         onAuditionCode={async () => undefined}
         aiComposerProps={aiComposerProps}

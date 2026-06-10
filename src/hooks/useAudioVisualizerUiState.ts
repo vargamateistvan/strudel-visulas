@@ -5,6 +5,7 @@ export function useAudioVisualizerUiState() {
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
+  const [sampleWorkspaceOpen, setSampleWorkspaceOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 900 : false,
   );
@@ -34,22 +35,29 @@ export function useAudioVisualizerUiState() {
   const openHelp = useCallback(() => setHelpOpen(true), []);
   const closeHelp = useCallback(() => setHelpOpen(false), []);
   const markSplashDone = useCallback(() => setSplashDone(true), []);
+  const toggleSampleWorkspace = useCallback(
+    () => setSampleWorkspaceOpen((open) => !open),
+    [],
+  );
 
   return {
     drawerOpen,
     presetsOpen,
     helpOpen,
     splashDone,
+    sampleWorkspaceOpen,
     isMobile,
     mobileHeaderExpanded,
     setPresetsOpen,
     setMobileHeaderExpanded,
+    setSampleWorkspaceOpen,
     openDrawer,
     closeDrawer,
     openPresets,
     closePresets,
     openHelp,
     closeHelp,
+    toggleSampleWorkspace,
     markSplashDone,
   };
 }
