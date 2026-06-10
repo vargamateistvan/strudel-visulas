@@ -930,6 +930,25 @@ export function SampleBrowserPanel({
             >
               Replace
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMacroApplyMode("layer");
+                setFxApplyHint("Macro mode reset to Layer.");
+              }}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background: "transparent",
+                color: "rgba(255,255,255,0.6)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="Reset macro mode to Layer"
+            >
+              Reset
+            </button>
           </div>
 
           {SYNTH_FX_MACROS.map((macro) => (
