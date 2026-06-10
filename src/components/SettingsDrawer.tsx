@@ -1325,13 +1325,33 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* ── Shortcuts ── */}
           <Accordion title="Shortcuts">
-            {[
-              ["⌘ + Enter", "Play / Stop"],
-              ["Tab", "Indent"],
-            ].map(([k, v]) => (
+            {(
+              [
+                ["⌘ / Ctrl + Enter", "Play / Stop"],
+                ["⌘ / Ctrl + S", "Open Presets"],
+                ["⌘ / Ctrl + O", "Open Presets"],
+                ["Tab", "Indent line"],
+                ["Shift + Tab", "Outdent line"],
+                ["⌘ / Ctrl + /", "Toggle comment"],
+                ["⌘ / Ctrl + Z", "Undo"],
+                ["⌘ / Ctrl + Shift + Z", "Redo"],
+                ["⌘ / Ctrl + A", "Select all"],
+                ["⌘ / Ctrl + F", "Find in editor"],
+                ["⌘ / Ctrl + D", "Select next occurrence"],
+                ["Alt + ↑ / ↓", "Move line up / down"],
+                ["⌘ / Ctrl + ↑ / ↓", "Scroll editor"],
+                ["Home / End", "Jump to line start / end"],
+                ["⌘ / Ctrl + Home / End", "Jump to file start / end"],
+              ] as [string, string][]
+            ).map(([k, v]) => (
               <div
                 key={k}
-                style={{ display: "flex", justifyContent: "space-between" }}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                }}
               >
                 <span
                   style={{
@@ -1341,11 +1361,19 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     background: "var(--surface-active)",
                     padding: "2px 6px",
                     borderRadius: 3,
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
                   }}
                 >
                   {k}
                 </span>
-                <span style={{ fontSize: 10, color: "var(--text-dim)" }}>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--text-dim)",
+                    textAlign: "right",
+                  }}
+                >
                   {v}
                 </span>
               </div>
