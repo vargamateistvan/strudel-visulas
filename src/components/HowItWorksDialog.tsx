@@ -21,7 +21,7 @@ const badgeStyle: React.CSSProperties = {
   justifyContent: "center",
   background: "rgba(0,255,136,0.13)",
   border: "1px solid rgba(0,255,136,0.28)",
-  color: "#00ff88",
+  color: "var(--primary)",
   fontFamily: '"JetBrains Mono",monospace',
   fontSize: 11,
   fontWeight: 700,
@@ -39,7 +39,7 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
         position: "fixed",
         inset: 0,
         zIndex: 95,
-        background: "rgba(0,0,0,0.52)",
+        background: "var(--bg-overlay)",
         backdropFilter: "blur(6px)",
         display: "flex",
         alignItems: "center",
@@ -54,11 +54,10 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
           width: "min(760px, 95vw)",
           maxHeight: "86vh",
           overflowY: "auto",
-          borderRadius: 12,
-          border: "1px solid rgba(0,255,136,0.24)",
-          background: "rgba(6,8,14,0.96)",
-          boxShadow:
-            "0 24px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,255,136,0.14)",
+          borderRadius: "var(--radius-lg)",
+          border: "1px solid var(--border-accent)",
+          background: "var(--bg-elevated)",
+          boxShadow: "var(--shadow-panel), var(--shadow-accent)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -66,7 +65,7 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
         <div
           style={{
             padding: "14px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
             gap: 12,
@@ -77,13 +76,13 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
               fontFamily: '"JetBrains Mono",monospace',
               fontWeight: 700,
               letterSpacing: 2,
-              color: "#00ff88",
+              color: "var(--primary)",
               fontSize: 12,
             }}
           >
             HOW IT WORKS
           </div>
-          <div style={{ color: "#8392a0", fontSize: 12 }}>
+          <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
             Strudel Studio quick guide
           </div>
           <button
@@ -91,8 +90,8 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             style={{
               marginLeft: "auto",
               background: "none",
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: "#9fb0bf",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-soft)",
               borderRadius: 6,
               padding: "4px 10px",
               cursor: "pointer",
@@ -109,7 +108,7 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             padding: 16,
             display: "grid",
             gap: 14,
-            color: "#d6deea",
+            color: "var(--text-body)",
             fontSize: 14,
             lineHeight: 1.55,
           }}
@@ -158,7 +157,13 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             >
               LEARN STRUDEL LANGUAGE
             </div>
-            <div style={{ color: "#bed5e7", fontSize: 13, marginBottom: 10 }}>
+            <div
+              style={{
+                color: "var(--text-body)",
+                fontSize: 13,
+                marginBottom: 10,
+              }}
+            >
               Learn syntax, examples, and live coding techniques at the official
               Strudel website.
             </div>

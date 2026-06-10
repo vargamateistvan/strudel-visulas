@@ -20,6 +20,6 @@ describe("HeaderIconButton", () => {
     render(<HeaderIconButton active>Y</HeaderIconButton>);
 
     const button = screen.getByRole("button");
-    expect(button).toHaveStyle({ color: "#00ff88" });
+    expect(button).toHaveStyle({ color: "var(--primary)" });
   });
 });

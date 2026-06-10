@@ -23,9 +23,9 @@ export function SettingToggle({
         padding: "10px 12px",
         borderRadius: 6,
         border: enabled
-          ? "1px solid rgba(0,255,136,0.3)"
-          : "1px solid rgba(255,255,255,0.05)",
-        background: enabled ? "rgba(0,255,136,0.08)" : "rgba(255,255,255,0.02)",
+          ? "1px solid var(--border-accent)"
+          : "1px solid var(--border-faint)",
+        background: enabled ? "var(--surface-active)" : "var(--surface-1)",
         cursor: "pointer",
         textAlign: "left",
         transition: "all 0.2s",
@@ -36,25 +36,25 @@ export function SettingToggle({
           style={{
             fontSize: 12,
             fontFamily: '"JetBrains Mono",monospace',
-            color: enabled ? "#00ff88" : "#555",
+            color: enabled ? "var(--primary)" : "var(--text-soft)",
             fontWeight: enabled ? 700 : 400,
           }}
         >
           {label}
         </span>
-        <span style={{ fontSize: 10, color: "#333" }}>{description}</span>
+        <span style={{ fontSize: 10, color: "var(--text-dim)" }}>
+          {description}
+        </span>
       </div>
       <div
         style={{
           width: 38,
           height: 22,
           borderRadius: 999,
-          background: enabled
-            ? "rgba(0,255,136,0.22)"
-            : "rgba(255,255,255,0.08)",
+          background: enabled ? "rgba(0,255,136,0.22)" : "var(--surface-2)",
           border: enabled
-            ? "1px solid rgba(0,255,136,0.3)"
-            : "1px solid rgba(255,255,255,0.08)",
+            ? "1px solid var(--border-accent)"
+            : "1px solid var(--border-subtle)",
           position: "relative",
           flexShrink: 0,
         }}
@@ -67,8 +67,8 @@ export function SettingToggle({
             width: 16,
             height: 16,
             borderRadius: "50%",
-            background: enabled ? "#00ff88" : "#888",
-            boxShadow: enabled ? "0 0 8px #00ff88" : "none",
+            background: enabled ? "var(--primary)" : "var(--text-muted)",
+            boxShadow: enabled ? "0 0 8px var(--primary)" : "none",
             transition: "left 0.2s ease, background 0.2s ease",
           }}
         />

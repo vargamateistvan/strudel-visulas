@@ -16,7 +16,7 @@ export const Layout: React.FC<LayoutProps> = ({
       height: "100dvh",
       minHeight: "100dvh",
       overflow: "hidden",
-      background: "#050508",
+      background: "var(--bg-darker)",
     }}
   >
     {/* full-screen background */}
@@ -32,7 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({
         zIndex: 5,
         pointerEvents: "none",
         background:
-          "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.6) 100%)",
+          "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.62) 100%)",
       }}
     />
 

@@ -39,7 +39,7 @@ export function ColorSchemeSection({
       <p
         style={{
           fontSize: 10,
-          color: "#333",
+          color: "var(--text-dim)",
           marginBottom: 10,
           letterSpacing: 1.5,
           textTransform: "uppercase",
@@ -62,11 +62,9 @@ export function ColorSchemeSection({
               border:
                 colorScheme === key
                   ? `1px solid ${colors[0]}66`
-                  : "1px solid rgba(255,255,255,0.05)",
+                  : "1px solid var(--border-faint)",
               background:
-                colorScheme === key
-                  ? `${colors[0]}18`
-                  : "rgba(255,255,255,0.02)",
+                colorScheme === key ? `${colors[0]}18` : "var(--surface-1)",
               cursor: "pointer",
               transition: "all 0.2s",
               textAlign: "left",
@@ -90,7 +88,7 @@ export function ColorSchemeSection({
               style={{
                 fontSize: 12,
                 fontFamily: '"JetBrains Mono",monospace',
-                color: colorScheme === key ? colors[0] : "#555",
+                color: colorScheme === key ? colors[0] : "var(--text-soft)",
                 fontWeight: colorScheme === key ? 700 : 400,
               }}
             >
@@ -103,7 +101,7 @@ export function ColorSchemeSection({
       <div
         style={{
           marginTop: 10,
-          borderTop: "1px solid rgba(255,255,255,0.04)",
+          borderTop: "1px solid var(--surface-2)",
           paddingTop: 10,
           display: "flex",
           flexDirection: "column",
@@ -123,7 +121,7 @@ export function ColorSchemeSection({
               fontSize: 10,
               fontFamily: '"JetBrains Mono",monospace',
               letterSpacing: 1,
-              color: "#444",
+              color: "var(--text-muted)",
               textTransform: "uppercase",
             }}
           >
@@ -133,9 +131,9 @@ export function ColorSchemeSection({
             onClick={onCreateCustomColorPreset}
             style={{
               borderRadius: 6,
-              border: "1px solid rgba(0,255,136,0.24)",
-              background: "rgba(0,255,136,0.08)",
-              color: "#00ff88",
+              border: "1px solid var(--border-accent)",
+              background: "var(--surface-active)",
+              color: "var(--primary)",
               fontSize: 10,
               fontFamily: '"JetBrains Mono",monospace',
               letterSpacing: 1,
@@ -156,11 +154,11 @@ export function ColorSchemeSection({
               style={{
                 borderRadius: 6,
                 border: isActive
-                  ? "1px solid rgba(0,255,136,0.3)"
-                  : "1px solid rgba(255,255,255,0.05)",
+                  ? "1px solid var(--border-accent)"
+                  : "1px solid var(--border-faint)",
                 background: isActive
-                  ? "rgba(0,255,136,0.08)"
-                  : "rgba(255,255,255,0.02)",
+                  ? "var(--surface-active)"
+                  : "var(--surface-1)",
                 padding: "8px 8px 9px",
                 display: "flex",
                 flexDirection: "column",
@@ -176,9 +174,9 @@ export function ColorSchemeSection({
                   onFocus={() => onSelectCustomColorPreset(preset.id)}
                   style={{
                     flex: 1,
-                    background: "rgba(255,255,255,0.03)",
-                    color: isActive ? "#00ff88" : "#888",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "var(--surface-1)",
+                    color: isActive ? "var(--primary)" : "var(--text-muted)",
+                    border: "1px solid var(--border-subtle)",
                     borderRadius: 5,
                     fontSize: 11,
                     fontFamily: '"JetBrains Mono",monospace',
@@ -189,9 +187,9 @@ export function ColorSchemeSection({
                   onClick={() => onSelectCustomColorPreset(preset.id)}
                   style={{
                     borderRadius: 5,
-                    border: "1px solid rgba(255,255,255,0.09)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: "#9aa8b2",
+                    border: "1px solid var(--border-subtle)",
+                    background: "var(--surface-1)",
+                    color: "var(--text-soft)",
                     fontSize: 10,
                     fontFamily: '"JetBrains Mono",monospace',
                     letterSpacing: 1,
@@ -251,7 +249,7 @@ export function ColorSchemeSection({
                       style={{
                         fontSize: 10,
                         fontFamily: '"JetBrains Mono",monospace',
-                        color: "#65707d",
+                        color: "var(--text-dim)",
                         textTransform: "uppercase",
                       }}
                     >

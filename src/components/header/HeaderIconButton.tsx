@@ -23,12 +23,12 @@ export function HeaderIconButton({
         width: buttonSize,
         height: buttonSize,
         padding: 0,
-        borderRadius: 6,
+        borderRadius: 8,
         border: active
-          ? "1px solid rgba(0,255,136,0.24)"
-          : "1px solid rgba(255,255,255,0.05)",
-        background: active ? "rgba(0,255,136,0.08)" : "rgba(255,255,255,0.02)",
-        color: active ? "#00ff88" : "#8da1af",
+          ? "1px solid var(--border-accent)"
+          : "1px solid var(--border-faint)",
+        background: active ? "var(--surface-active)" : "var(--surface-1)",
+        color: active ? "var(--primary)" : "var(--text-soft)",
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",

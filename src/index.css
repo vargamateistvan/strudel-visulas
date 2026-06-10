@@ -10,9 +10,27 @@
   --accent-red: #ff0088;
   --bg-dark: #0a0a14;
   --bg-darker: #050508;
+  --bg-elevated: rgba(8, 10, 18, 0.94);
+  --bg-overlay: rgba(0, 0, 0, 0.52);
+  --bg-panel: rgba(8, 10, 18, 0.94);
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-active: rgba(0, 255, 136, 0.1);
   --text-light: #f0f0f0;
+  --text-body: #d5deec;
   --text-muted: #a0a0a0;
+  --text-soft: #8ea0b8;
+  --text-dim: #74849a;
   --border-light: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-faint: rgba(255, 255, 255, 0.06);
+  --border-accent: rgba(0, 255, 136, 0.28);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --shadow-panel: 0 24px 60px rgba(0, 0, 0, 0.48);
+  --shadow-accent: 0 0 30px rgba(0, 255, 136, 0.14);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: 'Courier New', monospace;

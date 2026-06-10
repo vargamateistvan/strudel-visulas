@@ -112,7 +112,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
         position: "fixed",
         inset: 0,
         zIndex: 90,
-        background: "rgba(0,0,0,0.5)",
+        background: "var(--bg-overlay)",
         backdropFilter: "blur(6px)",
         display: "flex",
         alignItems: "center",
@@ -127,11 +127,10 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
           width: "min(820px, 94vw)",
           maxHeight: "82vh",
           overflow: "hidden",
-          borderRadius: 12,
-          border: "1px solid rgba(0,255,136,0.22)",
-          background: "rgba(6,8,14,0.96)",
-          boxShadow:
-            "0 24px 60px rgba(0,0,0,0.45), 0 0 36px rgba(0,255,136,0.16)",
+          borderRadius: "var(--radius-lg)",
+          border: "1px solid var(--border-accent)",
+          background: "var(--bg-elevated)",
+          boxShadow: "var(--shadow-panel), var(--shadow-accent)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -139,7 +138,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
         <div
           style={{
             padding: "14px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
             gap: 12,
@@ -150,13 +149,13 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
               fontFamily: '"JetBrains Mono",monospace',
               fontWeight: 700,
               letterSpacing: 2,
-              color: "#00ff88",
+              color: "var(--primary)",
               fontSize: 12,
             }}
           >
             PRESETS
           </div>
-          <div style={{ color: "#667", fontSize: 12 }}>
+          <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
             {presets.length} saved
           </div>
           <button
@@ -164,8 +163,8 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
             style={{
               marginLeft: "auto",
               background: "none",
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: "#889",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-soft)",
               borderRadius: 6,
               padding: "4px 10px",
               cursor: "pointer",
@@ -180,7 +179,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
         <div
           style={{
             padding: 16,
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            borderBottom: "1px solid var(--border-faint)",
             display: "flex",
             gap: 8,
           }}
@@ -191,11 +190,11 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
             placeholder="Preset name"
             style={{
               flex: 1,
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.16)",
+              background: "var(--surface-1)",
+              border: "1px solid var(--border-subtle)",
               borderRadius: 8,
               padding: "10px 12px",
-              color: "#d8ffe8",
+              color: "var(--text-body)",
               fontFamily: '"JetBrains Mono",monospace',
               fontSize: 12,
             }}
@@ -230,9 +229,9 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
               );
             }}
             style={{
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: "#d3dde8",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-body)",
               borderRadius: 8,
               padding: "10px 12px",
               fontFamily: '"JetBrains Mono",monospace',
@@ -274,11 +273,11 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
             placeholder="Search presets"
             style={{
               width: "100%",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: "var(--surface-1)",
+              border: "1px solid var(--border-subtle)",
               borderRadius: 8,
               padding: "9px 12px",
-              color: "#cbe9d6",
+              color: "var(--text-body)",
               fontFamily: '"JetBrains Mono",monospace',
               fontSize: 12,
             }}
@@ -289,7 +288,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
           {filtered.length === 0 ? (
             <div
               style={{
-                color: "#667",
+                color: "var(--text-muted)",
                 fontSize: 12,
                 textAlign: "center",
                 padding: 24,
@@ -302,8 +301,8 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
               <div
                 key={preset.id}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid var(--border-subtle)",
+                  background: "var(--surface-1)",
                   borderRadius: 10,
                   padding: 12,
                   marginBottom: 10,
@@ -316,11 +315,11 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
                       onChange={(e) => setEditingName(e.target.value)}
                       style={{
                         flex: 1,
-                        background: "rgba(255,255,255,0.04)",
+                        background: "var(--surface-2)",
                         border: "1px solid rgba(0,255,136,0.2)",
                         borderRadius: 6,
                         padding: "6px 8px",
-                        color: "#d8ffe8",
+                        color: "var(--text-body)",
                         fontFamily: '"JetBrains Mono",monospace',
                         fontSize: 12,
                       }}
@@ -328,7 +327,7 @@ export const PresetsDialog: React.FC<PresetsDialogProps> = ({
                   ) : (
                     <div
                       style={{
-                        color: "#d8ffe8",
+                        color: "var(--text-body)",
                         fontFamily: '"JetBrains Mono",monospace',
                         fontSize: 12,
                         fontWeight: 700,

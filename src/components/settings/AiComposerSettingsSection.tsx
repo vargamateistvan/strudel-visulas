@@ -35,7 +35,7 @@ export function AiComposerSettingsSection({
       <p
         style={{
           fontSize: 10,
-          color: "#333",
+          color: "var(--text-dim)",
           marginBottom: 10,
           letterSpacing: 1.5,
           textTransform: "uppercase",
@@ -53,7 +53,7 @@ export function AiComposerSettingsSection({
           marginBottom: 10,
           fontFamily: '"JetBrains Mono",monospace',
           fontSize: 11,
-          color: "#555",
+          color: "var(--text-soft)",
         }}
       >
         Enable AI Prompt Composer
@@ -77,7 +77,7 @@ export function AiComposerSettingsSection({
           <p
             style={{
               fontSize: 10,
-              color: "#333",
+              color: "var(--text-dim)",
               marginBottom: 6,
               letterSpacing: 1,
               textTransform: "uppercase",
@@ -94,9 +94,9 @@ export function AiComposerSettingsSection({
             style={{
               width: "100%",
               borderRadius: 6,
-              border: "1px solid rgba(255,255,255,0.09)",
-              background: "rgba(255,255,255,0.03)",
-              color: "#9ec3b8",
+              border: "1px solid var(--border-subtle)",
+              background: "var(--surface-1)",
+              color: "var(--text-body)",
               padding: "8px 10px",
               fontSize: 12,
               fontFamily: '"JetBrains Mono",monospace',
@@ -111,7 +111,7 @@ export function AiComposerSettingsSection({
           <p
             style={{
               fontSize: 10,
-              color: "#333",
+              color: "var(--text-dim)",
               marginBottom: 6,
               letterSpacing: 1,
               textTransform: "uppercase",
@@ -128,9 +128,9 @@ export function AiComposerSettingsSection({
             style={{
               width: "100%",
               borderRadius: 6,
-              border: "1px solid rgba(255,255,255,0.09)",
-              background: "rgba(255,255,255,0.03)",
-              color: "#9ec3b8",
+              border: "1px solid var(--border-subtle)",
+              background: "var(--surface-1)",
+              color: "var(--text-body)",
               padding: "8px 10px",
               fontSize: 12,
               fontFamily: '"JetBrains Mono",monospace',
@@ -145,7 +145,7 @@ export function AiComposerSettingsSection({
           <p
             style={{
               fontSize: 10,
-              color: "#333",
+              color: "var(--text-dim)",
               marginBottom: 6,
               letterSpacing: 1,
               textTransform: "uppercase",
@@ -163,9 +163,9 @@ export function AiComposerSettingsSection({
               style={{
                 flex: 1,
                 borderRadius: 6,
-                border: "1px solid rgba(255,255,255,0.09)",
-                background: "rgba(255,255,255,0.03)",
-                color: "#9ec3b8",
+                border: "1px solid var(--border-subtle)",
+                background: "var(--surface-1)",
+                color: "var(--text-body)",
                 padding: "8px 10px",
                 fontSize: 12,
                 fontFamily: '"JetBrains Mono",monospace',
@@ -176,9 +176,9 @@ export function AiComposerSettingsSection({
               onClick={() => setShowKey((prev) => !prev)}
               style={{
                 borderRadius: 6,
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.03)",
-                color: "#7fb4a3",
+                border: "1px solid var(--border-subtle)",
+                background: "var(--surface-1)",
+                color: "var(--text-soft)",
                 padding: "0 10px",
                 fontSize: 11,
                 fontFamily: '"JetBrains Mono",monospace',
@@ -192,9 +192,9 @@ export function AiComposerSettingsSection({
               onClick={onClearApiKey}
               style={{
                 borderRadius: 6,
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.03)",
-                color: "#7fb4a3",
+                border: "1px solid var(--border-subtle)",
+                background: "var(--surface-1)",
+                color: "var(--text-soft)",
                 padding: "0 10px",
                 fontSize: 11,
                 fontFamily: '"JetBrains Mono",monospace',
@@ -213,7 +213,7 @@ export function AiComposerSettingsSection({
             justifyContent: "space-between",
             fontFamily: '"JetBrains Mono",monospace',
             fontSize: 11,
-            color: "#555",
+            color: "var(--text-soft)",
           }}
         >
           Remember API key locally

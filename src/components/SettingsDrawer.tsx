@@ -211,7 +211,7 @@ const FreqBar = ({
       <span
         style={{
           fontSize: 10,
-          color: "#555",
+          color: "var(--text-soft)",
           fontFamily: '"JetBrains Mono",monospace',
           letterSpacing: 1,
         }}
@@ -221,7 +221,7 @@ const FreqBar = ({
       <span
         style={{
           fontSize: 10,
-          color: "#444",
+          color: "var(--text-muted)",
           fontFamily: '"JetBrains Mono",monospace',
         }}
       >
@@ -340,9 +340,9 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
           zIndex: 50,
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
-          background: "rgba(8,8,18,0.92)",
+          background: "var(--bg-panel)",
           backdropFilter: "blur(24px)",
-          borderLeft: "1px solid rgba(255,255,255,0.07)",
+          borderLeft: "1px solid var(--border-subtle)",
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
@@ -352,7 +352,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         <div
           style={{
             padding: "14px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            borderBottom: "1px solid var(--border-faint)",
             display: "flex",
             alignItems: "center",
             flexShrink: 0,
@@ -364,7 +364,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               fontFamily: '"JetBrains Mono",monospace',
               fontWeight: 700,
               letterSpacing: 2,
-              color: "#00ff88",
+              color: "var(--primary)",
               textTransform: "uppercase",
             }}
           >
@@ -376,7 +376,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               marginLeft: "auto",
               background: "none",
               border: "none",
-              color: "#444",
+              color: "var(--text-muted)",
               fontSize: 18,
               cursor: "pointer",
               padding: "0 4px",
@@ -412,7 +412,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -431,12 +431,12 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     borderRadius: 6,
                     border:
                       vizMode === key
-                        ? "1px solid rgba(0,255,136,0.3)"
-                        : "1px solid rgba(255,255,255,0.05)",
+                        ? "1px solid var(--border-accent)"
+                        : "1px solid var(--border-faint)",
                     background:
                       vizMode === key
-                        ? "rgba(0,255,136,0.08)"
-                        : "rgba(255,255,255,0.02)",
+                        ? "var(--surface-active)"
+                        : "var(--surface-1)",
                     cursor: "pointer",
                     textAlign: "left",
                     transition: "all 0.2s",
@@ -446,14 +446,17 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     style={{
                       fontSize: 12,
                       fontFamily: '"JetBrains Mono",monospace',
-                      color: vizMode === key ? "#00ff88" : "#555",
+                      color:
+                        vizMode === key ? "var(--primary)" : "var(--text-soft)",
                       fontWeight: vizMode === key ? 700 : 400,
                       marginBottom: 2,
                     }}
                   >
                     {label}
                   </div>
-                  <div style={{ fontSize: 10, color: "#333" }}>{desc}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-dim)" }}>
+                    {desc}
+                  </div>
                 </button>
               ))}
             </div>
@@ -464,7 +467,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -488,7 +491,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 style={{
                   fontSize: 11,
                   fontFamily: '"JetBrains Mono",monospace',
-                  color: "#444",
+                  color: "var(--text-muted)",
                   width: 36,
                   textAlign: "right",
                 }}
@@ -503,7 +506,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               <p
                 style={{
                   fontSize: 10,
-                  color: "#333",
+                  color: "var(--text-dim)",
                   marginBottom: 10,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
@@ -527,7 +530,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   style={{
                     fontSize: 11,
                     fontFamily: '"JetBrains Mono",monospace',
-                    color: "#444",
+                    color: "var(--text-muted)",
                     width: 40,
                     textAlign: "right",
                   }}
@@ -543,7 +546,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               <p
                 style={{
                   fontSize: 10,
-                  color: "#333",
+                  color: "var(--text-dim)",
                   marginBottom: 10,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
@@ -567,7 +570,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   style={{
                     fontSize: 11,
                     fontFamily: '"JetBrains Mono",monospace',
-                    color: "#444",
+                    color: "var(--text-muted)",
                     width: 34,
                     textAlign: "right",
                   }}
@@ -584,7 +587,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   marginTop: 10,
                   fontFamily: '"JetBrains Mono",monospace',
                   fontSize: 11,
-                  color: "#555",
+                  color: "var(--text-soft)",
                 }}
               >
                 Waveform Overlay
@@ -602,7 +605,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               <p
                 style={{
                   fontSize: 10,
-                  color: "#333",
+                  color: "var(--text-dim)",
                   marginBottom: 10,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
@@ -627,7 +630,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   style={{
                     fontSize: 11,
                     fontFamily: '"JetBrains Mono",monospace',
-                    color: "#444",
+                    color: "var(--text-muted)",
                     width: 68,
                     textAlign: "right",
                   }}
@@ -647,7 +650,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               <p
                 style={{
                   fontSize: 10,
-                  color: "#333",
+                  color: "var(--text-dim)",
                   marginBottom: 10,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
@@ -671,7 +674,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   style={{
                     fontSize: 11,
                     fontFamily: '"JetBrains Mono",monospace',
-                    color: "#444",
+                    color: "var(--text-muted)",
                     width: 52,
                     textAlign: "right",
                   }}
@@ -687,7 +690,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -711,7 +714,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 style={{
                   fontSize: 11,
                   fontFamily: '"JetBrains Mono",monospace',
-                  color: "#444",
+                  color: "var(--text-muted)",
                   width: 32,
                   textAlign: "right",
                 }}
@@ -732,7 +735,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -775,7 +778,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -798,11 +801,11 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     border:
                       editorColorPreset === key
                         ? `1px solid ${colors[0]}66`
-                        : "1px solid rgba(255,255,255,0.05)",
+                        : "1px solid var(--border-faint)",
                     background:
                       editorColorPreset === key
                         ? `${colors[0]}18`
-                        : "rgba(255,255,255,0.02)",
+                        : "var(--surface-1)",
                     cursor: "pointer",
                     transition: "all 0.2s",
                     textAlign: "left",
@@ -827,7 +830,10 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     style={{
                       fontSize: 12,
                       fontFamily: '"JetBrains Mono",monospace',
-                      color: editorColorPreset === key ? colors[0] : "#555",
+                      color:
+                        editorColorPreset === key
+                          ? colors[0]
+                          : "var(--text-soft)",
                       fontWeight: editorColorPreset === key ? 700 : 400,
                     }}
                   >
@@ -843,7 +849,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -866,12 +872,12 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                     borderRadius: 6,
                     border:
                       editorFontPreset === key
-                        ? "1px solid rgba(0,255,136,0.24)"
-                        : "1px solid rgba(255,255,255,0.05)",
+                        ? "1px solid var(--border-accent)"
+                        : "1px solid var(--border-faint)",
                     background:
                       editorFontPreset === key
-                        ? "rgba(0,255,136,0.08)"
-                        : "rgba(255,255,255,0.02)",
+                        ? "var(--surface-active)"
+                        : "var(--surface-1)",
                     cursor: "pointer",
                     transition: "all 0.2s",
                     textAlign: "left",
@@ -892,7 +898,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                       style={{
                         fontSize: 10,
                         fontFamily: '"JetBrains Mono",monospace',
-                        color: "#00ff88",
+                        color: "var(--primary)",
                         letterSpacing: 1,
                         textTransform: "uppercase",
                       }}
@@ -910,7 +916,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -933,7 +939,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                 style={{
                   fontSize: 11,
                   fontFamily: '"JetBrains Mono",monospace',
-                  color: "#444",
+                  color: "var(--text-muted)",
                   width: 42,
                   textAlign: "right",
                 }}
@@ -948,7 +954,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 10,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -966,14 +972,14 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
           {/* Keyboard hints */}
           <section
             style={{
-              borderTop: "1px solid rgba(255,255,255,0.04)",
+              borderTop: "1px solid var(--surface-2)",
               paddingTop: 16,
             }}
           >
             <p
               style={{
                 fontSize: 10,
-                color: "#333",
+                color: "var(--text-dim)",
                 marginBottom: 8,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
@@ -998,15 +1004,17 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   style={{
                     fontSize: 10,
                     fontFamily: '"JetBrains Mono",monospace',
-                    color: "#00ff88",
-                    background: "rgba(0,255,136,0.08)",
+                    color: "var(--primary)",
+                    background: "var(--surface-active)",
                     padding: "2px 6px",
                     borderRadius: 3,
                   }}
                 >
                   {k}
                 </span>
-                <span style={{ fontSize: 10, color: "#333" }}>{v}</span>
+                <span style={{ fontSize: 10, color: "var(--text-dim)" }}>
+                  {v}
+                </span>
               </div>
             ))}
           </section>

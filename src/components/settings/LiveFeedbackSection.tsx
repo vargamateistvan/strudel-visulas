@@ -19,7 +19,7 @@ export function LiveFeedbackSection({
         <p
           style={{
             fontSize: 10,
-            color: "#333",
+            color: "var(--text-dim)",
             marginBottom: 10,
             letterSpacing: 1.5,
             textTransform: "uppercase",
@@ -40,7 +40,7 @@ export function LiveFeedbackSection({
         <p
           style={{
             fontSize: 10,
-            color: "#333",
+            color: "var(--text-dim)",
             marginBottom: 10,
             letterSpacing: 1.5,
             textTransform: "uppercase",

@@ -136,7 +136,7 @@ const VolumePotmeter: React.FC<VolumePotmeterProps> = ({
         gap: 6,
         minWidth: isMobile ? 42 : 46,
         padding: "0 4px",
-        color: "#b8c2d6",
+        color: "var(--text-soft)",
       }}
       title={`Master volume: ${pct}%`}
     >
@@ -191,7 +191,7 @@ const VolumePotmeter: React.FC<VolumePotmeterProps> = ({
             borderRadius: "50%",
             background: ringGradient,
             boxShadow:
-              "inset 0 0 0 1px rgba(255,255,255,0.2), 0 2px 10px rgba(0,0,0,0.45)",
+              "inset 0 0 0 1px var(--border-subtle), 0 2px 10px rgba(0,0,0,0.45)",
             touchAction: "none",
             cursor: "pointer",
           }}
@@ -203,7 +203,7 @@ const VolumePotmeter: React.FC<VolumePotmeterProps> = ({
               borderRadius: "50%",
               background:
                 "radial-gradient(circle at 35% 30%, #2e3949 0%, #151b24 62%, #0c1118 100%)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: "1px solid var(--border-subtle)",
             }}
           />
           <div
@@ -214,7 +214,7 @@ const VolumePotmeter: React.FC<VolumePotmeterProps> = ({
               width: 4,
               height: isMobile ? 8 : 9,
               borderRadius: 999,
-              background: "#d8e2f4",
+              background: "var(--text-body)",
               boxShadow: "0 0 6px rgba(102,224,255,0.5)",
               transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(${markerDistance}px)`,
             }}
@@ -273,9 +273,9 @@ export const Header: React.FC<HeaderProps> = (props) => {
         padding: isMobile
           ? "calc(env(safe-area-inset-top, 0px) + 6px) 8px 8px"
           : "8px 14px",
-        background: "rgba(8,8,18,0.92)",
+        background: "var(--bg-panel)",
         backdropFilter: "blur(24px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid var(--border-faint)",
       }}
     >
       <div
@@ -330,11 +330,9 @@ export const Header: React.FC<HeaderProps> = (props) => {
               active={!isLoading}
               buttonSize={headerButtonSize}
               style={{
-                color: isLoading ? "#6fc8a6" : "#00ff88",
-                border: "1px solid rgba(0,255,136,0.24)",
-                background: isLoading
-                  ? "rgba(0,255,136,0.08)"
-                  : "rgba(0,255,136,0.08)",
+                color: isLoading ? "var(--text-soft)" : "var(--primary)",
+                border: "1px solid var(--border-accent)",
+                background: "var(--surface-active)",
                 opacity: isLoading ? 0.6 : 1,
                 cursor: isLoading ? "default" : "pointer",
               }}
@@ -377,7 +375,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
                 background: canRecord
                   ? "rgba(255,94,120,0.08)"
                   : "rgba(255,94,120,0.05)",
-                color: canRecord ? "#ff8ea6" : "#b98a93",
+                color: canRecord ? "#ff8ea6" : "var(--text-dim)",
                 opacity: canRecord ? 1 : 0.65,
                 cursor: canRecord ? "pointer" : "default",
               }}
