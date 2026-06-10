@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   buildSynthFxAuditionSnippet,
   buildSynthFxSnippet,
@@ -18,6 +18,14 @@ import {
 type AuditionStatus = "idle" | "loading" | "ready" | "error";
 type FxApplyTarget = "selection" | "document" | "none";
 type MacroApplyMode = "layer" | "replace";
+
+const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
+
+function readMacroApplyMode(): MacroApplyMode {
+  if (typeof window === "undefined") return "layer";
+  const saved = localStorage.getItem(MACRO_APPLY_MODE_KEY);
+  return saved === "replace" ? "replace" : "layer";
+}
 
 type SampleBrowserPanelProps = {
   category: SampleCategory | "all";
@@ -113,11 +121,17 @@ export function SampleBrowserPanel({
   const [builder, setBuilder] = useState<SynthFxBuilderState>(
     DEFAULT_SYNTH_FX_STATE,
   );
-  const [macroApplyMode, setMacroApplyMode] = useState<MacroApplyMode>("layer");
+  const [macroApplyMode, setMacroApplyMode] =
+    useState<MacroApplyMode>(readMacroApplyMode);
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(MACRO_APPLY_MODE_KEY, macroApplyMode);
+  }, [macroApplyMode]);
 
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
