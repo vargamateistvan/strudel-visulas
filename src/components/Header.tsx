@@ -268,10 +268,9 @@ export const Header: React.FC<HeaderProps> = (props) => {
         padding: isMobile
           ? "calc(env(safe-area-inset-top, 0px) + 6px) 8px 8px"
           : "8px 14px",
-        background:
-          "linear-gradient(180deg, rgba(10,10,14,0.96), rgba(10,10,14,0.9))",
-        backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "rgba(8,8,18,0.92)",
+        backdropFilter: "blur(24px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >
       <div
@@ -326,11 +325,11 @@ export const Header: React.FC<HeaderProps> = (props) => {
               active={!isLoading}
               buttonSize={headerButtonSize}
               style={{
-                color: isLoading ? "#6bd6ad" : "#00ff88",
-                border: "1px solid rgba(0,255,136,0.3)",
+                color: isLoading ? "#6fc8a6" : "#00ff88",
+                border: "1px solid rgba(0,255,136,0.24)",
                 background: isLoading
                   ? "rgba(0,255,136,0.08)"
-                  : "rgba(0,255,136,0.12)",
+                  : "rgba(0,255,136,0.08)",
                 opacity: isLoading ? 0.6 : 1,
                 cursor: isLoading ? "default" : "pointer",
               }}
@@ -349,9 +348,9 @@ export const Header: React.FC<HeaderProps> = (props) => {
               active
               buttonSize={headerButtonSize}
               style={{
-                border: "1px solid rgba(255,122,135,0.45)",
-                background: "rgba(255,122,135,0.14)",
-                color: "#ffb7c0",
+                border: "1px solid rgba(255,94,120,0.24)",
+                background: "rgba(255,94,120,0.08)",
+                color: "#ff8ea6",
               }}
               title="Stop recording"
               aria-label="Stop recording"
@@ -368,12 +367,12 @@ export const Header: React.FC<HeaderProps> = (props) => {
               buttonSize={headerButtonSize}
               style={{
                 border: canRecord
-                  ? "1px solid rgba(255,122,135,0.45)"
-                  : "1px solid rgba(255,122,135,0.22)",
+                  ? "1px solid rgba(255,94,120,0.24)"
+                  : "1px solid rgba(255,94,120,0.18)",
                 background: canRecord
-                  ? "rgba(255,122,135,0.14)"
-                  : "rgba(255,122,135,0.08)",
-                color: canRecord ? "#ffb7c0" : "#b98c92",
+                  ? "rgba(255,94,120,0.08)"
+                  : "rgba(255,94,120,0.05)",
+                color: canRecord ? "#ff8ea6" : "#b98a93",
                 opacity: canRecord ? 1 : 0.65,
                 cursor: canRecord ? "pointer" : "default",
               }}
