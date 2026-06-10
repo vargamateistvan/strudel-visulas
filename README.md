@@ -67,6 +67,16 @@ yarn preview
 - `src/ai`: AI prompt/skill shaping logic for Strudel code generation.
 - `src/visualizations`: Visualization implementations.
 
+## Design System
+
+UI styling follows a token-based neon-dark design system.
+
+- Design tokens (colors, surfaces, borders, radii, shadows, typography) are defined in `src/index.css`.
+- Dialog and panel patterns should follow the existing tokenized shell style used by components like Presets and How It Works.
+- Prefer CSS variables over hardcoded hex values in inline styles/components.
+
+For full guidance, see [docs/design-system.md](docs/design-system.md).
+
 ## AI Composer
 
 AI Composer is integrated into the editor workflow and is controlled via Settings.
