@@ -352,6 +352,11 @@ stack(
 let scopePromise: Promise<void> | null = null;
 let soundDepsPromise: Promise<void> | null = null;
 let audioInitPromise: Promise<void> | null = null;
+
+const DIRT_SAMPLES_MANIFEST_URL =
+  "https://cdn.jsdelivr.net/gh/tidalcycles/dirt-samples@main/strudel.json";
+const DIRT_SAMPLES_BASE_URL =
+  "https://cdn.jsdelivr.net/gh/tidalcycles/Dirt-Samples@master/";
 let loggerConfigured = false;
 
 const NOISY_RUNTIME_PATTERNS = [
@@ -482,12 +487,11 @@ function loadSoundDependencies(): Promise<void> {
       registerSoundfonts();
 
       // Main sample ecosystem used by strudel patterns
-      await samples("github:tidalcycles/dirt-samples");
+      await samples(DIRT_SAMPLES_MANIFEST_URL);
 
       // Compatibility aliases for legacy bank("RolandTR909") patterns
       await samples({
-        _base:
-          "https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/",
+        _base: DIRT_SAMPLES_BASE_URL,
         RolandTR909_bd: "bd/BT0A0A7.wav",
         RolandTR909_sd: "sd/rytm-00-hard.wav",
         RolandTR909_hh: "hh/000_hh3closedhh.wav",

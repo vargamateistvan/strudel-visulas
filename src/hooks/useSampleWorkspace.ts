@@ -112,8 +112,8 @@ export const SYNTH_FX_MACROS: SynthFxMacro[] = [
 const DEFAULT_SOURCES: CustomSampleSource[] = [
   {
     id: "source-dirt-samples",
-    name: "Dirt Samples (GitHub)",
-    url: "github:tidalcycles/dirt-samples",
+    name: "Dirt Samples (CDN)",
+    url: "https://cdn.jsdelivr.net/gh/tidalcycles/dirt-samples@main/strudel.json",
     enabled: true,
     createdAt: new Date(0).toISOString(),
     updatedAt: new Date(0).toISOString(),
