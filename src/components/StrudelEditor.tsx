@@ -42,7 +42,11 @@ interface StrudelEditorProps {
   activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
   onRegisterSelectionFxApplier?:
-    | ((applyFxTailToSelection: (fxTail: string) => void) => void)
+    | ((
+        applyFxTailToSelection: (
+          fxTail: string,
+        ) => "selection" | "document" | "none",
+      ) => void)
     | undefined;
 }
 
@@ -492,27 +496,29 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const applySelectionTransform = useCallback(
     (transform: (source: string) => string) => {
       const editor = editorRef.current;
-      if (!editor) return;
+      if (!editor) return "none" as const;
 
       const model = editor.getModel();
-      if (!model) return;
+      if (!model) return "none" as const;
 
       const selection = editor.getSelection();
       const fullRange = model.getFullModelRange();
+      const hasSelection = Boolean(selection && !selection.isEmpty());
       const selectedText =
-        selection && !selection.isEmpty()
+        hasSelection && selection
           ? model.getValueInRange(selection)
           : model.getValue();
 
       const nextText = transform(selectedText);
       editor.executeEdits("strudel-transform", [
         {
-          range: selection && !selection.isEmpty() ? selection : fullRange,
+          range: hasSelection && selection ? selection : fullRange,
           text: nextText,
           forceMoveMarkers: true,
         },
       ]);
       editor.focus();
+      return hasSelection ? ("selection" as const) : ("document" as const);
     },
     [],
   );
@@ -532,8 +538,8 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const applyFxTailToSelection = useCallback(
     (fxTail: string) => {
       const cleaned = fxTail.trim();
-      if (!cleaned) return;
-      applySelectionTransform((source) => `(${source})${cleaned}`);
+      if (!cleaned) return "none" as const;
+      return applySelectionTransform((source) => `(${source})${cleaned}`);
     },
     [applySelectionTransform],
   );
@@ -542,7 +548,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     if (!onRegisterSelectionFxApplier) return;
     onRegisterSelectionFxApplier(applyFxTailToSelection);
     return () => {
-      onRegisterSelectionFxApplier(() => undefined);
+      onRegisterSelectionFxApplier(() => "none");
     };
   }, [applyFxTailToSelection, onRegisterSelectionFxApplier]);
 

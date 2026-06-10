@@ -47,6 +47,8 @@ type EditorViewportProps = {
   aiComposerProps: AiComposerProps;
 };
 
+type FxApplyTarget = "selection" | "document" | "none";
+
 export function EditorViewport({
   code,
   play,
@@ -84,17 +86,19 @@ export function EditorViewport({
     toggleSource,
   } = useSampleWorkspace();
 
-  const applyFxTailRef = useRef<(fxTail: string) => void>(() => undefined);
+  const applyFxTailRef = useRef<(fxTail: string) => FxApplyTarget>(
+    () => "none",
+  );
 
   const registerSelectionFxApplier = useCallback(
-    (applyFn: (fxTail: string) => void) => {
+    (applyFn: (fxTail: string) => FxApplyTarget) => {
       applyFxTailRef.current = applyFn;
     },
     [],
   );
 
   const handleApplyFxToSelection = useCallback((fxTail: string) => {
-    applyFxTailRef.current(fxTail);
+    return applyFxTailRef.current(fxTail);
   }, []);
 
   return (

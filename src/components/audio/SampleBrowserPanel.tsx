@@ -16,6 +16,7 @@ import {
 } from "../../hooks/useSampleWorkspace";
 
 type AuditionStatus = "idle" | "loading" | "ready" | "error";
+type FxApplyTarget = "selection" | "document" | "none";
 
 type SampleBrowserPanelProps = {
   category: SampleCategory | "all";
@@ -28,7 +29,7 @@ type SampleBrowserPanelProps = {
   onAddRecentToken: (token: string) => void;
   onInsertCode: (snippet: string) => void;
   onAuditionCode: (snippet: string) => Promise<void>;
-  onApplyFxToSelection: (fxTail: string) => void;
+  onApplyFxToSelection: (fxTail: string) => FxApplyTarget;
   onAddSource: (name: string, url: string) => void;
   onRemoveSource: (id: string) => void;
   onToggleSource: (id: string) => void;
@@ -106,6 +107,7 @@ export function SampleBrowserPanel({
   const [builder, setBuilder] = useState<SynthFxBuilderState>(
     DEFAULT_SYNTH_FX_STATE,
   );
+  const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
@@ -806,7 +808,20 @@ export function SampleBrowserPanel({
 
           <button
             type="button"
-            onClick={() => onApplyFxToSelection(fxTailSnippet)}
+            onClick={() => {
+              const result = onApplyFxToSelection(fxTailSnippet);
+              if (result === "selection") {
+                setFxApplyHint("Applied FX tail to current selection.");
+                return;
+              }
+              if (result === "document") {
+                setFxApplyHint(
+                  "No selection found. Applied FX tail to full document.",
+                );
+                return;
+              }
+              setFxApplyHint("Editor is not ready yet. Try again in a moment.");
+            }}
             style={{
               border: "1px solid rgba(122,230,255,0.35)",
               borderRadius: 8,
@@ -819,6 +834,22 @@ export function SampleBrowserPanel({
           >
             Apply FX to Selection
           </button>
+
+          {fxApplyHint && (
+            <div
+              style={{
+                color: "rgba(122,230,255,0.92)",
+                fontSize: 10,
+                fontFamily: '"JetBrains Mono", monospace',
+                border: "1px solid rgba(122,230,255,0.28)",
+                background: "rgba(122,230,255,0.08)",
+                borderRadius: 8,
+                padding: "6px 8px",
+              }}
+            >
+              {fxApplyHint}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
