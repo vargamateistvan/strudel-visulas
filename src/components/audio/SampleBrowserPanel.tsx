@@ -933,7 +933,7 @@ export function SampleBrowserPanel({
       <div
         style={{
           padding: "12px 14px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
           display: "grid",
           gap: 8,
         }}
@@ -943,7 +943,7 @@ export function SampleBrowserPanel({
             fontSize: 11,
             letterSpacing: 1.2,
             fontWeight: 700,
-            color: "#7ae6ff",
+            color: "#00ff88",
           }}
         >
           SAMPLE WORKSPACE
@@ -975,13 +975,13 @@ export function SampleBrowserPanel({
                 onClick={() => onCategoryChange(option.value)}
                 style={{
                   border: active
-                    ? "1px solid rgba(122,230,255,0.4)"
+                    ? "1px solid rgba(0,255,136,0.4)"
                     : "1px solid rgba(255,255,255,0.18)",
                   borderRadius: 999,
                   background: active
-                    ? "rgba(122,230,255,0.16)"
+                    ? "rgba(0,255,136,0.16)"
                     : "rgba(255,255,255,0.03)",
-                  color: active ? "#c8f6ff" : "rgba(255,255,255,0.74)",
+                  color: active ? "#b7f7d3" : "rgba(255,255,255,0.74)",
                   fontSize: 11,
                   padding: "4px 10px",
                   cursor: "pointer",
@@ -996,7 +996,7 @@ export function SampleBrowserPanel({
 
       <div
         style={{
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
           padding: "8px 12px 10px",
         }}
       >
@@ -1105,7 +1105,7 @@ export function SampleBrowserPanel({
                 <div
                   key={item.id}
                   style={{
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.06)",
                     borderRadius: 8,
                     background: "rgba(255,255,255,0.03)",
                     padding: 6,
@@ -1160,7 +1160,7 @@ export function SampleBrowserPanel({
                     }
                     style={{
                       fontSize: 9,
-                      color: "#9be8ff",
+                      color: "#7ef4bf",
                       fontFamily: '"JetBrains Mono", monospace',
                       minWidth: 0,
                       overflow: "hidden",
@@ -1223,10 +1223,10 @@ export function SampleBrowserPanel({
                       title="Audition"
                       aria-label={`Audition ${item.label}`}
                       style={{
-                        border: "1px solid rgba(122,230,255,0.35)",
+                        border: "1px solid rgba(0,255,136,0.35)",
                         borderRadius: 6,
-                        background: "rgba(122,230,255,0.11)",
-                        color: "#c6f5ff",
+                        background: "rgba(0,255,136,0.11)",
+                        color: "#b7f7d3",
                         width: 24,
                         height: 22,
                         display: "inline-flex",
@@ -1252,8 +1252,8 @@ export function SampleBrowserPanel({
 
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
           padding: "10px 12px 12px",
           display: "grid",
           gap: 8,
@@ -1651,7 +1651,7 @@ export function SampleBrowserPanel({
                 fontSize: 10,
                 fontFamily: '"JetBrains Mono", monospace',
                 background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.06)",
                 borderRadius: 8,
                 padding: "6px 8px",
                 maxHeight: 56,
@@ -1705,10 +1705,10 @@ export function SampleBrowserPanel({
                     });
                 }}
                 style={{
-                  border: "1px solid rgba(122,230,255,0.35)",
+                  border: "1px solid rgba(0,255,136,0.35)",
                   borderRadius: 8,
-                  background: "rgba(122,230,255,0.11)",
-                  color: "#c6f5ff",
+                  background: "rgba(0,255,136,0.11)",
+                  color: "#b7f7d3",
                   fontSize: 10,
                   padding: "5px 7px",
                   cursor: "pointer",
@@ -1724,7 +1724,7 @@ export function SampleBrowserPanel({
               style={{
                 border: "1px solid rgba(255,255,255,0.25)",
                 borderRadius: 8,
-                background: "rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.06)",
                 color: "#e8edf4",
                 fontSize: 10,
                 padding: "5px 7px",
@@ -1753,10 +1753,10 @@ export function SampleBrowserPanel({
                 );
               }}
               style={{
-                border: "1px solid rgba(122,230,255,0.35)",
+                border: "1px solid rgba(0,255,136,0.35)",
                 borderRadius: 8,
-                background: "rgba(122,230,255,0.11)",
-                color: "#c6f5ff",
+                background: "rgba(0,255,136,0.11)",
+                color: "#b7f7d3",
                 fontSize: 10,
                 padding: "5px 7px",
                 cursor: "pointer",
@@ -1768,11 +1768,11 @@ export function SampleBrowserPanel({
             {fxApplyHint && (
               <div
                 style={{
-                  color: "rgba(122,230,255,0.92)",
+                  color: "rgba(0,255,136,0.92)",
                   fontSize: 10,
                   fontFamily: '"JetBrains Mono", monospace',
-                  border: "1px solid rgba(122,230,255,0.28)",
-                  background: "rgba(122,230,255,0.08)",
+                  border: "1px solid rgba(0,255,136,0.28)",
+                  background: "rgba(0,255,136,0.08)",
                   borderRadius: 8,
                   padding: "6px 8px",
                 }}
@@ -1805,11 +1805,11 @@ export function SampleBrowserPanel({
                 borderRadius: 999,
                 background:
                   macroApplyMode === "layer"
-                    ? "rgba(122,230,255,0.2)"
+                    ? "rgba(0,255,136,0.2)"
                     : "transparent",
                 color:
                   macroApplyMode === "layer"
-                    ? "#c6f5ff"
+                    ? "#b7f7d3"
                     : "rgba(255,255,255,0.7)",
                 fontSize: 10,
                 padding: "3px 8px",
@@ -1827,11 +1827,11 @@ export function SampleBrowserPanel({
                 borderRadius: 999,
                 background:
                   macroApplyMode === "replace"
-                    ? "rgba(122,230,255,0.2)"
+                    ? "rgba(0,255,136,0.2)"
                     : "transparent",
                 color:
                   macroApplyMode === "replace"
-                    ? "#c6f5ff"
+                    ? "#b7f7d3"
                     : "rgba(255,255,255,0.7)",
                 fontSize: 10,
                 padding: "3px 8px",
@@ -1882,9 +1882,9 @@ export function SampleBrowserPanel({
                 border: "none",
                 borderRadius: 999,
                 background: panelHasFocus
-                  ? "rgba(122,230,255,0.16)"
+                  ? "rgba(0,255,136,0.16)"
                   : "transparent",
-                color: panelHasFocus ? "#c6f5ff" : "rgba(255,255,255,0.62)",
+                color: panelHasFocus ? "#b7f7d3" : "rgba(255,255,255,0.62)",
                 fontSize: 10,
                 padding: "3px 8px",
                 cursor: "pointer",
@@ -1900,9 +1900,9 @@ export function SampleBrowserPanel({
                 border: "none",
                 borderRadius: 999,
                 background: showShortcutHelp
-                  ? "rgba(122,230,255,0.16)"
+                  ? "rgba(0,255,136,0.16)"
                   : "transparent",
-                color: showShortcutHelp ? "#c6f5ff" : "rgba(255,255,255,0.62)",
+                color: showShortcutHelp ? "#b7f7d3" : "rgba(255,255,255,0.62)",
                 fontSize: 10,
                 padding: "3px 8px",
                 cursor: "pointer",
@@ -1925,10 +1925,10 @@ export function SampleBrowserPanel({
                 border: "none",
                 borderRadius: 999,
                 background: keyboardModeEnabled
-                  ? "rgba(122,230,255,0.16)"
+                  ? "rgba(0,255,136,0.16)"
                   : "transparent",
                 color: keyboardModeEnabled
-                  ? "#c6f5ff"
+                  ? "#b7f7d3"
                   : "rgba(255,255,255,0.62)",
                 fontSize: 10,
                 padding: "3px 8px",
@@ -1968,8 +1968,8 @@ export function SampleBrowserPanel({
           {showShortcutHelp && (
             <div
               style={{
-                border: "1px solid rgba(122,230,255,0.28)",
-                background: "rgba(122,230,255,0.08)",
+                border: "1px solid rgba(0,255,136,0.28)",
+                background: "rgba(0,255,136,0.08)",
                 borderRadius: 10,
                 padding: "8px 10px",
                 display: "grid",
@@ -1981,7 +1981,7 @@ export function SampleBrowserPanel({
                 style={{
                   fontSize: 10,
                   letterSpacing: 0.8,
-                  color: "#c6f5ff",
+                  color: "#b7f7d3",
                   fontWeight: 700,
                 }}
               >
@@ -2071,10 +2071,10 @@ export function SampleBrowserPanel({
                 border: "none",
                 borderRadius: 999,
                 background: isCustomShortcutProfileActive
-                  ? "rgba(122,230,255,0.18)"
+                  ? "rgba(0,255,136,0.18)"
                   : "transparent",
                 color: isCustomShortcutProfileActive
-                  ? "#c6f5ff"
+                  ? "#b7f7d3"
                   : selectedCustomShortcutProfile
                     ? "rgba(255,255,255,0.7)"
                     : "rgba(255,255,255,0.35)",
@@ -2202,18 +2202,18 @@ export function SampleBrowserPanel({
                 !selectedCustomShortcutProfile || isCustomShortcutProfileActive
               }
               style={{
-                border: "1px solid rgba(122,230,255,0.3)",
+                border: "1px solid rgba(0,255,136,0.3)",
                 borderRadius: 8,
                 background:
                   !selectedCustomShortcutProfile ||
                   isCustomShortcutProfileActive
                     ? "rgba(255,255,255,0.04)"
-                    : "rgba(122,230,255,0.1)",
+                    : "rgba(0,255,136,0.1)",
                 color:
                   !selectedCustomShortcutProfile ||
                   isCustomShortcutProfileActive
                     ? "rgba(255,255,255,0.35)"
-                    : "#c6f5ff",
+                    : "#b7f7d3",
                 fontSize: 10,
                 padding: "5px 8px",
                 cursor:
@@ -2328,7 +2328,7 @@ export function SampleBrowserPanel({
               display: "grid",
               gap: 6,
               paddingTop: 4,
-              borderTop: "1px solid rgba(255,255,255,0.08)",
+              borderTop: "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <textarea
@@ -2361,10 +2361,10 @@ export function SampleBrowserPanel({
                   void exportCustomShortcutProfiles();
                 }}
                 style={{
-                  border: "1px solid rgba(122,230,255,0.3)",
+                  border: "1px solid rgba(0,255,136,0.3)",
                   borderRadius: 8,
-                  background: "rgba(122,230,255,0.1)",
-                  color: "#c6f5ff",
+                  background: "rgba(0,255,136,0.1)",
+                  color: "#b7f7d3",
                   fontSize: 11,
                   padding: "6px 10px",
                   cursor: "pointer",
@@ -2380,7 +2380,7 @@ export function SampleBrowserPanel({
                 style={{
                   border: "1px solid rgba(255,255,255,0.18)",
                   borderRadius: 8,
-                  background: "rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.06)",
                   color: "#d6deea",
                   fontSize: 11,
                   padding: "6px 10px",
@@ -2427,7 +2427,7 @@ export function SampleBrowserPanel({
                   borderRadius: 8,
                   background:
                     profileJsonBuffer.trim().length > 0
-                      ? "rgba(255,255,255,0.08)"
+                      ? "rgba(255,255,255,0.06)"
                       : "rgba(255,255,255,0.04)",
                   color:
                     profileJsonBuffer.trim().length > 0
@@ -2566,10 +2566,10 @@ export function SampleBrowserPanel({
                   );
                 }}
                 style={{
-                  border: "1px solid rgba(122,230,255,0.35)",
+                  border: "1px solid rgba(0,255,136,0.35)",
                   borderRadius: 999,
-                  background: "rgba(122,230,255,0.11)",
-                  color: "#c6f5ff",
+                  background: "rgba(0,255,136,0.11)",
+                  color: "#b7f7d3",
                   fontSize: 10,
                   padding: "4px 9px",
                   cursor: "pointer",
@@ -2586,7 +2586,7 @@ export function SampleBrowserPanel({
           style={{
             marginTop: 6,
             paddingTop: 8,
-            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
             display: "grid",
             gap: 6,
           }}
@@ -2617,9 +2617,9 @@ export function SampleBrowserPanel({
                 border: "1px solid rgba(255,255,255,0.2)",
                 borderRadius: 999,
                 background: patternPreviewMode
-                  ? "rgba(122,230,255,0.12)"
+                  ? "rgba(0,255,136,0.12)"
                   : "rgba(255,255,255,0.04)",
-                color: patternPreviewMode ? "#c6f5ff" : "#d6deea",
+                color: patternPreviewMode ? "#b7f7d3" : "#d6deea",
                 fontSize: 10,
                 padding: "3px 8px",
                 cursor: "pointer",
@@ -2715,7 +2715,7 @@ export function SampleBrowserPanel({
                   fontSize: 10,
                   fontFamily: '"JetBrains Mono", monospace',
                   background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.06)",
                   borderRadius: 8,
                   padding: "6px 8px",
                   overflow: "auto",
@@ -2733,10 +2733,10 @@ export function SampleBrowserPanel({
                     setPendingPatternTool(null);
                   }}
                   style={{
-                    border: "1px solid rgba(122,230,255,0.35)",
+                    border: "1px solid rgba(0,255,136,0.35)",
                     borderRadius: 8,
-                    background: "rgba(122,230,255,0.11)",
-                    color: "#c6f5ff",
+                    background: "rgba(0,255,136,0.11)",
+                    color: "#b7f7d3",
                     fontSize: 10,
                     padding: "5px 8px",
                     cursor: "pointer",
@@ -2770,7 +2770,7 @@ export function SampleBrowserPanel({
 
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
           padding: "10px 12px 12px",
           display: "grid",
           gap: 8,
@@ -2853,7 +2853,7 @@ export function SampleBrowserPanel({
                 style={{
                   border: "1px solid rgba(255,255,255,0.2)",
                   borderRadius: 8,
-                  background: "rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.06)",
                   color: "#f0f4f9",
                   fontSize: 10,
                   padding: "6px 8px",
@@ -2884,7 +2884,7 @@ export function SampleBrowserPanel({
                   <div
                     key={source.id}
                     style={{
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.06)",
                       borderRadius: 8,
                       background: "rgba(255,255,255,0.03)",
                       padding: "7px 8px",
@@ -2944,10 +2944,10 @@ export function SampleBrowserPanel({
                           onInsertCode(buildSourceInsertSnippet(source))
                         }
                         style={{
-                          border: "1px solid rgba(122,230,255,0.35)",
+                          border: "1px solid rgba(0,255,136,0.35)",
                           borderRadius: 6,
-                          background: "rgba(122,230,255,0.11)",
-                          color: "#c6f5ff",
+                          background: "rgba(0,255,136,0.11)",
+                          color: "#b7f7d3",
                           fontSize: 10,
                           padding: "4px 7px",
                           cursor: "pointer",
