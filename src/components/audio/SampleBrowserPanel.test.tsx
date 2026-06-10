@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SampleBrowserPanel } from "./SampleBrowserPanel";
@@ -147,5 +153,55 @@ describe("SampleBrowserPanel shortcut profile polish", () => {
     expect(
       screen.getByText("Imported 2 profiles (replace mode)."),
     ).toBeInTheDocument();
+  });
+
+  it("imports custom profiles from file in replace mode", async () => {
+    render(<SampleBrowserPanel {...createProps()} />);
+
+    const payload = {
+      version: 1,
+      selectedProfileId: "f-b",
+      profiles: [
+        {
+          id: "f-a",
+          name: "File A",
+          keyboardModeEnabled: false,
+          showShortcutHelp: true,
+          patternPreviewMode: true,
+          macroApplyMode: "layer",
+        },
+        {
+          id: "f-b",
+          name: "File B",
+          keyboardModeEnabled: true,
+          showShortcutHelp: false,
+          patternPreviewMode: false,
+          macroApplyMode: "replace",
+        },
+      ],
+    };
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Import File Replace" }),
+    );
+
+    const fileInput = screen.getByLabelText("Import profile JSON file");
+    const file = new File([JSON.stringify(payload)], "profiles.json", {
+      type: "application/json",
+    });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Imported 2 profiles (replace mode)."),
+      ).toBeInTheDocument();
+    });
+
+    const list = screen.getByRole("combobox", { name: "Custom profile list" });
+    const options = within(list)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(options).toContain("File A");
+    expect(options).toContain("File B");
   });
 });

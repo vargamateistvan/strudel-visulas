@@ -404,11 +404,15 @@ export function SampleBrowserPanel({
     },
   );
   const [profileJsonBuffer, setProfileJsonBuffer] = useState("");
+  const [pendingFileImportMode, setPendingFileImportMode] = useState<
+    "merge" | "replace"
+  >("merge");
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const profileFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -778,8 +782,42 @@ export function SampleBrowserPanel({
     setFxApplyHint("Export prepared in buffer. Copy JSON manually.");
   };
 
-  const importCustomShortcutProfiles = (mode: "merge" | "replace") => {
-    const parsed = parseImportedShortcutProfiles(profileJsonBuffer.trim());
+  const downloadCustomShortcutProfiles = () => {
+    if (customShortcutProfiles.length === 0) {
+      setFxApplyHint("No custom profiles to download yet.");
+      return;
+    }
+
+    const payload = {
+      version: 1,
+      profiles: customShortcutProfiles,
+      selectedProfileId: fallbackSelectedCustomShortcutProfileId,
+    };
+    const text = JSON.stringify(payload, null, 2);
+    setProfileJsonBuffer(text);
+
+    if (typeof document === "undefined") {
+      setFxApplyHint("Download is unavailable in this environment.");
+      return;
+    }
+
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "strudel-shortcut-profiles.json";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    setFxApplyHint("Downloaded custom profile JSON.");
+  };
+
+  const importCustomShortcutProfilesFromSource = (
+    source: string,
+    mode: "merge" | "replace",
+  ) => {
+    const parsed = parseImportedShortcutProfiles(source.trim());
     if (!parsed) {
       setFxApplyHint("Import failed: invalid profile JSON.");
       return;
@@ -822,6 +860,34 @@ export function SampleBrowserPanel({
     setFxApplyHint(
       `Imported ${importedProfiles.length} profiles (merge mode).`,
     );
+  };
+
+  const importCustomShortcutProfiles = (mode: "merge" | "replace") => {
+    importCustomShortcutProfilesFromSource(profileJsonBuffer, mode);
+  };
+
+  const triggerFileImport = (mode: "merge" | "replace") => {
+    setPendingFileImportMode(mode);
+    profileFileInputRef.current?.click();
+  };
+
+  const handleProfileFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      setProfileJsonBuffer(text);
+      importCustomShortcutProfilesFromSource(text, pendingFileImportMode);
+    } catch {
+      setFxApplyHint("Import failed: unable to read selected file.");
+    } finally {
+      event.target.value = "";
+    }
   };
 
   const handlePatternTool = (tool: PatternTool) => {
@@ -2126,7 +2192,7 @@ export function SampleBrowserPanel({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(4, auto)",
+                gridTemplateColumns: "repeat(6, auto)",
                 gap: 6,
                 justifyContent: "start",
               }}
@@ -2149,6 +2215,23 @@ export function SampleBrowserPanel({
                 title="Export all custom profiles as JSON"
               >
                 Export JSON
+              </button>
+              <button
+                type="button"
+                onClick={downloadCustomShortcutProfiles}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 8,
+                  background: "rgba(255,255,255,0.08)",
+                  color: "#d6deea",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                title="Download custom profiles as JSON file"
+              >
+                Download File
               </button>
               <button
                 type="button"
@@ -2206,6 +2289,40 @@ export function SampleBrowserPanel({
               </button>
               <button
                 type="button"
+                onClick={() => triggerFileImport("merge")}
+                style={{
+                  border: "1px solid rgba(0,255,136,0.34)",
+                  borderRadius: 8,
+                  background: "rgba(0,255,136,0.08)",
+                  color: "#b6ffdb",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                title="Import profiles from file and merge"
+              >
+                Import File Merge
+              </button>
+              <button
+                type="button"
+                onClick={() => triggerFileImport("replace")}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 8,
+                  background: "rgba(255,255,255,0.06)",
+                  color: "#d6deea",
+                  fontSize: 11,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                title="Import profiles from file and replace current list"
+              >
+                Import File Replace
+              </button>
+              <button
+                type="button"
                 onClick={() => setProfileJsonBuffer("")}
                 disabled={profileJsonBuffer.length === 0}
                 style={{
@@ -2226,6 +2343,16 @@ export function SampleBrowserPanel({
               >
                 Clear Buffer
               </button>
+              <input
+                ref={profileFileInputRef}
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => {
+                  void handleProfileFileImport(event);
+                }}
+                aria-label="Import profile JSON file"
+                style={{ display: "none" }}
+              />
             </div>
           </div>
 
