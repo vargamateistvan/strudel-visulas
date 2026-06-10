@@ -42,11 +42,14 @@ interface StrudelEditorProps {
   activeMiniLocations?: SourceLocationRange[];
   onCodeChange?: (code: string) => void;
   onRegisterSelectionFxApplier?:
-    | ((
+    | ((appliers: {
         applyFxTailToSelection: (
           fxTail: string,
-        ) => "selection" | "document" | "none",
-      ) => void)
+        ) => "selection" | "document" | "none";
+        applyMacroLayerToSelection: (
+          snippet: string,
+        ) => "selection" | "document" | "none";
+      }) => void)
     | undefined;
 }
 
@@ -544,13 +547,34 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     [applySelectionTransform],
   );
 
+  const applyMacroLayerToSelection = useCallback(
+    (snippet: string) => {
+      const cleaned = snippet.trim();
+      if (!cleaned) return "none" as const;
+      return applySelectionTransform(
+        (source) => `stack(${source}, ${cleaned})`,
+      );
+    },
+    [applySelectionTransform],
+  );
+
   useEffect(() => {
     if (!onRegisterSelectionFxApplier) return;
-    onRegisterSelectionFxApplier(applyFxTailToSelection);
+    onRegisterSelectionFxApplier({
+      applyFxTailToSelection,
+      applyMacroLayerToSelection,
+    });
     return () => {
-      onRegisterSelectionFxApplier(() => "none");
+      onRegisterSelectionFxApplier({
+        applyFxTailToSelection: () => "none",
+        applyMacroLayerToSelection: () => "none",
+      });
     };
-  }, [applyFxTailToSelection, onRegisterSelectionFxApplier]);
+  }, [
+    applyFxTailToSelection,
+    applyMacroLayerToSelection,
+    onRegisterSelectionFxApplier,
+  ]);
 
   const handleMount = useCallback(
     (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {

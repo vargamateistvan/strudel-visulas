@@ -30,6 +30,7 @@ type SampleBrowserPanelProps = {
   onInsertCode: (snippet: string) => void;
   onAuditionCode: (snippet: string) => Promise<void>;
   onApplyFxToSelection: (fxTail: string) => FxApplyTarget;
+  onApplyMacroToSelection: (snippet: string) => FxApplyTarget;
   onAddSource: (name: string, url: string) => void;
   onRemoveSource: (id: string) => void;
   onToggleSource: (id: string) => void;
@@ -97,6 +98,7 @@ export function SampleBrowserPanel({
   onInsertCode,
   onAuditionCode,
   onApplyFxToSelection,
+  onApplyMacroToSelection,
   onAddSource,
   onRemoveSource,
   onToggleSource,
@@ -854,23 +856,55 @@ export function SampleBrowserPanel({
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {SYNTH_FX_MACROS.map((macro) => (
-            <button
-              key={macro.id}
-              type="button"
-              onClick={() => onInsertCode(macro.snippet)}
-              style={{
-                border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.05)",
-                color: "#d6deea",
-                fontSize: 10,
-                padding: "4px 9px",
-                cursor: "pointer",
-              }}
-              title={macro.description}
-            >
-              {macro.label}
-            </button>
+            <div key={macro.id} style={{ display: "flex", gap: 4 }}>
+              <button
+                type="button"
+                onClick={() => onInsertCode(macro.snippet)}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#d6deea",
+                  fontSize: 10,
+                  padding: "4px 9px",
+                  cursor: "pointer",
+                }}
+                title={macro.description}
+              >
+                {macro.label}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const result = onApplyMacroToSelection(macro.snippet);
+                  if (result === "selection") {
+                    setFxApplyHint(`Layered ${macro.label} onto selection.`);
+                    return;
+                  }
+                  if (result === "document") {
+                    setFxApplyHint(
+                      `No selection found. Layered ${macro.label} onto full document.`,
+                    );
+                    return;
+                  }
+                  setFxApplyHint(
+                    "Editor is not ready yet. Try again in a moment.",
+                  );
+                }}
+                style={{
+                  border: "1px solid rgba(122,230,255,0.35)",
+                  borderRadius: 999,
+                  background: "rgba(122,230,255,0.11)",
+                  color: "#c6f5ff",
+                  fontSize: 10,
+                  padding: "4px 9px",
+                  cursor: "pointer",
+                }}
+                title="Layer this macro with current selection"
+              >
+                +Sel
+              </button>
+            </div>
           ))}
         </div>
       </div>

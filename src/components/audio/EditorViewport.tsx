@@ -49,6 +49,11 @@ type EditorViewportProps = {
 
 type FxApplyTarget = "selection" | "document" | "none";
 
+type SelectionAppliers = {
+  applyFxTailToSelection: (fxTail: string) => FxApplyTarget;
+  applyMacroLayerToSelection: (snippet: string) => FxApplyTarget;
+};
+
 export function EditorViewport({
   code,
   play,
@@ -86,19 +91,24 @@ export function EditorViewport({
     toggleSource,
   } = useSampleWorkspace();
 
-  const applyFxTailRef = useRef<(fxTail: string) => FxApplyTarget>(
-    () => "none",
-  );
+  const selectionAppliersRef = useRef<SelectionAppliers>({
+    applyFxTailToSelection: () => "none",
+    applyMacroLayerToSelection: () => "none",
+  });
 
   const registerSelectionFxApplier = useCallback(
-    (applyFn: (fxTail: string) => FxApplyTarget) => {
-      applyFxTailRef.current = applyFn;
+    (appliers: SelectionAppliers) => {
+      selectionAppliersRef.current = appliers;
     },
     [],
   );
 
   const handleApplyFxToSelection = useCallback((fxTail: string) => {
-    return applyFxTailRef.current(fxTail);
+    return selectionAppliersRef.current.applyFxTailToSelection(fxTail);
+  }, []);
+
+  const handleApplyMacroToSelection = useCallback((snippet: string) => {
+    return selectionAppliersRef.current.applyMacroLayerToSelection(snippet);
   }, []);
 
   return (
@@ -169,6 +179,7 @@ export function EditorViewport({
             onInsertCode={onInsertCode}
             onAuditionCode={onAuditionCode}
             onApplyFxToSelection={handleApplyFxToSelection}
+            onApplyMacroToSelection={handleApplyMacroToSelection}
             onAddSource={addSource}
             onRemoveSource={removeSource}
             onToggleSource={toggleSource}
