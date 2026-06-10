@@ -2,6 +2,7 @@ type EditorToolbarProps = {
   fontFamily: string;
   onUndo: () => void;
   onRedo: () => void;
+  isMobile?: boolean;
 };
 
 const iconButtonStyle = {
@@ -19,6 +20,7 @@ export function EditorToolbar({
   fontFamily,
   onUndo,
   onRedo,
+  isMobile = false,
 }: EditorToolbarProps) {
   const buttonStyle = {
     ...iconButtonStyle,
@@ -26,14 +28,16 @@ export function EditorToolbar({
     background: "rgba(0,0,0,0.22)",
     color: "#c8ffd8",
     fontFamily,
+    fontSize: isMobile ? 11 : 10,
+    padding: isMobile ? "4px 9px 6px" : "3px 7px 6px",
   } as const;
 
   return (
     <div
       style={{
         position: "absolute",
-        left: 12,
-        top: 8,
+        left: isMobile ? 10 : 12,
+        top: isMobile ? 6 : 8,
         zIndex: 3,
         display: "flex",
         gap: 6,

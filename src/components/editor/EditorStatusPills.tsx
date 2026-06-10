@@ -7,11 +7,13 @@ type EditorStatusPill = {
 type EditorStatusPillsProps = {
   pills: EditorStatusPill[];
   fontFamily: string;
+  isMobile?: boolean;
 };
 
 export function EditorStatusPills({
   pills,
   fontFamily,
+  isMobile = false,
 }: EditorStatusPillsProps) {
   if (pills.length === 0) return null;
 
@@ -19,13 +21,13 @@ export function EditorStatusPills({
     <div
       style={{
         position: "absolute",
-        left: 14,
-        bottom: 12,
+        left: isMobile ? 10 : 14,
+        bottom: isMobile ? 10 : 12,
         zIndex: 4,
         display: "flex",
         flexWrap: "wrap",
         gap: 6,
-        maxWidth: "calc(100% - 28px)",
+        maxWidth: isMobile ? "calc(100% - 20px)" : "calc(100% - 28px)",
         pointerEvents: "none",
       }}
     >
@@ -35,15 +37,15 @@ export function EditorStatusPills({
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 6,
-            padding: "5px 8px",
+            gap: isMobile ? 5 : 6,
+            padding: isMobile ? "4px 7px" : "5px 8px",
             borderRadius: 999,
             border: `1px solid ${pill.accent}55`,
             background: "rgba(0,0,0,0.3)",
             boxShadow: `0 0 14px ${pill.accent}22`,
             color: "#dfe9ef",
             fontFamily,
-            fontSize: 10,
+            fontSize: isMobile ? 9 : 10,
             letterSpacing: 0.4,
           }}
         >

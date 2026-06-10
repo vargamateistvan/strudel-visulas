@@ -95,14 +95,14 @@ export function AudioWorkspace({
           position: "absolute",
           top: isMobile
             ? `calc(env(safe-area-inset-top, 0px) + ${
-                mobileHeaderExpanded ? 110 : 70
+                mobileHeaderExpanded ? 104 : 64
               }px)`
             : 48,
           left: 0,
           right: 0,
           bottom: 0,
           padding: isMobile
-            ? "8px 8px calc(env(safe-area-inset-bottom, 0px) + 10px)"
+            ? "6px 6px calc(env(safe-area-inset-bottom, 0px) + 8px)"
             : 24,
           display: "flex",
           alignItems: "stretch",

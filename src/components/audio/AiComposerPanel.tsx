@@ -22,6 +22,7 @@ type AiComposerPanelProps = {
   history: AiComposerHistoryEntry[];
   onClearHistory: () => void;
   onGenerate: (intent: AiGenerationIntent) => void;
+  isMobile?: boolean;
 };
 
 const historyOverlayStyle: CSSProperties = {
@@ -78,6 +79,7 @@ export function AiComposerPanel({
   history,
   onClearHistory,
   onGenerate,
+  isMobile = false,
 }: AiComposerPanelProps) {
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -108,7 +110,7 @@ export function AiComposerPanel({
         style={{
           width: "100%",
           marginTop: 10,
-          fontSize: 11,
+          fontSize: isMobile ? 10 : 11,
           color: "rgba(255,255,255,0.46)",
           paddingLeft: 8,
         }}
@@ -123,7 +125,7 @@ export function AiComposerPanel({
       <div
         style={{
           marginBottom: 6,
-          fontSize: 11,
+          fontSize: isMobile ? 10 : 11,
           color: "rgba(255,255,255,0.46)",
           paddingLeft: 8,
         }}
@@ -134,6 +136,8 @@ export function AiComposerPanel({
       <div
         style={{
           ...composerShellStyle,
+          borderRadius: isMobile ? 18 : 28,
+          padding: isMobile ? 5 : 6,
           opacity: 1,
           pointerEvents: "auto",
         }}
@@ -154,7 +158,13 @@ export function AiComposerPanel({
           }}
           placeholder="Use /new or /rework then describe your track"
           rows={1}
-          style={promptInputStyle}
+          style={{
+            ...promptInputStyle,
+            fontSize: isMobile ? 15 : 17,
+            minHeight: isMobile ? 32 : 34,
+            padding: isMobile ? "7px 9px" : "8px 10px",
+          }}
+          aria-label="AI prompt"
         />
 
         <button
@@ -163,15 +173,15 @@ export function AiComposerPanel({
           disabled={!canGenerate || isGenerating}
           onClick={() => onGenerate("new")}
           style={{
-            width: 42,
-            height: 42,
+            width: isMobile ? 38 : 42,
+            height: isMobile ? 38 : 42,
             flexShrink: 0,
-            borderRadius: 21,
+            borderRadius: isMobile ? 19 : 21,
             border: "none",
             background: canGenerate && !isGenerating ? "#3f4044" : "#2a2b2f",
             color: canGenerate && !isGenerating ? "#0f1115" : "#8b8d95",
-            fontSize: 25,
-            lineHeight: "42px",
+            fontSize: isMobile ? 22 : 25,
+            lineHeight: isMobile ? "38px" : "42px",
             fontWeight: 700,
             cursor: canGenerate && !isGenerating ? "pointer" : "default",
             padding: 0,
@@ -202,8 +212,8 @@ export function AiComposerPanel({
               borderRadius: 999,
               background: "rgba(255,255,255,0.04)",
               color: "rgba(255,255,255,0.8)",
-              fontSize: 11,
-              padding: "4px 10px",
+              fontSize: isMobile ? 10 : 11,
+              padding: isMobile ? "4px 8px" : "4px 10px",
               cursor: "pointer",
             }}
           >
@@ -219,8 +229,8 @@ export function AiComposerPanel({
             borderRadius: 999,
             background: "rgba(122,230,255,0.1)",
             color: "#b7f3ff",
-            fontSize: 11,
-            padding: "4px 10px",
+            fontSize: isMobile ? 10 : 11,
+            padding: isMobile ? "4px 8px" : "4px 10px",
             cursor: "pointer",
           }}
         >
@@ -244,7 +254,7 @@ export function AiComposerPanel({
           <div
             onClick={(event) => event.stopPropagation()}
             style={{
-              width: "min(900px, 96vw)",
+              width: isMobile ? "96vw" : "min(900px, 96vw)",
               maxHeight: "84vh",
               overflow: "hidden",
               borderRadius: 12,
@@ -262,6 +272,7 @@ export function AiComposerPanel({
                 gap: 8,
                 padding: "12px 14px",
                 borderBottom: "1px solid rgba(255,255,255,0.08)",
+                flexWrap: isMobile ? "wrap" : "nowrap",
               }}
             >
               <div
@@ -283,7 +294,7 @@ export function AiComposerPanel({
                   onClearHistory();
                 }}
                 style={{
-                  marginLeft: "auto",
+                  marginLeft: isMobile ? 0 : "auto",
                   border: "1px solid rgba(255,122,135,0.4)",
                   borderRadius: 8,
                   background: "rgba(255,122,135,0.12)",

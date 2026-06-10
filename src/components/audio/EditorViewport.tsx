@@ -171,18 +171,19 @@ export function EditorViewport({
             activeMiniLocations={activeMiniLocations}
             onCodeChange={onCodeChange}
             onRegisterSelectionFxApplier={registerSelectionFxApplier}
+            isMobile={isMobile}
           />
         </div>
 
-        <AiComposerPanel {...aiComposerProps} />
+        <AiComposerPanel {...aiComposerProps} isMobile={isMobile} />
       </div>
 
       {showSampleWorkspace && !isMobile && (
         <div
           style={{
-            width: isMobile ? "100%" : 330,
-            minWidth: isMobile ? 0 : 280,
-            maxWidth: isMobile ? "100%" : "34vw",
+            width: "clamp(260px, 30vw, 340px)",
+            minWidth: 260,
+            maxWidth: 360,
             height: isMobile ? 360 : "auto",
             minHeight: 0,
             display: "flex",
@@ -219,7 +220,7 @@ export function EditorViewport({
             right: 0,
             bottom: 0,
             zIndex: 35,
-            height: "min(68dvh, 560px)",
+            height: "clamp(280px, 58dvh, 520px)",
             maxHeight: "100%",
             minHeight: 280,
             display: "flex",

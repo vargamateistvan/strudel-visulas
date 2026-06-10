@@ -57,6 +57,7 @@ interface StrudelEditorProps {
         ) => "selection" | "document" | "none";
       }) => void)
     | undefined;
+  isMobile?: boolean;
 }
 
 type ThemeTokens = {
@@ -222,6 +223,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   activeMiniLocations,
   onCodeChange,
   onRegisterSelectionFxApplier,
+  isMobile = false,
 }) => {
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
@@ -744,7 +746,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        borderRadius: 10,
+        borderRadius: isMobile ? 8 : 10,
         overflow: "hidden",
         background: editorBackground,
         border: `1px solid ${themeTokens.border}`,
@@ -775,6 +777,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         fontFamily={editorFontFamily}
         onUndo={undoEdit}
         onRedo={redoEdit}
+        isMobile={isMobile}
       />
 
       <Editor
@@ -788,13 +791,13 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         }}
         options={{
           automaticLayout: true,
-          minimap: { enabled: true },
+          minimap: { enabled: !isMobile },
           smoothScrolling: true,
           cursorBlinking: "smooth",
           cursorSmoothCaretAnimation: "on",
           fontFamily: editorFontFamily,
           fontSize: editorFontSize,
-          lineHeight: Math.round(editorFontSize * 1.75),
+          lineHeight: Math.round(editorFontSize * (isMobile ? 1.65 : 1.75)),
           tabSize: 2,
           insertSpaces: true,
           wordWrap: "on",
@@ -803,7 +806,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           bracketPairColorization: { enabled: true },
           scrollBeyondLastLine: false,
           overviewRulerBorder: false,
-          padding: { top: 42, bottom: 18 },
+          padding: { top: isMobile ? 38 : 42, bottom: isMobile ? 14 : 18 },
           suggestOnTriggerCharacters: true,
           wordBasedSuggestions: "off",
           quickSuggestions: {
@@ -822,9 +825,14 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
       <EditorChrome
         fontFamily={editorFontFamily}
         liveEditError={liveEditError}
+        isMobile={isMobile}
       />
 
-      <EditorStatusPills pills={statusPills} fontFamily={editorFontFamily} />
+      <EditorStatusPills
+        pills={statusPills}
+        fontFamily={editorFontFamily}
+        isMobile={isMobile}
+      />
     </div>
   );
 };
