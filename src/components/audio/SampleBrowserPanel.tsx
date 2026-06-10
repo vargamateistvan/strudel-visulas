@@ -979,7 +979,6 @@ export function SampleBrowserPanel({
           ? "1px solid rgba(0,255,136,0.45)"
           : "1px solid rgba(255,255,255,0.07)",
         background: panelBackground,
-        backdropFilter: "blur(24px)",
         boxShadow: panelHasFocus
           ? "0 18px 40px rgba(0,0,0,0.38), 0 0 0 2px rgba(0,255,136,0.18)"
           : "0 18px 40px rgba(0,0,0,0.38)",
