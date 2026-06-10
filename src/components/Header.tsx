@@ -259,6 +259,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
     display: "block",
   } as const;
   const headerButtonSize = isMobile ? 34 : 40;
+  const brandMarkUrl = `${import.meta.env.BASE_URL}brand-mark.svg`;
 
   return (
     <header
@@ -288,7 +289,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <img
-            src="/brand-mark.svg"
+            src={brandMarkUrl}
             alt="Strudel Studio"
             style={{
               width: isMobile ? 20 : 24,
