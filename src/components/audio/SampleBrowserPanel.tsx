@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   buildSynthFxAuditionSnippet,
   buildSynthFxSnippet,
@@ -124,9 +124,11 @@ export function SampleBrowserPanel({
   const [macroApplyMode, setMacroApplyMode] =
     useState<MacroApplyMode>(readMacroApplyMode);
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
+  const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -180,16 +182,23 @@ export function SampleBrowserPanel({
 
   return (
     <div
+      ref={panelRef}
       tabIndex={0}
       onKeyDown={handlePanelKeyDown}
+      onFocus={() => setPanelHasFocus(true)}
+      onBlur={() => setPanelHasFocus(false)}
       style={{
         width: "100%",
         height: "100%",
         borderRadius: 12,
-        border: "1px solid rgba(122,230,255,0.2)",
+        border: panelHasFocus
+          ? "1px solid rgba(122,230,255,0.5)"
+          : "1px solid rgba(122,230,255,0.2)",
         background:
           "linear-gradient(180deg, rgba(9,14,24,0.95), rgba(6,10,16,0.92))",
-        boxShadow: "0 18px 40px rgba(0,0,0,0.38)",
+        boxShadow: panelHasFocus
+          ? "0 18px 40px rgba(0,0,0,0.38), 0 0 0 2px rgba(122,230,255,0.18)"
+          : "0 18px 40px rgba(0,0,0,0.38)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -984,6 +993,27 @@ export function SampleBrowserPanel({
             >
               L/R shortcuts
             </span>
+            <button
+              type="button"
+              onClick={() => {
+                panelRef.current?.focus();
+                setFxApplyHint("Panel focused. L/R shortcuts are now active.");
+              }}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background: panelHasFocus
+                  ? "rgba(122,230,255,0.16)"
+                  : "transparent",
+                color: panelHasFocus ? "#c6f5ff" : "rgba(255,255,255,0.62)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="Focus panel to use L/R shortcuts"
+            >
+              {panelHasFocus ? "Focused" : "Focus"}
+            </button>
           </div>
 
           {SYNTH_FX_MACROS.map((macro) => (
