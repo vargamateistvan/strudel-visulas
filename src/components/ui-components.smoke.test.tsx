@@ -225,20 +225,9 @@ describe("UI component smoke coverage", () => {
 
     const onUndo = vi.fn();
     render(
-      <EditorToolbar
-        fontFamily="monospace"
-        onUndo={onUndo}
-        onRedo={noop}
-        onFormat={noop}
-        onWrapRev={noop}
-        onWrapGain={noop}
-        onDuplicateStack={noop}
-        onQuickActions={noop}
-        onInsertBeat={noop}
-        onInsertAmbient={noop}
-      />,
+      <EditorToolbar fontFamily="monospace" onUndo={onUndo} onRedo={noop} />,
     );
-    fireEvent.click(screen.getByText("Undo"));
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     expect(onUndo).toHaveBeenCalledTimes(1);
   });
 

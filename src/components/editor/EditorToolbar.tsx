@@ -2,13 +2,6 @@ type EditorToolbarProps = {
   fontFamily: string;
   onUndo: () => void;
   onRedo: () => void;
-  onFormat: () => void;
-  onWrapRev: () => void;
-  onWrapGain: () => void;
-  onDuplicateStack: () => void;
-  onQuickActions: () => void;
-  onInsertBeat: () => void;
-  onInsertAmbient: () => void;
 };
 
 const iconButtonStyle = {
@@ -26,13 +19,6 @@ export function EditorToolbar({
   fontFamily,
   onUndo,
   onRedo,
-  onFormat,
-  onWrapRev,
-  onWrapGain,
-  onDuplicateStack,
-  onQuickActions,
-  onInsertBeat,
-  onInsertAmbient,
 }: EditorToolbarProps) {
   const buttonStyle = {
     ...iconButtonStyle,
@@ -54,32 +40,21 @@ export function EditorToolbar({
         alignItems: "center",
       }}
     >
-      <button onClick={onUndo} style={buttonStyle}>
-        Undo
+      <button
+        onClick={onUndo}
+        style={buttonStyle}
+        title="Undo"
+        aria-label="Undo"
+      >
+        ↶
       </button>
-      <button onClick={onRedo} style={buttonStyle}>
-        Redo
-      </button>
-      <button onClick={onFormat} style={buttonStyle}>
-        Format
-      </button>
-      <button onClick={onWrapRev} style={buttonStyle}>
-        rev
-      </button>
-      <button onClick={onWrapGain} style={buttonStyle}>
-        gain
-      </button>
-      <button onClick={onDuplicateStack} style={buttonStyle}>
-        stack
-      </button>
-      <button onClick={onQuickActions} style={buttonStyle}>
-        Actions
-      </button>
-      <button onClick={onInsertBeat} style={buttonStyle}>
-        + Beat
-      </button>
-      <button onClick={onInsertAmbient} style={buttonStyle}>
-        + Ambient
+      <button
+        onClick={onRedo}
+        style={buttonStyle}
+        title="Redo"
+        aria-label="Redo"
+      >
+        ↷
       </button>
     </div>
   );

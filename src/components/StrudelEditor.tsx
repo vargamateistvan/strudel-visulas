@@ -703,15 +703,6 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     ],
   );
 
-  const formatCode = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const action = editor.getAction("editor.action.formatDocument");
-    if (action) {
-      void action.run();
-    }
-  }, []);
-
   const undoEdit = useCallback(() => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -783,15 +774,6 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         fontFamily={editorFontFamily}
         onUndo={undoEdit}
         onRedo={redoEdit}
-        onFormat={formatCode}
-        onWrapRev={wrapInRev}
-        onWrapGain={wrapInGain}
-        onDuplicateStack={duplicateInStack}
-        onQuickActions={() =>
-          editorRef.current?.getAction("editor.action.quickCommand")?.run()
-        }
-        onInsertBeat={() => insertSnippet("Basic Beat")}
-        onInsertAmbient={() => insertSnippet("Ambient Chords")}
       />
 
       <Editor

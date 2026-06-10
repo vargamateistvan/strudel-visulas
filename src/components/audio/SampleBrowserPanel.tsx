@@ -285,6 +285,31 @@ const PATTERN_TOOL_META: Record<
   },
 };
 
+const QUICK_INSERT_ITEMS: Array<{ label: string; snippet: string }> = [
+  {
+    label: "note",
+    snippet: 'note("c3 eb3 g3 bb3").sound("triangle").slow(2).gain(0.35)',
+  },
+  {
+    label: "stack",
+    snippet: 'stack(sound("bd ~ bd ~"), sound("~ sn ~ sn")).cpm(120)',
+  },
+  {
+    label: "sound",
+    snippet: 'sound("bd ~ sd ~").bank("RolandTR909").gain(0.7)',
+  },
+  {
+    label: "basic beat",
+    snippet:
+      'stack(\n  sound("bd ~ bd ~"),\n  sound("~ sn ~ sn"),\n  sound("hh*8").gain(0.5)\n).cpm(120)',
+  },
+  {
+    label: "ambient",
+    snippet:
+      'stack(\n  note("c3 eb3 g3 bb3").sound("triangle").slow(2).gain(0.35),\n  note("c4 g4 eb4").sound("sawtooth").delay(0.4).gain(0.2)\n).cpm(72)',
+  },
+];
+
 const SHORTCUT_PROFILES: Array<{
   id: ShortcutProfileId;
   label: string;
@@ -411,6 +436,7 @@ export function SampleBrowserPanel({
   >("merge");
   const [recentSectionOpen, setRecentSectionOpen] = useState(true);
   const [catalogSectionOpen, setCatalogSectionOpen] = useState(true);
+  const [quickInsertSectionOpen, setQuickInsertSectionOpen] = useState(true);
   const [synthSectionOpen, setSynthSectionOpen] = useState(true);
   const [sourcesSectionOpen, setSourcesSectionOpen] = useState(true);
   const [panelHasFocus, setPanelHasFocus] = useState(false);
@@ -921,7 +947,7 @@ export function SampleBrowserPanel({
         border: panelHasFocus
           ? "1px solid rgba(0,255,136,0.45)"
           : "1px solid rgba(255,255,255,0.07)",
-        background: `rgba(8,8,18,${panelSurfaceOpacity})`,
+        background: `rgba(7,11,18,${panelSurfaceOpacity})`,
         backdropFilter: "blur(24px)",
         boxShadow: panelHasFocus
           ? "0 18px 40px rgba(0,0,0,0.38), 0 0 0 2px rgba(0,255,136,0.18)"
@@ -1249,6 +1275,68 @@ export function SampleBrowserPanel({
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          padding: "10px 12px 12px",
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setQuickInsertSectionOpen((prev) => !prev)}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            border: "none",
+            background: "none",
+            padding: 0,
+            cursor: "pointer",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 10,
+              letterSpacing: 1,
+              color: "rgba(255,255,255,0.56)",
+            }}
+          >
+            QUICK INSERTS
+          </span>
+          <span style={{ color: "rgba(255,255,255,0.56)", fontSize: 12 }}>
+            {quickInsertSectionOpen ? "-" : "+"}
+          </span>
+        </button>
+
+        {quickInsertSectionOpen && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {QUICK_INSERT_ITEMS.map((item) => (
+              <button
+                key={`quick-insert-${item.label}`}
+                type="button"
+                onClick={() => onInsertCode(item.snippet)}
+                style={{
+                  border: "1px solid rgba(0,255,136,0.3)",
+                  borderRadius: 999,
+                  background: "rgba(0,255,136,0.08)",
+                  color: "#b7f7d3",
+                  fontSize: 10,
+                  padding: "4px 8px",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.4,
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         )}
       </div>
