@@ -4,6 +4,7 @@ import type {
   CustomColorPreset,
   EditorColorPreset,
   EditorFontPreset,
+  IfsShape,
   VizMode,
 } from "../SettingsDrawer";
 
@@ -38,6 +39,7 @@ export type VisualSettings = {
   particleDensity: number;
   spectrumBarCount: number;
   spectrumWaveform: boolean;
+  ifsShape: IfsShape;
 };
 
 export type VisualSettingsMap = Partial<Record<VizMode, VisualSettings>>;
@@ -49,7 +51,12 @@ export const DEFAULT_VISUAL_SETTINGS: VisualSettings = {
   particleDensity: 220,
   spectrumBarCount: 96,
   spectrumWaveform: true,
+  ifsShape: "fern",
 };
+
+function isIfsShape(value: unknown): value is IfsShape {
+  return value === "fern" || value === "spiral" || value === "crystal";
+}
 
 export function isColorScheme(value: string): value is ColorScheme {
   return (
@@ -211,6 +218,7 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
   const particleDensityRaw = value.particleDensity;
   const spectrumBarCountRaw = value.spectrumBarCount;
   const spectrumWaveformRaw = value.spectrumWaveform;
+  const ifsShapeRaw = value.ifsShape;
   if (
     typeof kickRaw !== "number" ||
     typeof fractalRaw !== "number" ||
@@ -251,6 +259,10 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
       ? spectrumWaveformRaw
       : DEFAULT_VISUAL_SETTINGS.spectrumWaveform;
 
+  const ifsShape = isIfsShape(ifsShapeRaw)
+    ? ifsShapeRaw
+    : DEFAULT_VISUAL_SETTINGS.ifsShape;
+
   return {
     kickSensitivity,
     fractalQuality,
@@ -258,6 +270,7 @@ function parseVisualSettings(value: unknown): VisualSettings | null {
     particleDensity,
     spectrumBarCount,
     spectrumWaveform,
+    ifsShape,
   };
 }
 
@@ -327,6 +340,7 @@ export function loadVisualSettingsMap(): VisualSettingsMap {
       particleDensity: DEFAULT_VISUAL_SETTINGS.particleDensity,
       spectrumBarCount: DEFAULT_VISUAL_SETTINGS.spectrumBarCount,
       spectrumWaveform: DEFAULT_VISUAL_SETTINGS.spectrumWaveform,
+      ifsShape: DEFAULT_VISUAL_SETTINGS.ifsShape,
     };
   }
   return fallback;

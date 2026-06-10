@@ -2,7 +2,7 @@ import { ParticleField } from "../../visualizations/ParticleField";
 import { SpectrumAnalyzer } from "../../visualizations/SpectrumAnalyzer";
 import { FractalField } from "../../visualizations/FractalField";
 import type { AudioData, StrudelStatus } from "../../hooks/useStrudel";
-import type { ColorScheme, VizMode } from "../SettingsDrawer";
+import type { ColorScheme, IfsShape, VizMode } from "../SettingsDrawer";
 
 type BackgroundVisualizerProps = {
   audioData: AudioData;
@@ -16,6 +16,7 @@ type BackgroundVisualizerProps = {
   particleDensity: number;
   spectrumBarCount: number;
   spectrumWaveform: boolean;
+  ifsShape: IfsShape;
 };
 
 export function BackgroundVisualizer({
@@ -30,6 +31,7 @@ export function BackgroundVisualizer({
   particleDensity,
   spectrumBarCount,
   spectrumWaveform,
+  ifsShape,
 }: BackgroundVisualizerProps) {
   const isPlaying = status === "playing";
 
@@ -243,6 +245,7 @@ export function BackgroundVisualizer({
             colorScheme={colorScheme}
             customColors={customColors}
             mode="ifs"
+            ifsShape={ifsShape}
             isPlaying={isPlaying}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}

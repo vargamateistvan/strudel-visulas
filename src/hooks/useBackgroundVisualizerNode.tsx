@@ -15,6 +15,7 @@ type UseBackgroundVisualizerNodeArgs = {
   particleDensity: number;
   spectrumBarCount: number;
   spectrumWaveform: boolean;
+  ifsShape: "fern" | "spiral" | "crystal";
 };
 
 export function useBackgroundVisualizerNode({
@@ -29,6 +30,7 @@ export function useBackgroundVisualizerNode({
   particleDensity,
   spectrumBarCount,
   spectrumWaveform,
+  ifsShape,
 }: UseBackgroundVisualizerNodeArgs) {
   return useMemo(
     () => (
@@ -44,6 +46,7 @@ export function useBackgroundVisualizerNode({
         particleDensity={particleDensity}
         spectrumBarCount={spectrumBarCount}
         spectrumWaveform={spectrumWaveform}
+        ifsShape={ifsShape}
       />
     ),
     [
@@ -58,6 +61,7 @@ export function useBackgroundVisualizerNode({
       particleDensity,
       spectrumBarCount,
       spectrumWaveform,
+      ifsShape,
     ],
   );
 }

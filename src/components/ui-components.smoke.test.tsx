@@ -255,6 +255,8 @@ describe("UI component smoke coverage", () => {
         onSpectrumBarCount={noop}
         spectrumWaveform
         onSpectrumWaveform={noop}
+        ifsShape="fern"
+        onIfsShape={noop}
         fractalQuality={1}
         onFractalQuality={noop}
         mandelbulbSize={1}

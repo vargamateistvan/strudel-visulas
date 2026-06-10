@@ -28,6 +28,7 @@ interface FractalFieldProps {
   kickSensitivity?: number;
   fractalQuality?: number;
   mandelbulbSize?: number;
+  ifsShape?: "fern" | "spiral" | "crystal";
 }
 
 let runtimeCustomColors: [string, string, string] | null = null;
@@ -1224,6 +1225,7 @@ function drawIFS(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
+  ifsShape: "fern" | "spiral" | "crystal",
   bass: number,
   mid: number,
   treble: number,
@@ -1235,10 +1237,12 @@ function drawIFS(
   ctx.fillRect(0, 0, w, h);
 
   const cx = w / 2;
-  const baseY = h * 0.95;
+  const isCenteredIfs = ifsShape === "spiral" || ifsShape === "crystal";
+  const baseY = isCenteredIfs ? h * 0.56 : h * 0.95;
   let x = 0;
   let y = 0;
-  const points = 3200;
+  const points =
+    ifsShape === "spiral" ? 3600 : ifsShape === "crystal" ? 3400 : 3200;
   const sway = Math.sin(frame * 0.015) * (0.015 + mid * 0.03);
 
   for (let i = 0; i < points; i++) {
@@ -1246,7 +1250,32 @@ function drawIFS(
     let nx: number;
     let ny: number;
 
-    if (r < 0.01) {
+    if (ifsShape === "spiral") {
+      if (r < 0.6) {
+        nx = (0.79 + sway) * x - 0.24 * y + 0.12;
+        ny = 0.24 * x + (0.79 - sway) * y + 0.36;
+      } else if (r < 0.82) {
+        nx = 0.27 * x - 0.41 * y - 0.15;
+        ny = 0.41 * x + 0.27 * y + 0.52;
+      } else {
+        nx = -0.38 * x + 0.3 * y + 0.2;
+        ny = -0.3 * x - 0.38 * y + 0.46;
+      }
+    } else if (ifsShape === "crystal") {
+      if (r < 0.42) {
+        nx = 0.53 * x - 0.5 * y;
+        ny = 0.5 * x + 0.53 * y + 0.42;
+      } else if (r < 0.72) {
+        nx = -0.53 * x - 0.5 * y;
+        ny = 0.5 * x - 0.53 * y + 0.42;
+      } else if (r < 0.9) {
+        nx = 0.18 * x - 0.26 * y;
+        ny = 0.26 * x + 0.18 * y + 0.85;
+      } else {
+        nx = -0.18 * x - 0.26 * y;
+        ny = 0.26 * x - 0.18 * y + 0.85;
+      }
+    } else if (r < 0.01) {
       nx = 0;
       ny = 0.16 * y;
     } else if (r < 0.86) {
@@ -1263,14 +1292,21 @@ function drawIFS(
     x = nx;
     y = ny;
 
-    const px = cx + x * (w * (0.055 + bass * 0.03));
-    const py = baseY - y * (h * (0.055 + treble * 0.02));
+    const scaleBase =
+      ifsShape === "spiral" ? 0.075 : ifsShape === "crystal" ? 0.09 : 0.055;
+    const verticalBase =
+      ifsShape === "spiral" ? 0.068 : ifsShape === "crystal" ? 0.078 : 0.055;
+    const px = cx + x * (w * (scaleBase + bass * 0.03));
+    const yOffset =
+      ifsShape === "spiral" ? h * 0.12 : ifsShape === "crystal" ? h * 0.16 : 0;
+    const py = baseY + yOffset - y * (h * (verticalBase + treble * 0.02));
     const hue = schemeHue(
       scheme,
       ((i / points) * 0.7 + frame * 0.002 + bass * 0.2) % 1,
     );
+    const dotSize = ifsShape === "crystal" ? 1.4 : 1.2;
     ctx.fillStyle = `hsla(${hue},${70 + treble * 25}%,${38 + y * 5}%,${0.12 + volume * 0.45})`;
-    ctx.fillRect(px, py, 1.2, 1.2);
+    ctx.fillRect(px, py, dotSize, dotSize);
   }
 }
 
@@ -1409,6 +1445,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
   kickSensitivity = 1,
   fractalQuality = 2,
   mandelbulbSize = 1.28,
+  ifsShape = "fern",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
@@ -1618,6 +1655,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           ctx,
           w,
           h,
+          ifsShape,
           bassReactive,
           midReactive,
           trebleReactive,
@@ -1768,6 +1806,7 @@ export const FractalField: React.FC<FractalFieldProps> = ({
     kickSensitivity,
     fractalQuality,
     mandelbulbSize,
+    ifsShape,
   ]);
 
   return (

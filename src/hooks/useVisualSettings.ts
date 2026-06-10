@@ -20,6 +20,7 @@ export function useVisualSettings(vizMode: VizMode) {
   const particleDensity = currentVisualSettings.particleDensity;
   const spectrumBarCount = currentVisualSettings.spectrumBarCount;
   const spectrumWaveform = currentVisualSettings.spectrumWaveform;
+  const ifsShape = currentVisualSettings.ifsShape;
 
   const setKickSensitivityForViz = useCallback(
     (value: number) => {
@@ -117,6 +118,22 @@ export function useVisualSettings(vizMode: VizMode) {
     [vizMode],
   );
 
+  const setIfsShapeForViz = useCallback(
+    (value: "fern" | "spiral" | "crystal") => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            ifsShape: value,
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
   return {
     visualSettings,
     kickSensitivity,
@@ -125,11 +142,13 @@ export function useVisualSettings(vizMode: VizMode) {
     particleDensity,
     spectrumBarCount,
     spectrumWaveform,
+    ifsShape,
     setKickSensitivityForViz,
     setFractalQualityForViz,
     setMandelbulbSizeForViz,
     setParticleDensityForViz,
     setSpectrumBarCountForViz,
     setSpectrumWaveformForViz,
+    setIfsShapeForViz,
   };
 }

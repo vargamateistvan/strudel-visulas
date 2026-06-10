@@ -41,6 +41,7 @@ describe("BackgroundVisualizer", () => {
       particleDensity: 100,
       spectrumBarCount: 32,
       spectrumWaveform: true,
+      ifsShape: "fern" as const,
     };
 
     const layered = render(<BackgroundVisualizer {...common} vizMode="both" />);

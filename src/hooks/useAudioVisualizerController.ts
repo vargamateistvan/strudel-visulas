@@ -175,12 +175,14 @@ export function useAudioVisualizerController(): ComponentProps<
     particleDensity,
     spectrumBarCount,
     spectrumWaveform,
+    ifsShape,
     setKickSensitivityForViz,
     setFractalQualityForViz,
     setMandelbulbSizeForViz,
     setParticleDensityForViz,
     setSpectrumBarCountForViz,
     setSpectrumWaveformForViz,
+    setIfsShapeForViz,
   } = useVisualSettings(vizMode);
 
   const { handleLoadPreset, handleSplashClick } = useAudioVisualizerActions({
@@ -251,6 +253,7 @@ export function useAudioVisualizerController(): ComponentProps<
     particleDensity,
     spectrumBarCount,
     spectrumWaveform,
+    ifsShape,
   });
 
   const drawerAudioData = drawerOpen ? audioData : IDLE_AUDIO_DATA;
@@ -278,6 +281,8 @@ export function useAudioVisualizerController(): ComponentProps<
       onSpectrumBarCount: setSpectrumBarCountForViz,
       spectrumWaveform,
       onSpectrumWaveform: setSpectrumWaveformForViz,
+      ifsShape,
+      onIfsShape: setIfsShapeForViz,
       fractalQuality,
       onFractalQuality: setFractalQualityForViz,
       mandelbulbSize,
@@ -335,6 +340,8 @@ export function useAudioVisualizerController(): ComponentProps<
       setSpectrumBarCountForViz,
       spectrumWaveform,
       setSpectrumWaveformForViz,
+      ifsShape,
+      setIfsShapeForViz,
       fractalQuality,
       setFractalQualityForViz,
       mandelbulbSize,

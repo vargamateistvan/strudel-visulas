@@ -37,6 +37,7 @@ export type EditorFontPreset =
   | "bitcountSingle"
   | "doto"
   | "firaCode";
+export type IfsShape = "fern" | "spiral" | "crystal";
 
 export interface CustomColorPreset {
   id: string;
@@ -70,6 +71,8 @@ interface SettingsDrawerProps {
   onSpectrumBarCount: (v: number) => void;
   spectrumWaveform: boolean;
   onSpectrumWaveform: (enabled: boolean) => void;
+  ifsShape: IfsShape;
+  onIfsShape: (shape: IfsShape) => void;
   fractalQuality: number;
   onFractalQuality: (v: number) => void;
   mandelbulbSize: number;
@@ -239,6 +242,12 @@ const EDITOR_FONTS: {
   },
 ];
 
+const IFS_SHAPES: { key: IfsShape; label: string; desc: string }[] = [
+  { key: "fern", label: "Fern", desc: "Classic organic attractor" },
+  { key: "spiral", label: "Spiral", desc: "Swirling spiral petals" },
+  { key: "crystal", label: "Crystal", desc: "Symmetric crystalline branches" },
+];
+
 const FreqBar = ({
   label,
   value,
@@ -320,6 +329,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onSpectrumBarCount,
   spectrumWaveform,
   onSpectrumWaveform,
+  ifsShape,
+  onIfsShape,
   fractalQuality,
   onFractalQuality,
   mandelbulbSize,
@@ -360,6 +371,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   const showMandelbulbSize = vizMode === "mandelbulb";
   const showParticleDensity = vizMode === "particles" || vizMode === "both";
   const showSpectrumSettings = vizMode === "spectrum" || vizMode === "both";
+  const showIfsSettings = vizMode === "ifs";
 
   return (
     <>
@@ -645,6 +657,64 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
                   onChange={(e) => onSpectrumWaveform(e.target.checked)}
                 />
               </label>
+            </section>
+          )}
+
+          {showIfsSettings && (
+            <section>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "var(--text-dim)",
+                  marginBottom: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  fontFamily: '"JetBrains Mono",monospace',
+                }}
+              >
+                IFS Shape
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {IFS_SHAPES.map(({ key, label, desc }) => (
+                  <button
+                    key={key}
+                    onClick={() => onIfsShape(key)}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      border:
+                        ifsShape === key
+                          ? "1px solid var(--border-accent)"
+                          : "1px solid var(--border-faint)",
+                      background:
+                        ifsShape === key
+                          ? "var(--surface-active)"
+                          : "var(--surface-1)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontFamily: '"JetBrains Mono",monospace',
+                        color:
+                          ifsShape === key
+                            ? "var(--primary)"
+                            : "var(--text-soft)",
+                        fontWeight: ifsShape === key ? 700 : 400,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {label}
+                    </div>
+                    <div style={{ fontSize: 10, color: "var(--text-dim)" }}>
+                      {desc}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </section>
           )}
 
