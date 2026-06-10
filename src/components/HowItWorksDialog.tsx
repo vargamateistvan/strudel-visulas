@@ -117,23 +117,52 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             <span style={badgeStyle}>1</span>
             <div>
               Write or paste a pattern in the editor. Strudel uses compact
-              musical code to describe notes, drums, effects, and timing.
+              musical code to describe drums, notes, effects, and timing.
             </div>
           </div>
 
           <div style={rowStyle}>
             <span style={badgeStyle}>2</span>
             <div>
-              Press PLAY to run the pattern and drive the visuals in real time.
-              Use PRESETS for fast starting points and SETTINGS to tune visuals.
+              Press PLAY to run the pattern and drive visuals in real time. Use
+              PRESETS for quick starts and SAMPLE WORKSPACE for code snippets,
+              FX, and source tokens.
             </div>
           </div>
 
           <div style={rowStyle}>
             <span style={badgeStyle}>3</span>
             <div>
-              Save your favorite patterns, export them as TXT or HTML, and tweak
-              kick sensitivity to make the visuals react harder to drums.
+              Open SETTINGS to tune visual modes, editor style, audio response,
+              and recording/export quality.
+            </div>
+          </div>
+
+          <div style={rowStyle}>
+            <span style={badgeStyle}>4</span>
+            <div>
+              Enable AI Composer in SETTINGS, choose provider (ChatGPT or
+              Gemini), then generate Strudel code directly from prompt text.
+            </div>
+          </div>
+
+          <div style={rowStyle}>
+            <span style={badgeStyle}>5</span>
+            <div>
+              Use prompt commands for intent control:
+              <span
+                style={{
+                  display: "block",
+                  marginTop: 4,
+                  fontFamily: '"JetBrains Mono",monospace',
+                  fontSize: 12,
+                  color: "#b7f3ff",
+                }}
+              >
+                /new, /rework, /variation
+              </span>
+              You can replace or append generated code and reuse prompts from AI
+              history.
             </div>
           </div>
 
