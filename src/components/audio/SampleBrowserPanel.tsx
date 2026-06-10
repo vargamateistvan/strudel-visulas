@@ -21,11 +21,20 @@ type MacroApplyMode = "layer" | "replace";
 type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
 
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
+const PATTERN_PREVIEW_MODE_KEY =
+  "strudel:sample-workspace:pattern-preview-mode:v1";
 
 function readMacroApplyMode(): MacroApplyMode {
   if (typeof window === "undefined") return "layer";
   const saved = localStorage.getItem(MACRO_APPLY_MODE_KEY);
   return saved === "replace" ? "replace" : "layer";
+}
+
+function readPatternPreviewMode(): boolean {
+  if (typeof window === "undefined") return true;
+  const saved = localStorage.getItem(PATTERN_PREVIEW_MODE_KEY);
+  if (saved === null) return true;
+  return saved === "true";
 }
 
 type SampleBrowserPanelProps = {
@@ -143,7 +152,9 @@ export function SampleBrowserPanel({
   );
   const [macroApplyMode, setMacroApplyMode] =
     useState<MacroApplyMode>(readMacroApplyMode);
-  const [patternPreviewMode, setPatternPreviewMode] = useState(true);
+  const [patternPreviewMode, setPatternPreviewMode] = useState<boolean>(
+    readPatternPreviewMode,
+  );
   const [pendingPatternTool, setPendingPatternTool] =
     useState<PatternTool | null>(null);
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
@@ -157,6 +168,11 @@ export function SampleBrowserPanel({
     if (typeof window === "undefined") return;
     localStorage.setItem(MACRO_APPLY_MODE_KEY, macroApplyMode);
   }, [macroApplyMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(PATTERN_PREVIEW_MODE_KEY, String(patternPreviewMode));
+  }, [patternPreviewMode]);
 
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
