@@ -23,6 +23,7 @@ type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
   "strudel:sample-workspace:pattern-preview-mode:v1";
+const SHORTCUT_HELP_OPEN_KEY = "strudel:sample-workspace:shortcut-help-open:v1";
 
 function readMacroApplyMode(): MacroApplyMode {
   if (typeof window === "undefined") return "layer";
@@ -34,6 +35,13 @@ function readPatternPreviewMode(): boolean {
   if (typeof window === "undefined") return true;
   const saved = localStorage.getItem(PATTERN_PREVIEW_MODE_KEY);
   if (saved === null) return true;
+  return saved === "true";
+}
+
+function readShortcutHelpOpen(): boolean {
+  if (typeof window === "undefined") return false;
+  const saved = localStorage.getItem(SHORTCUT_HELP_OPEN_KEY);
+  if (saved === null) return false;
   return saved === "true";
 }
 
@@ -158,7 +166,8 @@ export function SampleBrowserPanel({
   const [pendingPatternTool, setPendingPatternTool] =
     useState<PatternTool | null>(null);
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
-  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] =
+    useState<boolean>(readShortcutHelpOpen);
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
@@ -174,6 +183,11 @@ export function SampleBrowserPanel({
     if (typeof window === "undefined") return;
     localStorage.setItem(PATTERN_PREVIEW_MODE_KEY, String(patternPreviewMode));
   }, [patternPreviewMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(SHORTCUT_HELP_OPEN_KEY, String(showShortcutHelp));
+  }, [showShortcutHelp]);
 
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
