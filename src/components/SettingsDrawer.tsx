@@ -14,7 +14,9 @@ export type VizMode =
   | "particles"
   | "spectrum"
   | "lissajous"
+  | "auroraRings"
   | "julia"
+  | "mandelbrot"
   | "mandelbulb"
   | "mandelbox"
   | "ifs"
@@ -107,6 +109,11 @@ const VIZ_MODES: { key: VizMode; label: string; desc: string }[] = [
   { key: "spectrum", label: "Spectrum", desc: "Frequency bar + waveform" },
   { key: "lissajous", label: "Lissajous", desc: "Phase-space oscilloscope" },
   {
+    key: "auroraRings",
+    label: "Aurora Rings",
+    desc: "Layered rings and spokes driven by spectrum",
+  },
+  {
     key: "kaleidoscope",
     label: "Kaleidoscope",
     desc: "Mirrored petals synced to rhythm",
@@ -138,6 +145,11 @@ const VIZ_MODES: { key: VizMode; label: string; desc: string }[] = [
     desc: "Lindenmayer turtle growth",
   },
   { key: "julia", label: "Julia Set", desc: "Audio-driven fractal" },
+  {
+    key: "mandelbrot",
+    label: "Mandelbrot",
+    desc: "Classic zooming fractal with music modulation",
+  },
   { key: "both", label: "Layered", desc: "Particles + spectrum blend" },
 ];
 

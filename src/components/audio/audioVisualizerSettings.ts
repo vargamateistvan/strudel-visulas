@@ -62,15 +62,14 @@ export function isColorScheme(value: string): value is ColorScheme {
 }
 
 export function isVizMode(value: string): value is VizMode {
-  if (value === "mandelbrot" || value === "burningShip") {
-    return true;
-  }
   return (
     value === "particles" ||
     value === "spectrum" ||
     value === "lissajous" ||
+    value === "auroraRings" ||
     value === "kaleidoscope" ||
     value === "kaleidoTunnel" ||
+    value === "mandelbrot" ||
     value === "mandelbulb" ||
     value === "mandelbox" ||
     value === "ifs" ||
@@ -266,7 +265,9 @@ export function loadVisualSettingsMap(): VisualSettingsMap {
     "particles",
     "spectrum",
     "lissajous",
+    "auroraRings",
     "julia",
+    "mandelbrot",
     "mandelbulb",
     "mandelbox",
     "ifs",

@@ -7,6 +7,7 @@ interface FractalFieldProps {
   customColors?: [string, string, string];
   mode?:
     | "lissajous"
+    | "auroraRings"
     | "julia"
     | "kaleidoscope"
     | "kaleidoTunnel"
@@ -108,7 +109,7 @@ function drawLissajous(
 
   const cx = w / 2,
     cy = h / 2;
-  const scale = Math.min(w, h) * 0.42;
+  const scale = Math.min(w, h) * 3.6;
 
   // draw multiple phase-shifted copies for richness
   const layers = 3;
@@ -641,6 +642,83 @@ function drawKaleidoTunnel(
   ctx.shadowBlur = 0;
 }
 
+function drawAuroraRings(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  frequencies: Uint8Array,
+  waveform: Uint8Array,
+  bass: number,
+  mid: number,
+  treble: number,
+  volume: number,
+  scheme: string,
+  frame: number,
+) {
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxR = Math.min(w, h) * 0.48;
+  const ringCount = 20;
+  const spokeCount = 72;
+  const t = frame * 0.02;
+
+  ctx.fillStyle = `rgba(4,7,14,${0.18 + volume * 0.08})`;
+  ctx.fillRect(0, 0, w, h);
+
+  for (let ring = 0; ring < ringCount; ring++) {
+    const rp = (ring + 1) / ringCount;
+    const freqIdx = Math.floor((rp * 0.9 + 0.05) * (frequencies.length - 1));
+    const fv = (frequencies[freqIdx] ?? 0) / 255;
+    const baseRadius = maxR * rp;
+    const pulse = (0.012 + bass * 0.07) * Math.sin(t * 2.1 + ring * 0.5);
+    const radius = baseRadius * (1 + pulse) + fv * (4 + treble * 16);
+    const hue = schemeHue(scheme, (rp * 0.65 + t * 0.02 + mid * 0.18) % 1);
+    const alpha = 0.1 + fv * 0.35 + volume * 0.12;
+    const color = `hsla(${hue},${72 + treble * 20}%,${44 + bass * 20}%,${alpha})`;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(2, radius), 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 5 + fv * 18;
+    ctx.lineWidth = 0.8 + fv * 2.2;
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
+
+  for (let i = 0; i < spokeCount; i++) {
+    const p = i / spokeCount;
+    const waveIdx = Math.floor(p * (waveform.length - 1));
+    const wv = (waveform[waveIdx] ?? 128) / 128 - 1;
+    const angle = p * Math.PI * 2 + t * (0.28 + treble * 0.4);
+    const inner = maxR * (0.1 + mid * 0.08);
+    const outer = maxR * (0.75 + Math.abs(wv) * (0.2 + bass * 0.15));
+    const x1 = cx + Math.cos(angle) * inner;
+    const y1 = cy + Math.sin(angle) * inner;
+    const x2 = cx + Math.cos(angle) * outer;
+    const y2 = cy + Math.sin(angle) * outer;
+    const hue = schemeHue(scheme, (p * 0.85 + volume * 0.1 + t * 0.03) % 1);
+    const alpha = 0.08 + Math.abs(wv) * 0.4;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = `hsla(${hue},${76 + mid * 20}%,${50 + treble * 22}%,${alpha})`;
+    ctx.lineWidth = 0.6 + Math.abs(wv) * 2.1;
+    ctx.stroke();
+  }
+
+  const coreHue = schemeHue(scheme, (t * 0.06 + bass * 0.2) % 1);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 12 + bass * 24, 0, Math.PI * 2);
+  ctx.fillStyle = `hsla(${coreHue},90%,64%,${0.24 + volume * 0.36})`;
+  ctx.shadowColor = `hsla(${coreHue},90%,64%,1)`;
+  ctx.shadowBlur = 16 + bass * 30;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 function drawMandelbulb(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -1059,6 +1137,20 @@ export const FractalField: React.FC<FractalFieldProps> = ({
           trebleReactive,
           volumeReactive,
           colorScheme,
+        );
+      } else if (mode === "auroraRings") {
+        drawAuroraRings(
+          ctx,
+          w,
+          h,
+          frequencies,
+          waveform,
+          bassReactive,
+          midReactive,
+          trebleReactive,
+          volumeReactive,
+          colorScheme,
+          frameRef.current,
         );
       } else if (mode === "kaleidoscope") {
         drawKaleidoscope(

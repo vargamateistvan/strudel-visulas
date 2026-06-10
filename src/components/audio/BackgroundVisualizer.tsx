@@ -79,6 +79,19 @@ export function BackgroundVisualizer({
           />
         </div>
       )}
+      {vizMode === "auroraRings" && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <FractalField
+            audioData={audioData}
+            colorScheme={colorScheme}
+            customColors={customColors}
+            mode="auroraRings"
+            isPlaying={isPlaying}
+            kickSensitivity={kickSensitivity}
+            fractalQuality={fractalQuality}
+          />
+        </div>
+      )}
       {vizMode === "julia" && (
         <div style={{ position: "absolute", inset: 0 }}>
           <FractalField
@@ -184,26 +197,13 @@ export function BackgroundVisualizer({
           />
         </div>
       )}
-      {(vizMode as string) === "mandelbrot" && (
+      {vizMode === "mandelbrot" && (
         <div style={{ position: "absolute", inset: 0 }}>
           <FractalField
             audioData={audioData}
             colorScheme={colorScheme}
             customColors={customColors}
             mode="mandelbrot"
-            isPlaying={isPlaying}
-            kickSensitivity={kickSensitivity}
-            fractalQuality={fractalQuality}
-          />
-        </div>
-      )}
-      {(vizMode as string) === "burningShip" && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <FractalField
-            audioData={audioData}
-            colorScheme={colorScheme}
-            customColors={customColors}
-            mode="burningShip"
             isPlaying={isPlaying}
             kickSensitivity={kickSensitivity}
             fractalQuality={fractalQuality}

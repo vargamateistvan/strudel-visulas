@@ -62,4 +62,21 @@ describe("visualization components", () => {
 
     expect(container.querySelector("canvas")).toBeInTheDocument();
   });
+
+  it("renders Aurora Rings mode canvas", () => {
+    const { container } = render(
+      <FractalField
+        audioData={audioData}
+        colorScheme="neon"
+        customColors={["#00ff88", "#00ffff", "#ff00ff"]}
+        mode="auroraRings"
+        isPlaying={false}
+        kickSensitivity={1}
+        fractalQuality={1}
+        mandelbulbSize={1}
+      />,
+    );
+
+    expect(container.querySelector("canvas")).toBeInTheDocument();
+  });
 });
