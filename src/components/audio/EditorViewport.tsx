@@ -187,6 +187,7 @@ export function EditorViewport({
         >
           <SampleBrowserPanel
             opacity={opacity}
+            colorPreset={colorPreset}
             category={category}
             onCategoryChange={setCategory}
             query={query}

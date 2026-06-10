@@ -36,6 +36,31 @@ type ImportedShortcutProfilesPayload = {
   selectedProfileId: string | null;
 };
 
+type EditorColorPreset = "neon" | "amber" | "ice" | "mono";
+
+const SAMPLE_PANEL_BG_BY_PRESET: Record<EditorColorPreset, string> = {
+  neon: "#070b12",
+  amber: "#100b06",
+  ice: "#061019",
+  mono: "#0b1017",
+};
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace("#", "");
+  const value =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : normalized;
+  const r = Number.parseInt(value.slice(0, 2), 16);
+  const g = Number.parseInt(value.slice(2, 4), 16);
+  const b = Number.parseInt(value.slice(4, 6), 16);
+  const clampedAlpha = Math.max(0, Math.min(1, alpha));
+  return `rgba(${r},${g},${b},${clampedAlpha})`;
+}
+
 const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
   "strudel:sample-workspace:pattern-preview-mode:v1";
@@ -230,6 +255,7 @@ function parseImportedShortcutProfiles(
 
 type SampleBrowserPanelProps = {
   opacity: number;
+  colorPreset: EditorColorPreset;
   category: SampleCategory | "all";
   onCategoryChange: (value: SampleCategory | "all") => void;
   query: string;
@@ -379,6 +405,7 @@ function badgeStyle(status: AuditionStatus) {
 
 export function SampleBrowserPanel({
   opacity,
+  colorPreset,
   category,
   onCategoryChange,
   query,
@@ -443,7 +470,11 @@ export function SampleBrowserPanel({
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
-  const panelSurfaceOpacity = Math.max(0.38, Math.min(1, opacity));
+  const panelSurfaceOpacity = Math.max(0, Math.min(1, opacity));
+  const panelBackground = hexToRgba(
+    SAMPLE_PANEL_BG_BY_PRESET[colorPreset],
+    panelSurfaceOpacity,
+  );
   const panelRef = useRef<HTMLDivElement | null>(null);
   const profileFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -947,7 +978,7 @@ export function SampleBrowserPanel({
         border: panelHasFocus
           ? "1px solid rgba(0,255,136,0.45)"
           : "1px solid rgba(255,255,255,0.07)",
-        background: `rgba(7,11,18,${panelSurfaceOpacity})`,
+        background: panelBackground,
         backdropFilter: "blur(24px)",
         boxShadow: panelHasFocus
           ? "0 18px 40px rgba(0,0,0,0.38), 0 0 0 2px rgba(0,255,136,0.18)"

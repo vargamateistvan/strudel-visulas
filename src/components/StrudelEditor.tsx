@@ -249,13 +249,14 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
   const editorFontFamily =
     EDITOR_FONT_FAMILY[fontPreset] ?? EDITOR_FONT_FAMILY.jetbrainsMono;
   const editorFontSize = Math.max(11, Math.min(22, Math.round(fontSize)));
+  const editorSurfaceOpacity = Math.max(0, Math.min(1, opacity));
   const editorBackground = hexToRgba(
     themeTokens.background,
-    Math.max(0.38, opacity),
+    editorSurfaceOpacity,
   );
   const monacoBackground = hexToAlphaHex(
     themeTokens.background,
-    Math.max(0.38, opacity),
+    editorSurfaceOpacity,
   );
 
   useEffect(() => {

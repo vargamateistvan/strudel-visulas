@@ -13,6 +13,7 @@ const noop = vi.fn();
 
 const createProps = () => ({
   opacity: 0.8,
+  colorPreset: "neon" as const,
   category: "all" as const,
   onCategoryChange: noop,
   query: "",
