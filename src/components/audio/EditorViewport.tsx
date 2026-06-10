@@ -129,9 +129,12 @@ export function EditorViewport({
     return selectionAppliersRef.current.applyPatternToolToSelection(tool);
   }, []);
 
+  const showMobileSampleSheet = isMobile && showSampleWorkspace;
+
   return (
     <div
       style={{
+        position: "relative",
         width: "100%",
         maxWidth: showSampleWorkspace ? 1140 : 860,
         height: "100%",
@@ -174,7 +177,7 @@ export function EditorViewport({
         <AiComposerPanel {...aiComposerProps} />
       </div>
 
-      {showSampleWorkspace && (
+      {showSampleWorkspace && !isMobile && (
         <div
           style={{
             width: isMobile ? "100%" : 330,
@@ -205,6 +208,70 @@ export function EditorViewport({
             onRemoveSource={removeSource}
             onToggleSource={toggleSource}
           />
+        </div>
+      )}
+
+      {showMobileSampleSheet && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 35,
+            height: "min(68dvh, 560px)",
+            maxHeight: "100%",
+            minHeight: 280,
+            display: "flex",
+            flexDirection: "column",
+            borderTop: "1px solid var(--border-subtle)",
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+            overflow: "hidden",
+            boxShadow: "0 -20px 40px rgba(0,0,0,0.42)",
+          }}
+        >
+          <div
+            style={{
+              height: 22,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "var(--bg-elevated)",
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 999,
+                background: "var(--border-subtle)",
+              }}
+            />
+          </div>
+
+          <div style={{ flex: "1 1 auto", minHeight: 0 }}>
+            <SampleBrowserPanel
+              opacity={opacity}
+              colorPreset={colorPreset}
+              category={category}
+              onCategoryChange={setCategory}
+              query={query}
+              onQueryChange={setQuery}
+              filteredCatalog={filteredCatalog}
+              recentItems={recentItems}
+              customSources={customSources}
+              onAddRecentToken={addRecentToken}
+              onInsertCode={onInsertCode}
+              onAuditionCode={onAuditionCode}
+              onApplyFxToSelection={handleApplyFxToSelection}
+              onApplyMacroToSelection={handleApplyMacroToSelection}
+              onApplyPatternTool={handleApplyPatternTool}
+              onAddSource={addSource}
+              onRemoveSource={removeSource}
+              onToggleSource={toggleSource}
+            />
+          </div>
         </div>
       )}
     </div>

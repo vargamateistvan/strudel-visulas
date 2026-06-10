@@ -5,7 +5,9 @@ const SAMPLE_WORKSPACE_OPEN_KEY = "strudel:sample-workspace-open:v1";
 function readSampleWorkspaceOpen(): boolean {
   if (typeof window === "undefined") return true;
   const saved = localStorage.getItem(SAMPLE_WORKSPACE_OPEN_KEY);
-  if (saved === null) return true;
+  if (saved === null) {
+    return window.innerWidth >= 900;
+  }
   return saved === "true";
 }
 
