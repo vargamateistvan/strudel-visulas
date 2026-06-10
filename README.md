@@ -1,73 +1,91 @@
-# React + TypeScript + Vite
+# Strudel Visulas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Strudel Visulas is an in-browser live-coding music playground built with React, TypeScript, Vite, and Strudel. It combines a Monaco-based Strudel editor, real-time audio visualizations, preset/sample workflows, recording export, and an AI Composer that can generate Strudel code from natural language prompts.
 
-Currently, two official plugins are available:
+## Highlights
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Live Strudel coding with Monaco editor and custom language support.
+- Audio-reactive visual modes (particles, spectrum, fractal variants, kaleido modes, and more).
+- Local preset save/load plus sample workspace tools.
+- MP3 export flow with quality presets.
+- AI Composer with provider switching (OpenAI ChatGPT and Google Gemini), prompt presets, slash-intent commands, and generation history.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript
+- Vite
+- Strudel packages (`@strudel/core`, `@strudel/webaudio`, `@strudel/mini`, `@strudel/codemirror`, `@strudel/tonal`)
+- Monaco editor
+- Vitest + Testing Library
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js 20+
+- Yarn (recommended for this repo)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Run development server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn dev
 ```
+
+### Build
+
+```bash
+yarn build
+```
+
+### Preview production build
+
+```bash
+yarn preview
+```
+
+## Available Scripts
+
+- `yarn dev`: Start Vite dev server.
+- `yarn build`: Type-check and build for production.
+- `yarn lint`: Run ESLint.
+- `yarn test`: Run tests once.
+- `yarn test:watch`: Run tests in watch mode.
+- `yarn test:coverage`: Run tests with coverage.
+
+## Project Structure (Key Paths)
+
+- `src/components`: UI components and editor/visualizer composition.
+- `src/components/audio`: Main workspace shell, AI composer panel, sample browser, and overlays.
+- `src/components/settings`: Settings sections including AI Composer settings.
+- `src/hooks`: App orchestration hooks (audio, visuals, persistence, AI composer integration).
+- `src/ai`: AI prompt/skill shaping logic for Strudel code generation.
+- `src/visualizations`: Visualization implementations.
+
+## AI Composer
+
+AI Composer is integrated into the editor workflow and is controlled via Settings.
+
+- Toggle on/off from the Settings drawer.
+- Choose provider: ChatGPT (OpenAI) or Gemini (Google).
+- Set apply mode: replace current editor code or append generated code.
+- Use slash commands in prompt input:
+  - `/new ...`
+  - `/rework ...`
+  - `/variation ...`
+
+For full architecture and implementation details, see [docs/ai-agents.md](docs/ai-agents.md).
+
+## Notes
+
+- API keys are handled in client-side state/localStorage according to your settings.
+- If AI generation fails, the UI surfaces provider-friendly error messages and keeps history entries (including failures).
+
+## License
+
+No license file is currently included.
