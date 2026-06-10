@@ -276,6 +276,8 @@ describe("UI component smoke coverage", () => {
         onLivePulseStrip={noop}
         livePlayingNoteHighlights
         onLivePlayingNoteHighlights={noop}
+        sampleWorkspaceOpen
+        onSampleWorkspaceOpenChange={noop}
         recordingMode="audio"
         onRecordingMode={noop}
         mp3Quality="good"

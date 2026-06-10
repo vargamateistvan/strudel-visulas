@@ -6,6 +6,7 @@ import { ColorSchemeSection } from "./settings/ColorSchemeSection";
 import { LiveFeedbackSection } from "./settings/LiveFeedbackSection";
 import { RecordingSection } from "./settings/RecordingSection";
 import { AiComposerSettingsSection } from "./settings/AiComposerSettingsSection";
+import { SettingToggle } from "./settings/SettingToggle";
 import type { AiApplyMode, AiProvider } from "../hooks/useAiMusicComposer";
 
 export type ColorScheme = "neon" | "pastel" | "fire" | "ocean" | "custom";
@@ -71,6 +72,8 @@ interface SettingsDrawerProps {
   onLivePulseStrip: (enabled: boolean) => void;
   livePlayingNoteHighlights: boolean;
   onLivePlayingNoteHighlights: (enabled: boolean) => void;
+  sampleWorkspaceOpen: boolean;
+  onSampleWorkspaceOpenChange: (open: boolean) => void;
   recordingMode: RecordingMode;
   onRecordingMode: (mode: RecordingMode) => void;
   mp3Quality: Mp3Quality;
@@ -279,6 +282,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   onLivePulseStrip,
   livePlayingNoteHighlights,
   onLivePlayingNoteHighlights,
+  sampleWorkspaceOpen,
+  onSampleWorkspaceOpenChange,
   recordingMode,
   onRecordingMode,
   mp3Quality,
@@ -722,6 +727,27 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
             livePlayingNoteHighlights={livePlayingNoteHighlights}
             onLivePlayingNoteHighlights={onLivePlayingNoteHighlights}
           />
+
+          <section>
+            <p
+              style={{
+                fontSize: 10,
+                color: "#333",
+                marginBottom: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontFamily: '"JetBrains Mono",monospace',
+              }}
+            >
+              Sample Workspace
+            </p>
+            <SettingToggle
+              label="Sample Workspace"
+              description="Show or hide the sample browser panel."
+              enabled={sampleWorkspaceOpen}
+              onToggle={() => onSampleWorkspaceOpenChange(!sampleWorkspaceOpen)}
+            />
+          </section>
 
           <RecordingSection
             recordingMode={recordingMode}
