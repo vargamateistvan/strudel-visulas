@@ -24,6 +24,8 @@ const MACRO_APPLY_MODE_KEY = "strudel:sample-workspace:macro-apply-mode:v1";
 const PATTERN_PREVIEW_MODE_KEY =
   "strudel:sample-workspace:pattern-preview-mode:v1";
 const SHORTCUT_HELP_OPEN_KEY = "strudel:sample-workspace:shortcut-help-open:v1";
+const KEYBOARD_MODE_ENABLED_KEY =
+  "strudel:sample-workspace:keyboard-mode-enabled:v1";
 
 function readMacroApplyMode(): MacroApplyMode {
   if (typeof window === "undefined") return "layer";
@@ -42,6 +44,13 @@ function readShortcutHelpOpen(): boolean {
   if (typeof window === "undefined") return false;
   const saved = localStorage.getItem(SHORTCUT_HELP_OPEN_KEY);
   if (saved === null) return false;
+  return saved === "true";
+}
+
+function readKeyboardModeEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  const saved = localStorage.getItem(KEYBOARD_MODE_ENABLED_KEY);
+  if (saved === null) return true;
   return saved === "true";
 }
 
@@ -168,6 +177,9 @@ export function SampleBrowserPanel({
   const [fxApplyHint, setFxApplyHint] = useState<string | null>(null);
   const [showShortcutHelp, setShowShortcutHelp] =
     useState<boolean>(readShortcutHelpOpen);
+  const [keyboardModeEnabled, setKeyboardModeEnabled] = useState<boolean>(
+    readKeyboardModeEnabled,
+  );
   const [panelHasFocus, setPanelHasFocus] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
@@ -189,12 +201,24 @@ export function SampleBrowserPanel({
     localStorage.setItem(SHORTCUT_HELP_OPEN_KEY, String(showShortcutHelp));
   }, [showShortcutHelp]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(
+      KEYBOARD_MODE_ENABLED_KEY,
+      String(keyboardModeEnabled),
+    );
+  }, [keyboardModeEnabled]);
+
   const chainSnippet = buildSynthFxSnippet(builder);
   const fxTailSnippet = buildSynthFxTailSnippet(builder);
 
   const handlePanelKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, [contenteditable="true"]')) {
+      return;
+    }
+
+    if (!keyboardModeEnabled) {
       return;
     }
 
@@ -1149,6 +1173,33 @@ export function SampleBrowserPanel({
             >
               ?
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setKeyboardModeEnabled((prev) => !prev);
+                setFxApplyHint(
+                  keyboardModeEnabled
+                    ? "Keyboard mode disabled. Use panel controls with mouse."
+                    : "Keyboard mode enabled. Shortcuts are active when focused.",
+                );
+              }}
+              style={{
+                border: "none",
+                borderRadius: 999,
+                background: keyboardModeEnabled
+                  ? "rgba(122,230,255,0.16)"
+                  : "transparent",
+                color: keyboardModeEnabled
+                  ? "#c6f5ff"
+                  : "rgba(255,255,255,0.62)",
+                fontSize: 10,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+              title="Toggle panel keyboard shortcuts"
+            >
+              {keyboardModeEnabled ? "Keys On" : "Keys Off"}
+            </button>
           </div>
 
           {showShortcutHelp && (
@@ -1196,6 +1247,9 @@ export function SampleBrowserPanel({
               </div>
               <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>
                 Press ? to toggle this panel.
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>
+                Keyboard mode: {keyboardModeEnabled ? "On" : "Off"}
               </div>
             </div>
           )}
