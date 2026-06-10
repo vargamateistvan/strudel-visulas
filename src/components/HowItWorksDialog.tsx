@@ -10,6 +10,10 @@ const rowStyle: React.CSSProperties = {
   gridTemplateColumns: "28px 1fr",
   gap: 10,
   alignItems: "start",
+  padding: "10px 10px 10px 8px",
+  borderRadius: "var(--radius-md)",
+  border: "1px solid var(--border-faint)",
+  background: "var(--surface-1)",
 };
 
 const badgeStyle: React.CSSProperties = {
@@ -19,12 +23,24 @@ const badgeStyle: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  background: "rgba(0,255,136,0.13)",
-  border: "1px solid rgba(0,255,136,0.28)",
+  background: "var(--surface-active)",
+  border: "1px solid var(--border-accent)",
   color: "var(--primary)",
   fontFamily: '"JetBrains Mono",monospace',
   fontSize: 11,
   fontWeight: 700,
+};
+
+const commandChipStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  borderRadius: 999,
+  border: "1px solid var(--border-subtle)",
+  background: "var(--surface-2)",
+  color: "var(--text-body)",
+  fontFamily: '"JetBrains Mono",monospace',
+  fontSize: 11,
+  padding: "4px 10px",
 };
 
 export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
@@ -82,7 +98,12 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
           >
             HOW IT WORKS
           </div>
-          <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+          <div
+            style={{
+              color: "var(--text-muted)",
+              fontSize: 12,
+            }}
+          >
             Strudel Studio quick guide
           </div>
           <button
@@ -113,6 +134,31 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             lineHeight: 1.55,
           }}
         >
+          <div
+            style={{
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-md)",
+              padding: "12px 14px",
+              background: "var(--surface-2)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: '"JetBrains Mono",monospace',
+                fontSize: 11,
+                letterSpacing: 1.2,
+                color: "var(--secondary)",
+                marginBottom: 5,
+              }}
+            >
+              QUICK FLOW
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-body)" }}>
+              Code, play, shape visuals, use AI for new ideas, then save or
+              export your best patterns.
+            </div>
+          </div>
+
           <div style={rowStyle}>
             <span style={badgeStyle}>1</span>
             <div>
@@ -150,17 +196,19 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             <span style={badgeStyle}>5</span>
             <div>
               Use prompt commands for intent control:
-              <span
+              <div
                 style={{
-                  display: "block",
-                  marginTop: 4,
-                  fontFamily: '"JetBrains Mono",monospace',
-                  fontSize: 12,
-                  color: "#b7f3ff",
+                  marginTop: 8,
+                  marginBottom: 8,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
                 }}
               >
-                /new, /rework, /variation
-              </span>
+                <span style={commandChipStyle}>/new</span>
+                <span style={commandChipStyle}>/rework</span>
+                <span style={commandChipStyle}>/variation</span>
+              </div>
               You can replace or append generated code and reuse prompts from AI
               history.
             </div>
@@ -170,7 +218,7 @@ export const HowItWorksDialog: React.FC<HowItWorksDialogProps> = ({
             style={{
               marginTop: 4,
               border: "1px solid rgba(0,220,255,0.25)",
-              borderRadius: 10,
+              borderRadius: "var(--radius-md)",
               background: "rgba(0,220,255,0.08)",
               padding: "12px 14px",
             }}
