@@ -26,17 +26,22 @@ type SampleBrowserPanelProps = {
   onToggleSource: (id: string) => void;
 };
 
-const CATEGORY_OPTIONS: Array<{ value: SampleCategory | "all"; label: string }> =
-  [
-    { value: "all", label: "All" },
-    { value: "drums", label: "Drums" },
-    { value: "perc", label: "Perc" },
-    { value: "fx", label: "FX" },
-    { value: "instruments", label: "Instruments" },
-    { value: "synths", label: "Synths" },
-  ];
+const CATEGORY_OPTIONS: Array<{
+  value: SampleCategory | "all";
+  label: string;
+}> = [
+  { value: "all", label: "All" },
+  { value: "drums", label: "Drums" },
+  { value: "perc", label: "Perc" },
+  { value: "fx", label: "FX" },
+  { value: "instruments", label: "Instruments" },
+  { value: "synths", label: "Synths" },
+];
 
-const LOCKED_SOURCE_IDS = new Set(["source-dirt-samples", "source-eddyflux-crate"]);
+const LOCKED_SOURCE_IDS = new Set([
+  "source-dirt-samples",
+  "source-eddyflux-crate",
+]);
 
 function badgeStyle(status: AuditionStatus) {
   if (status === "loading") {
@@ -391,7 +396,9 @@ export function SampleBrowserPanel({
                 setSourceUrl("");
               } catch (error) {
                 setSourceError(
-                  error instanceof Error ? error.message : "Failed to add source.",
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to add source.",
                 );
               }
             }}
@@ -412,7 +419,9 @@ export function SampleBrowserPanel({
           )}
         </div>
 
-        <div style={{ display: "grid", gap: 6, maxHeight: 180, overflowY: "auto" }}>
+        <div
+          style={{ display: "grid", gap: 6, maxHeight: 180, overflowY: "auto" }}
+        >
           {customSources.map((source) => {
             const status = auditionStatusById[source.id] ?? "idle";
             const badge = badgeStyle(status);
@@ -474,7 +483,9 @@ export function SampleBrowserPanel({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onInsertCode(buildSourceInsertSnippet(source))}
+                    onClick={() =>
+                      onInsertCode(buildSourceInsertSnippet(source))
+                    }
                     style={{
                       border: "1px solid rgba(122,230,255,0.35)",
                       borderRadius: 6,
@@ -526,7 +537,8 @@ export function SampleBrowserPanel({
             );
           })}
           <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
-            Enabled sources: {customSources.filter((source) => source.enabled).length}
+            Enabled sources:{" "}
+            {customSources.filter((source) => source.enabled).length}
           </div>
         </div>
       </div>

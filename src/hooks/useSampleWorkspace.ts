@@ -356,15 +356,17 @@ export function useSampleWorkspace() {
   const [recentTokens, setRecentTokens] = useState<string[]>(() =>
     safeParse<string[]>(localStorage.getItem(RECENT_TOKENS_KEY), []),
   );
-  const [customSources, setCustomSources] = useState<CustomSampleSource[]>(() => {
-    const saved = safeParse<CustomSampleSource[]>(
-      localStorage.getItem(CUSTOM_SOURCES_KEY),
-      [],
-    );
-    const merged = normalizeSources(saved);
-    localStorage.setItem(CUSTOM_SOURCES_KEY, JSON.stringify(merged));
-    return merged;
-  });
+  const [customSources, setCustomSources] = useState<CustomSampleSource[]>(
+    () => {
+      const saved = safeParse<CustomSampleSource[]>(
+        localStorage.getItem(CUSTOM_SOURCES_KEY),
+        [],
+      );
+      const merged = normalizeSources(saved);
+      localStorage.setItem(CUSTOM_SOURCES_KEY, JSON.stringify(merged));
+      return merged;
+    },
+  );
 
   const persistSources = useCallback((next: CustomSampleSource[]) => {
     setCustomSources(next);
@@ -380,8 +382,10 @@ export function useSampleWorkspace() {
     (token: string) => {
       const trimmed = token.trim();
       if (!trimmed) return;
-      const next = [trimmed, ...recentTokens.filter((value) => value !== trimmed)]
-        .slice(0, MAX_RECENT_TOKENS);
+      const next = [
+        trimmed,
+        ...recentTokens.filter((value) => value !== trimmed),
+      ].slice(0, MAX_RECENT_TOKENS);
       persistRecents(next);
     },
     [persistRecents, recentTokens],
