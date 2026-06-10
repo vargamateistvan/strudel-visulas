@@ -184,6 +184,89 @@ stack(
 ).cpm(84/4)`,
   },
   {
+    id: "builtin-blackbird-inspired",
+    name: "Blackbird (Inspired Picking)",
+    code: `// Imported/adapted from eefano/strudel-songs-collection
+// Inspired by "Blackbird" @by Paul McCartney
+stack(
+  note("g4 a4 g4 e4 d4 e4 g4 a4")
+    .s("gm_acoustic_guitar_nylon")
+    .gain(0.55)
+    .release(0.2)
+    .pan(0.42),
+  note("g3 ~ e3 ~ d3 ~ c3 ~")
+    .s("gm_acoustic_guitar_nylon")
+    .gain(0.45)
+    .release(0.28)
+    .pan(0.58),
+  s("~ ~ cp ~ ~ ~ cp ~")
+    .bank("RolandTR909")
+    .gain(0.1)
+).cpm(93/4)`,
+  },
+  {
+    id: "builtin-pyramid-song-inspired",
+    name: "Pyramid Song (Inspired)",
+    code: `// Imported/adapted from eefano/strudel-songs-collection
+// Inspired by "Pyramid Song" @by Radiohead
+stack(
+  chord("f#3:minor g3:major a3:major")
+    .anchor("c4")
+    .voicing()
+    .s("gm_pad_warm")
+    .room(0.75)
+    .gain(0.35),
+  n("0 ~ 2 ~ 4 ~ 2 ~")
+    .scale("f#2:minor")
+    .s("gm_fretless_bass")
+    .gain(0.6),
+  s("bd ~ ~ bd ~ sd ~ ~")
+    .bank("RolandTR909")
+    .gain(0.16)
+).cpm(104/4)`,
+  },
+  {
+    id: "builtin-hey-moon-inspired",
+    name: "Hey Moon (Inspired)",
+    code: `// Imported/adapted from eefano/strudel-songs-collection
+// Inspired by "Hey Moon" @by John Maus
+stack(
+  chord("f3 c4 g3 f3")
+    .voicing()
+    .s("gm_pad_warm")
+    .release(1.8)
+    .room(0.6)
+    .gain(0.5),
+  n("0 ~ 3 1 ~ 0 5 4")
+    .scale("f4:major")
+    .s("gm_voice_oohs")
+    .gain(0.42)
+    .release(0.4),
+  s("bd ~ ~ bd ~ ~ bd ~")
+    .bank("RolandTR909")
+    .gain(0.12)
+).cpm(88/4)`,
+  },
+  {
+    id: "builtin-jitterbug-coda-inspired",
+    name: "Jitterbug (Coda Inspired)",
+    code: `// Imported/adapted from eefano/strudel-songs-collection
+// Inspired by "Jitterbug (Coda)" @by Cardiacs
+setDefaultVoicings('legacy')
+stack(
+  note("f#4 d4 g4 a4 f#4 e4 c#4 b3")
+    .s("gm_rock_organ")
+    .gain(0.5)
+    .release(0.2),
+  note("f#2 ~ d2 ~ e2 ~ c#2 ~")
+    .s("gm_electric_bass_finger")
+    .gain(0.6),
+  s("bd ~ sd ~ [bd sd] ~ sd ~")
+    .bank("RolandTR909")
+    .gain(0.14)
+).cpm(82/4)`,
+  },
+  {
     id: "builtin-ode-to-joy",
     name: "Ode To Joy (Public Domain)",
     code: `stack(
