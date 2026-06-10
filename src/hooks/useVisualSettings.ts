@@ -137,30 +137,53 @@ export function useVisualSettings(vizMode: VizMode) {
     [vizMode],
   );
 
-  const makeNumericSetter = (
-    field: "ifsSize" | "lissajousSize" | "kaleidoscopeSize",
-  ) =>
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useCallback(
-      (value: number) => {
-        setVisualSettings((prev) => {
-          const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
-          return {
-            ...prev,
-            [vizMode]: {
-              ...existing,
-              [field]: Math.max(0.2, Math.min(4, value)),
-            },
-          };
-        });
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [vizMode],
-    );
+  const setIfsSizeForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            ifsSize: Math.max(0.2, Math.min(4, value)),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
 
-  const setIfsSizeForViz = makeNumericSetter("ifsSize");
-  const setLissajousSizeForViz = makeNumericSetter("lissajousSize");
-  const setKaleidoscopeSizeForViz = makeNumericSetter("kaleidoscopeSize");
+  const setLissajousSizeForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            lissajousSize: Math.max(0.2, Math.min(4, value)),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
+
+  const setKaleidoscopeSizeForViz = useCallback(
+    (value: number) => {
+      setVisualSettings((prev) => {
+        const existing = prev[vizMode] ?? DEFAULT_VISUAL_SETTINGS;
+        return {
+          ...prev,
+          [vizMode]: {
+            ...existing,
+            kaleidoscopeSize: Math.max(0.2, Math.min(4, value)),
+          },
+        };
+      });
+    },
+    [vizMode],
+  );
 
   return {
     visualSettings,
