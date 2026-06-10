@@ -791,7 +791,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
         }}
         options={{
           automaticLayout: true,
-          minimap: { enabled: !isMobile },
+          minimap: { enabled: false },
           smoothScrolling: true,
           cursorBlinking: "smooth",
           cursorSmoothCaretAnimation: "on",
@@ -806,6 +806,12 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
           bracketPairColorization: { enabled: true },
           scrollBeyondLastLine: false,
           overviewRulerBorder: false,
+          overviewRulerLanes: 0,
+          scrollbar: {
+            vertical: "hidden",
+            horizontal: "hidden",
+            alwaysConsumeMouseWheel: false,
+          },
           padding: { top: isMobile ? 38 : 42, bottom: isMobile ? 14 : 18 },
           suggestOnTriggerCharacters: true,
           wordBasedSuggestions: "off",
