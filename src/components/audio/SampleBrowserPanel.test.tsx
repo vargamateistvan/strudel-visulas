@@ -12,6 +12,7 @@ import { SampleBrowserPanel } from "./SampleBrowserPanel";
 const noop = vi.fn();
 
 const createProps = () => ({
+  isMobile: false,
   opacity: 0.8,
   colorPreset: "neon" as const,
   category: "all" as const,

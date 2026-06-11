@@ -73,7 +73,6 @@ const CUSTOM_SHORTCUT_PROFILES_KEY =
   "strudel:sample-workspace:custom-shortcut-profiles:v1";
 const SELECTED_CUSTOM_SHORTCUT_PROFILE_ID_KEY =
   "strudel:sample-workspace:selected-custom-shortcut-profile-id:v1";
-const MOBILE_VIEW_MEDIA_QUERY = "(max-width: 1024px)";
 
 function readMacroApplyMode(): MacroApplyMode {
   if (typeof window === "undefined") return "layer";
@@ -255,6 +254,7 @@ function parseImportedShortcutProfiles(
 }
 
 type SampleBrowserPanelProps = {
+  isMobile: boolean;
   opacity: number;
   colorPreset: EditorColorPreset;
   category: SampleCategory | "all";
@@ -405,6 +405,7 @@ function badgeStyle(status: AuditionStatus) {
 }
 
 export function SampleBrowserPanel({
+  isMobile,
   opacity,
   colorPreset,
   category,
@@ -468,7 +469,6 @@ export function SampleBrowserPanel({
   const [synthSectionOpen, setSynthSectionOpen] = useState(true);
   const [sourcesSectionOpen, setSourcesSectionOpen] = useState(true);
   const [panelHasFocus, setPanelHasFocus] = useState(false);
-  const [isMobileView, setIsMobileView] = useState(false);
   const [auditionStatusById, setAuditionStatusById] = useState<
     Record<string, AuditionStatus>
   >({});
@@ -484,26 +484,6 @@ export function SampleBrowserPanel({
     if (typeof window === "undefined") return;
     localStorage.setItem(MACRO_APPLY_MODE_KEY, macroApplyMode);
   }, [macroApplyMode]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (typeof window.matchMedia !== "function") {
-      setIsMobileView(window.innerWidth <= 1024);
-      return;
-    }
-
-    const mediaQuery = window.matchMedia(MOBILE_VIEW_MEDIA_QUERY);
-    const updateMobileView = () => {
-      setIsMobileView(mediaQuery.matches);
-    };
-
-    updateMobileView();
-    mediaQuery.addEventListener("change", updateMobileView);
-    return () => {
-      mediaQuery.removeEventListener("change", updateMobileView);
-    };
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1001,7 +981,7 @@ export function SampleBrowserPanel({
           ? "1px solid rgba(0,255,136,0.45)"
           : "1px solid rgba(255,255,255,0.07)",
         background: panelBackground,
-        backdropFilter: isMobileView ? "blur(12px)" : "none",
+        backdropFilter: isMobile ? "blur(12px)" : "none",
         boxShadow: panelHasFocus
           ? "0 18px 40px rgba(0,0,0,0.38), 0 0 0 2px rgba(0,255,136,0.18)"
           : "0 18px 40px rgba(0,0,0,0.38)",

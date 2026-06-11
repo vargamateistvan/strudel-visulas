@@ -205,6 +205,7 @@ export function EditorViewport({
           }}
         >
           <SampleBrowserPanel
+            isMobile={isMobile}
             opacity={opacity}
             colorPreset={colorPreset}
             category={category}
@@ -268,6 +269,7 @@ export function EditorViewport({
 
           <div style={{ flex: "1 1 auto", minHeight: 0 }}>
             <SampleBrowserPanel
+              isMobile={isMobile}
               opacity={opacity}
               colorPreset={colorPreset}
               category={category}
