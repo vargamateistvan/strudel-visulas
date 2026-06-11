@@ -488,6 +488,11 @@ export function SampleBrowserPanel({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    if (typeof window.matchMedia !== "function") {
+      setIsMobileView(window.innerWidth <= 1024);
+      return;
+    }
+
     const mediaQuery = window.matchMedia(MOBILE_VIEW_MEDIA_QUERY);
     const updateMobileView = () => {
       setIsMobileView(mediaQuery.matches);
