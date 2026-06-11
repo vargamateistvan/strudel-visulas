@@ -46,6 +46,7 @@ interface StrudelEditorProps {
         applyFxTailToSelection: (
           fxTail: string,
         ) => "selection" | "document" | "none";
+        insertSnippetAtCursor: (snippet: string) => boolean;
         applyMacroLayerToSelection: (
           snippet: string,
         ) => "selection" | "document" | "none";
@@ -556,6 +557,35 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     [applySelectionTransform],
   );
 
+  const insertSnippetAtCursor = useCallback((snippet: string) => {
+    const cleaned = snippet.trim();
+    if (!cleaned) return false;
+
+    const editor = editorRef.current;
+    const model = editor?.getModel();
+    if (!editor || !model) return false;
+
+    const selection = editor.getSelection();
+    const position =
+      editor.getPosition() ?? model.getFullModelRange().getEndPosition();
+    const range = selection ?? {
+      startLineNumber: position.lineNumber,
+      startColumn: position.column,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column,
+    };
+
+    editor.executeEdits("strudel-insert-snippet", [
+      {
+        range,
+        text: cleaned,
+        forceMoveMarkers: true,
+      },
+    ]);
+    editor.focus();
+    return true;
+  }, []);
+
   const applyMacroLayerToSelection = useCallback(
     (snippet: string) => {
       const cleaned = snippet.trim();
@@ -595,6 +625,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     if (!onRegisterSelectionFxApplier) return;
     onRegisterSelectionFxApplier({
       applyFxTailToSelection,
+      insertSnippetAtCursor,
       applyMacroLayerToSelection,
       applyMacroReplaceToSelection,
       applyPatternToolToSelection,
@@ -602,6 +633,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     return () => {
       onRegisterSelectionFxApplier({
         applyFxTailToSelection: () => "none",
+        insertSnippetAtCursor: () => false,
         applyMacroLayerToSelection: () => "none",
         applyMacroReplaceToSelection: () => "none",
         applyPatternToolToSelection: () => "none",
@@ -609,6 +641,7 @@ export const StrudelEditor: React.FC<StrudelEditorProps> = ({
     };
   }, [
     applyFxTailToSelection,
+    insertSnippetAtCursor,
     applyMacroLayerToSelection,
     applyMacroReplaceToSelection,
     applyPatternToolToSelection,

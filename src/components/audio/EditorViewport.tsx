@@ -53,6 +53,7 @@ type PatternTool = "reverse" | "slow2" | "fast2" | "density2" | "stutter";
 
 type SelectionAppliers = {
   applyFxTailToSelection: (fxTail: string) => FxApplyTarget;
+  insertSnippetAtCursor: (snippet: string) => boolean;
   applyMacroLayerToSelection: (snippet: string) => FxApplyTarget;
   applyMacroReplaceToSelection: (snippet: string) => FxApplyTarget;
   applyPatternToolToSelection: (tool: PatternTool) => FxApplyTarget;
@@ -97,6 +98,7 @@ export function EditorViewport({
 
   const selectionAppliersRef = useRef<SelectionAppliers>({
     applyFxTailToSelection: () => "none",
+    insertSnippetAtCursor: () => false,
     applyMacroLayerToSelection: () => "none",
     applyMacroReplaceToSelection: () => "none",
     applyPatternToolToSelection: () => "none",
@@ -128,6 +130,19 @@ export function EditorViewport({
   const handleApplyPatternTool = useCallback((tool: PatternTool) => {
     return selectionAppliersRef.current.applyPatternToolToSelection(tool);
   }, []);
+
+  const handleInsertCode = useCallback(
+    (snippet: string) => {
+      const cleaned = snippet.trim();
+      if (!cleaned) return;
+      const inserted =
+        selectionAppliersRef.current.insertSnippetAtCursor(cleaned);
+      if (!inserted) {
+        onInsertCode(cleaned);
+      }
+    },
+    [onInsertCode],
+  );
 
   const showMobileSampleSheet = isMobile && showSampleWorkspace;
 
@@ -200,7 +215,7 @@ export function EditorViewport({
             recentItems={recentItems}
             customSources={customSources}
             onAddRecentToken={addRecentToken}
-            onInsertCode={onInsertCode}
+            onInsertCode={handleInsertCode}
             onAuditionCode={onAuditionCode}
             onApplyFxToSelection={handleApplyFxToSelection}
             onApplyMacroToSelection={handleApplyMacroToSelection}
@@ -263,7 +278,7 @@ export function EditorViewport({
               recentItems={recentItems}
               customSources={customSources}
               onAddRecentToken={addRecentToken}
-              onInsertCode={onInsertCode}
+              onInsertCode={handleInsertCode}
               onAuditionCode={onAuditionCode}
               onApplyFxToSelection={handleApplyFxToSelection}
               onApplyMacroToSelection={handleApplyMacroToSelection}
