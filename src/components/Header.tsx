@@ -260,6 +260,7 @@ export const Header: React.FC<HeaderProps> = (props) => {
   } as const;
   const headerButtonSize = isMobile ? 34 : 40;
   const brandMarkUrl = `${import.meta.env.BASE_URL}brand-mark.svg`;
+  const buyMeCoffeeUrl = "https://buymeacoffee.com/matt_varga";
 
   return (
     <header
@@ -486,6 +487,34 @@ export const Header: React.FC<HeaderProps> = (props) => {
               <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
             </svg>
           </HeaderIconButton>
+
+          <a
+            href={buyMeCoffeeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Buy me a coffee"
+            aria-label="Buy me a coffee"
+            style={{
+              border: "1px solid var(--border-faint)",
+              borderRadius: 999,
+              color: "var(--text-main)",
+              background: "var(--surface-soft)",
+              textDecoration: "none",
+              height: headerButtonSize,
+              minHeight: headerButtonSize,
+              padding: isMobile ? "0 10px" : "0 12px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: isMobile ? 11 : 12,
+              letterSpacing: 0.2,
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            Buy me a coffee
+          </a>
         </div>
       </div>
     </header>
